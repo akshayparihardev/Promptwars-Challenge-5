@@ -8,7 +8,10 @@ const RETRY_DELAY_MS = 600;
 
 /** Busy or briefly unavailable model: worth one quick retry inside the same time budget. */
 function isTransient(error: unknown): boolean {
-  const status = typeof error === 'object' && error !== null && 'status' in error ? (error as { status: unknown }).status : null;
+  const status =
+    typeof error === 'object' && error !== null && 'status' in error
+      ? (error as { status: unknown }).status
+      : null;
   return status === 429 || status === 500 || status === 503;
 }
 
@@ -55,8 +58,12 @@ export async function callModel(request: ModelRequest): Promise<string> {
         const response = await Promise.race([attempt(), timeout]);
         return response.text ?? '';
       } catch (error) {
-        if (error instanceof ApiFailure || tries >= MAX_ATTEMPTS || !isTransient(error)) throw error;
-        await Promise.race([new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS)), timeout]);
+        if (error instanceof ApiFailure || tries >= MAX_ATTEMPTS || !isTransient(error))
+          throw error;
+        await Promise.race([
+          new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS)),
+          timeout,
+        ]);
       }
     }
   } catch (error) {

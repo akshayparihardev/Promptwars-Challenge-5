@@ -43,8 +43,8 @@ export function TradeoffPanel({
           Ways to close the gap
         </h2>
         <p className="mt-2 text-sm">
-          No automatic option fits {formatINR(overBy)}. Try fewer guests, a bigger total budget, or unlock categories
-          so money can move.
+          No automatic option fits {formatINR(overBy)}. Try fewer guests, a bigger total budget, or
+          unlock categories so money can move.
         </p>
       </section>
     );
@@ -60,14 +60,23 @@ export function TradeoffPanel({
           </h2>
           <p className="hint">Nothing changes until you apply an option.</p>
         </div>
-        <button type="button" className="btn-secondary" onClick={() => void explain()} disabled={ai.state.status === 'loading'}>
+        <button
+          type="button"
+          className="btn-secondary"
+          onClick={() => void explain()}
+          disabled={ai.state.status === 'loading'}
+        >
           Explain these options
         </button>
       </div>
 
       <div aria-live="polite" className="mt-3">
-        {ai.state.status === 'loading' && <AiLoading label="Asking the AI to explain in plain language…" />}
-        {ai.state.status === 'error' && <AiError message={ai.state.message} onRetry={() => void explain()} />}
+        {ai.state.status === 'loading' && (
+          <AiLoading label="Asking the AI to explain in plain language…" />
+        )}
+        {ai.state.status === 'error' && (
+          <AiError message={ai.state.message} onRetry={() => void explain()} />
+        )}
       </div>
 
       <ul className="mt-4 grid gap-4 md:grid-cols-3">
@@ -77,7 +86,11 @@ export function TradeoffPanel({
             <li key={o.id} className="flex flex-col rounded-xl border border-line p-4">
               <h3 className="text-base">{o.title}</h3>
               <p className="mt-1 text-sm">{o.description}</p>
-              {o.changes.length > 0 && <p className="mt-2 text-sm font-medium">{describeChanges(plan.occasion, o.changes)}</p>}
+              {o.changes.length > 0 && (
+                <p className="mt-2 text-sm font-medium">
+                  {describeChanges(plan.occasion, o.changes)}
+                </p>
+              )}
               {o.warning && (
                 <p className="mt-2 text-sm font-medium text-warn">
                   <span aria-hidden="true">⚠ </span>
@@ -103,7 +116,11 @@ export function TradeoffPanel({
                     }}
                   />
                 ) : (
-                  <button type="button" className="btn-primary w-full" onClick={() => setConfirming(o.id)}>
+                  <button
+                    type="button"
+                    className="btn-primary w-full"
+                    onClick={() => setConfirming(o.id)}
+                  >
                     Apply
                   </button>
                 )}

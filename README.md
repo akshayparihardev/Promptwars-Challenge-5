@@ -39,6 +39,7 @@ The AI never invents prices, vendors or availability. Every amount is labelled *
 | Keep spending in check | Budget engine: occasion presets, priority weighting, locks, live redistribution with a change toast |
 | Guests change, everything follows | Guest control shows catering impact; over-budget banner with up to 3 options (reduce guests, trim flexible categories, use contingency), each with exact rupee impact and an explicit Apply |
 | Don't miss deadlines | Dependency-aware timeline grouped by phase, assignees, Done / Mark delayed, downstream tasks highlighted, at-risk / overdue / impossible flags |
+| Know who to book | Vendor checklist per occasion (venue, caterer, decor, photographer, entertainment, misc) with status: not started, contacted, quote received, quote accepted |
 | Compare vendors | Paste a quote, extracted fields, flags (guest minimum, over budget, tax unstated, high advance, overtime, no cancellation policy), effective cost, ready-to-send inquiry message, side-by-side comparison of up to 3 quotes per category |
 | Trust the numbers | Estimate vs Verified quote labels, committed vs estimated spend |
 | Fresh ideas | Ideas panel: themes, activities, food style, tuned to occasion, vibe, guests, budget tier |
@@ -125,7 +126,7 @@ Derived engine results are memoised, the category cards are memoised, number inp
 
 ## Testing
 
-`npm run check` runs typecheck, lint and 178 Vitest tests: engine (rounding invariant, zero and huge budgets, 1 and 5,000 guests, past dates, cycles, all-locked, null quotes), schemas (malicious share payloads), API handlers with Gemini mocked (405, 400, 413, 429, 502, injection text), UI flows and axe accessibility checks on every tab. Engine line coverage is 100%. CI runs the same on every push.
+`npm run check` runs typecheck, lint and 184 Vitest tests: engine (rounding invariant, zero and huge budgets, 1 and 5,000 guests, past dates, cycles, all-locked, null quotes), schemas (malicious share payloads), API handlers with Gemini mocked (405, 400, 413, 429, 502, injection text), UI flows and axe accessibility checks on every tab. Engine line coverage is 100%. CI runs the same on every push.
 
 ## Accessibility
 

@@ -65,7 +65,9 @@ describe('callModel', () => {
     await vi.advanceTimersByTimeAsync(700);
     await expect(pending).resolves.toBe('{"ok":1}');
     expect(generateContent).toHaveBeenCalledTimes(2);
-    expect(generateContent.mock.calls[0]?.[0].config.thinkingConfig).toEqual({ thinkingLevel: 'MINIMAL' });
+    expect(generateContent.mock.calls[0]?.[0].config.thinkingConfig).toEqual({
+      thinkingLevel: 'MINIMAL',
+    });
 
     generateContent.mockReset();
     generateContent.mockRejectedValue(busy);

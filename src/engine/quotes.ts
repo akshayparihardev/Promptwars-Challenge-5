@@ -47,7 +47,10 @@ export function compareQuote(quote: Quote, plan: Plan): QuoteFlag[] {
     }
   }
   if (quote.taxIncluded == null) {
-    flags.push({ code: 'taxNotStated', message: 'GST/tax is not mentioned; ask whether it is included.' });
+    flags.push({
+      code: 'taxNotStated',
+      message: 'GST/tax is not mentioned; ask whether it is included.',
+    });
   }
   if (quote.advancePercent != null && quote.advancePercent > 50) {
     flags.push({
@@ -62,7 +65,10 @@ export function compareQuote(quote: Quote, plan: Plan): QuoteFlag[] {
     });
   }
   if (quote.cancellationPolicy == null) {
-    flags.push({ code: 'noCancellationPolicy', message: 'No cancellation or refund policy stated.' });
+    flags.push({
+      code: 'noCancellationPolicy',
+      message: 'No cancellation or refund policy stated.',
+    });
   }
   return flags;
 }
@@ -84,13 +90,22 @@ export function missingFields(quote: Quote): MissingField[] {
     out.push({ field: 'taxIncluded', question: 'Is GST/tax included in this price?' });
   }
   if (quote.advancePercent == null) {
-    out.push({ field: 'advancePercent', question: 'How much advance is needed to confirm the booking?' });
+    out.push({
+      field: 'advancePercent',
+      question: 'How much advance is needed to confirm the booking?',
+    });
   }
   if (quote.overtimeFeePerHour == null) {
-    out.push({ field: 'overtimeFeePerHour', question: 'What is the charge if the event runs over time?' });
+    out.push({
+      field: 'overtimeFeePerHour',
+      question: 'What is the charge if the event runs over time?',
+    });
   }
   if (quote.cancellationPolicy == null) {
-    out.push({ field: 'cancellationPolicy', question: 'What is your cancellation and refund policy?' });
+    out.push({
+      field: 'cancellationPolicy',
+      question: 'What is your cancellation and refund policy?',
+    });
   }
   if (quote.inclusions.length === 0) {
     out.push({ field: 'inclusions', question: 'What exactly is included in the price?' });
@@ -116,7 +131,10 @@ export function addQuote(plan: Plan, quote: Quote, id: string): { plan: Plan; ad
   const count = plan.quotes.filter((q) => q.category === quote.category).length;
   if (count >= MAX_QUOTES_PER_CATEGORY) return { plan, added: false };
   return {
-    plan: { ...plan, quotes: [...plan.quotes, { id, category: quote.category, quote, accepted: false }] },
+    plan: {
+      ...plan,
+      quotes: [...plan.quotes, { id, category: quote.category, quote, accepted: false }],
+    },
     added: true,
   };
 }

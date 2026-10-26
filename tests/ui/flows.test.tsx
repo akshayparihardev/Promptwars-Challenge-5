@@ -20,7 +20,9 @@ describe('create a plan and watch it react', () => {
     const catering = screen.getByRole('article', { name: 'Catering' });
     expect(within(catering).getByText('Estimate')).toBeInTheDocument();
 
-    fireEvent.change(screen.getAllByLabelText('Number of guests')[0] as HTMLElement, { target: { value: '260' } });
+    fireEvent.change(screen.getAllByLabelText('Number of guests')[0] as HTMLElement, {
+      target: { value: '260' },
+    });
     const banner = screen.getByTestId('over-budget-region');
     expect(banner).toHaveTextContent(/Over budget by ₹/);
     expect(banner).toHaveAttribute('aria-live', 'polite');
@@ -59,14 +61,19 @@ describe('budget interactions', () => {
     const { user } = renderWithPlan();
     await user.click(screen.getByRole('tab', { name: 'Budget' }));
     await user.click(screen.getByRole('button', { name: 'Lock Catering amount' }));
-    expect(screen.getByRole('button', { name: 'Lock Catering amount' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Lock Catering amount' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
     expect(screen.getByLabelText('Catering amount')).toBeDisabled();
 
     const photo = screen.getByLabelText('Photography & video amount (₹)');
     await user.clear(photo);
     await user.type(photo, '1.2 lakh');
     await user.tab();
-    const toast = screen.getAllByRole('status').find((el) => /Photography & video \+/.test(el.textContent ?? ''));
+    const toast = screen
+      .getAllByRole('status')
+      .find((el) => /Photography & video \+/.test(el.textContent ?? ''));
     expect(toast).toBeDefined();
     expect(toast?.textContent).toMatch(/−₹/);
     expect(toast?.textContent).not.toMatch(/Catering/);
@@ -86,18 +93,32 @@ describe('budget interactions', () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(jsonResponse({ error: 'AI_UNAVAILABLE' }, 503))
-      .mockResolvedValueOnce(jsonResponse({ explanations: [{ optionId: 'reduce_guests', summary: 'Invite a few fewer people.', bestWhen: 'Your list is flexible.' }] }));
+      .mockResolvedValueOnce(
+        jsonResponse({
+          explanations: [
+            {
+              optionId: 'reduce_guests',
+              summary: 'Invite a few fewer people.',
+              bestWhen: 'Your list is flexible.',
+            },
+          ],
+        }),
+      );
     vi.stubGlobal('fetch', fetchMock);
     const { user } = renderWithPlan({ guests: 200 });
     await user.click(screen.getByRole('tab', { name: 'Budget' }));
-    fireEvent.change(screen.getAllByLabelText('Number of guests')[0] as HTMLElement, { target: { value: '260' } });
+    fireEvent.change(screen.getAllByLabelText('Number of guests')[0] as HTMLElement, {
+      target: { value: '260' },
+    });
     await user.click(screen.getByRole('button', { name: 'Explain these options' }));
     expect(await screen.findByRole('alert')).toHaveTextContent(/AI help is unavailable/);
     // engine still works while AI is down
     expect(screen.getByTestId('over-budget-region')).toHaveTextContent(/Over budget/);
     await user.click(screen.getByRole('button', { name: 'Try again' }));
     expect(await screen.findByText('Invite a few fewer people.')).toBeInTheDocument();
-    expect(JSON.parse(fetchMock.mock.calls[1]?.[1]?.body as string).options.length).toBeGreaterThan(0);
+    expect(JSON.parse(fetchMock.mock.calls[1]?.[1]?.body as string).options.length).toBeGreaterThan(
+      0,
+    );
   });
 });
 
@@ -118,9 +139,14 @@ describe('AI intake', () => {
       ),
     );
     const { user } = renderApp();
-    await user.type(screen.getByLabelText('Event description'), 'Kids birthday, 30 guests, 1.5 lakh');
+    await user.type(
+      screen.getByLabelText('Event description'),
+      'Kids birthday, 30 guests, 1.5 lakh',
+    );
     await user.click(screen.getByRole('button', { name: 'Fill form from description' }));
-    expect(await screen.findByText(/Filled occasion, budget, guests, date, style, priorities/)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Filled occasion, budget, guests, date, style, priorities/),
+    ).toBeInTheDocument();
     expect(screen.getByLabelText('Occasion')).toHaveValue('kids_birthday');
     expect(screen.getByLabelText('Number of guests')).toHaveValue(30);
     expect(screen.getByLabelText('Total budget (₹)')).toHaveValue('150000');
@@ -160,20 +186,42 @@ describe('vendors', () => {
     expect(await screen.findByText(/Message copied/)).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Accept quote' }));
-    expect(await screen.findByText(/Quote accepted/)).toBeInTheDocument();
-    expect(screen.getByRole('table', { name: /Side-by-side quotes for Catering/ })).toBeInTheDocument();
+    expect(await screen.findByText(/Quote accepted. This category/)).toBeInTheDocument();
+    expect(
+      screen.getByRole('table', { name: /Side-by-side quotes for Catering/ }),
+    ).toBeInTheDocument();
     expect(screen.getAllByText(/Accepted/).length).toBeGreaterThan(0);
     await user.click(screen.getByRole('tab', { name: 'Budget' }));
-    expect(within(screen.getByRole('article', { name: 'Catering' })).getByText('Verified quote')).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('article', { name: 'Catering' })).getByText('Verified quote'),
+    ).toBeInTheDocument();
   });
 
   it('shows a retry when quote extraction fails', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ error: 'AI_RESPONSE_INVALID' }, 502)));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(jsonResponse({ error: 'AI_RESPONSE_INVALID' }, 502)),
+    );
     const { user } = renderWithPlan();
     await user.click(screen.getByRole('tab', { name: 'Vendors' }));
     await user.type(await screen.findByLabelText('Quote text'), 'some quote');
     await user.click(screen.getByRole('button', { name: 'Analyze quote' }));
     expect(await screen.findByRole('alert')).toHaveTextContent(/could not trust/);
+  });
+});
+
+describe('vendor checklist', () => {
+  it('marks a vendor as contacted and shows progress', async () => {
+    const { user } = renderWithPlan();
+    await user.click(screen.getByRole('tab', { name: 'Vendors' }));
+    expect(await screen.findByRole('heading', { name: 'Vendor checklist' })).toBeInTheDocument();
+    expect(screen.getByText('0 of 6 vendors confirmed')).toBeInTheDocument();
+    await user.click(screen.getByLabelText('Contacted Catering vendor'));
+    const row = screen.getByText('Caterer, menu tasting').closest('li') as HTMLElement;
+    expect(
+      within(row).getByText('Contacted', { selector: 'span:not([aria-hidden])' }),
+    ).toBeInTheDocument();
+    expect(within(row).getByLabelText('Contacted Catering vendor')).toBeChecked();
   });
 });
 
@@ -188,17 +236,27 @@ describe('header and ideas', () => {
 
   it('shows readiness and share-link fallback', async () => {
     const { user } = renderWithPlan();
-    Object.defineProperty(navigator, 'clipboard', { value: { writeText: vi.fn().mockRejectedValue(new Error('no')) }, configurable: true });
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: vi.fn().mockRejectedValue(new Error('no')) },
+      configurable: true,
+    });
     expect(within(screen.getByRole('banner')).getByText(/Plan readiness 0%/)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Share link' }));
-    expect(((await screen.findByLabelText('Copy this link')) as HTMLInputElement).value).toContain('#plan=');
+    expect(((await screen.findByLabelText('Copy this link')) as HTMLInputElement).value).toContain(
+      '#plan=',
+    );
   });
 
   it('ideas panel is labelled as AI with no prices and can retry', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue(
-        jsonResponse({ themes: [{ title: 'Marigold Mehfil', description: 'Warm florals.' }], activities: ['Antakshari'], foodStyle: ['Chaat counter'], personalTouches: [] }),
+        jsonResponse({
+          themes: [{ title: 'Marigold Mehfil', description: 'Warm florals.' }],
+          activities: ['Antakshari'],
+          foodStyle: ['Chaat counter'],
+          personalTouches: [],
+        }),
       ),
     );
     const { user } = renderWithPlan();

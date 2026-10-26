@@ -40,19 +40,35 @@ describe('compareQuote', () => {
 
   it('flags advance, overtime; a clean quote has no flags', () => {
     const risky = compareQuote(
-      makeQuote({ totalPrice: 1000, advancePercent: 70, overtimeFeePerHour: 5000, taxIncluded: true, cancellationPolicy: 'x' }),
+      makeQuote({
+        totalPrice: 1000,
+        advancePercent: 70,
+        overtimeFeePerHour: 5000,
+        taxIncluded: true,
+        cancellationPolicy: 'x',
+      }),
       plan,
     ).map((f) => f.code);
     expect(risky).toEqual(['advanceHigh', 'overtimeFeeApplies']);
     const clean = compareQuote(
-      makeQuote({ totalPrice: 1000, advancePercent: 30, overtimeFeePerHour: 0, taxIncluded: false, cancellationPolicy: 'x', guestMinimum: 10 }),
+      makeQuote({
+        totalPrice: 1000,
+        advancePercent: 30,
+        overtimeFeePerHour: 0,
+        taxIncluded: false,
+        cancellationPolicy: 'x',
+        guestMinimum: 10,
+      }),
       plan,
     );
     expect(clean).toEqual([]);
   });
 
   it('an all-null quote only flags tax and cancellation', () => {
-    expect(compareQuote(makeQuote(), plan).map((f) => f.code)).toEqual(['taxNotStated', 'noCancellationPolicy']);
+    expect(compareQuote(makeQuote(), plan).map((f) => f.code)).toEqual([
+      'taxNotStated',
+      'noCancellationPolicy',
+    ]);
   });
 });
 
@@ -106,7 +122,8 @@ describe('missingFields and inquiryDraft', () => {
 describe('quote lifecycle', () => {
   it('caps at three quotes per category, accepts one, removes and unaccepts', () => {
     let plan = makePlan();
-    for (const id of ['a', 'b', 'c']) plan = addQuote(plan, makeQuote({ totalPrice: 100 }), id).plan;
+    for (const id of ['a', 'b', 'c'])
+      plan = addQuote(plan, makeQuote({ totalPrice: 100 }), id).plan;
     const fourth = addQuote(plan, makeQuote({ totalPrice: 100 }), 'd');
     expect(fourth.added).toBe(false);
     expect(fourth.plan).toBe(plan);

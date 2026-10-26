@@ -60,7 +60,12 @@ describe('redistribute', () => {
   const plan = makePlan();
 
   it('spreads an increase over unlocked categories and reports diffs', () => {
-    const r = redistribute(plan.allocation, 'photography', plan.allocation.photography + 40_000, []);
+    const r = redistribute(
+      plan.allocation,
+      'photography',
+      plan.allocation.photography + 40_000,
+      [],
+    );
     expect(r.capped).toBe(false);
     expect(total(r.allocation)).toBe(800_000);
     expect(r.allocation.photography).toBe(plan.allocation.photography + 40_000);
@@ -69,7 +74,10 @@ describe('redistribute', () => {
   });
 
   it('never touches locked categories', () => {
-    const r = redistribute(plan.allocation, 'decor', plan.allocation.decor + 20_000, ['catering', 'venue']);
+    const r = redistribute(plan.allocation, 'decor', plan.allocation.decor + 20_000, [
+      'catering',
+      'venue',
+    ]);
     expect(r.allocation.catering).toBe(plan.allocation.catering);
     expect(r.allocation.venue).toBe(plan.allocation.venue);
     expect(total(r.allocation)).toBe(800_000);
@@ -80,7 +88,11 @@ describe('redistribute', () => {
     expect(r.capped).toBe(true);
     expect(r.applied).toBe(800_000);
     expect(r.maxAllowed).toBe(800_000);
-    expect(Object.entries(r.allocation).filter(([k]) => k !== 'decor').every(([, v]) => v === 0)).toBe(true);
+    expect(
+      Object.entries(r.allocation)
+        .filter(([k]) => k !== 'decor')
+        .every(([, v]) => v === 0),
+    ).toBe(true);
   });
 
   it('returning money to others when reducing a category', () => {
@@ -97,20 +109,35 @@ describe('redistribute', () => {
   });
 
   it('cannot shrink when no other category can absorb it', () => {
-    const r = redistribute(plan.allocation, 'decor', 0, CATEGORIES.filter((c) => c !== 'decor'));
+    const r = redistribute(
+      plan.allocation,
+      'decor',
+      0,
+      CATEGORIES.filter((c) => c !== 'decor'),
+    );
     expect(r.capped).toBe(true);
     expect(r.allocation).toEqual(plan.allocation);
   });
 
   it('handles NaN and negative input safely', () => {
-    expect(redistribute(plan.allocation, 'decor', Number.NaN, []).allocation).toEqual(plan.allocation);
+    expect(redistribute(plan.allocation, 'decor', Number.NaN, []).allocation).toEqual(
+      plan.allocation,
+    );
     const r = redistribute(plan.allocation, 'decor', -500, []);
     expect(r.allocation.decor).toBe(0);
     expect(total(r.allocation)).toBe(800_000);
   });
 
   it('splits evenly when the other categories are all empty', () => {
-    const a = { venue: 0, catering: 0, decor: 100, photography: 0, entertainment: 0, misc: 0, contingency: 0 };
+    const a = {
+      venue: 0,
+      catering: 0,
+      decor: 100,
+      photography: 0,
+      entertainment: 0,
+      misc: 0,
+      contingency: 0,
+    };
     const r = redistribute(a, 'decor', 40, []);
     expect(total(r.allocation)).toBe(100);
     expect(r.allocation.decor).toBe(40);
@@ -151,7 +178,13 @@ describe('plan creation and guests', () => {
   });
 
   it('handles a zero or huge budget', () => {
-    const zero = createPlan({ occasion: 'wedding', totalBudget: 1, guests: 10, eventDate: '2026-07-15', priorities: [] });
+    const zero = createPlan({
+      occasion: 'wedding',
+      totalBudget: 1,
+      guests: 10,
+      eventDate: '2026-07-15',
+      priorities: [],
+    });
     expect(total(zero.allocation)).toBe(1);
     const huge = makePlan({ totalBudget: 50_000_000_000 });
     expect(total(huge.allocation)).toBe(50_000_000_000);
@@ -198,7 +231,10 @@ describe('readiness', () => {
   it('counts done tasks and verified categories', () => {
     let plan = makePlan();
     expect(planReadiness(plan).percent).toBe(0);
-    plan = { ...plan, tasks: plan.tasks.map((t, i) => (i === 0 ? { ...t, status: 'done' as const } : t)) };
+    plan = {
+      ...plan,
+      tasks: plan.tasks.map((t, i) => (i === 0 ? { ...t, status: 'done' as const } : t)),
+    };
     plan = acceptQuote(addQuote(plan, makeQuote({ totalPrice: 1000 }), 'q').plan, 'q');
     const r = planReadiness(plan);
     expect(r.tasksDone).toBe(1);

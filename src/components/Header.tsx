@@ -33,10 +33,16 @@ export function Header({ plan, onReset }: { plan: Plan | null; onReset: () => vo
             <p className="text-sm font-medium">
               Plan readiness {readiness.percent}%
               <span className="ml-1 font-normal text-ink-soft">
-                · {readiness.tasksDone}/{readiness.tasksTotal} tasks · {readiness.quotesVerified}/{readiness.quotesTotal} quotes
+                · {readiness.tasksDone}/{readiness.tasksTotal} tasks · {readiness.quotesVerified}/
+                {readiness.quotesTotal} quotes
               </span>
             </p>
-            <progress className="h-2 w-full accent-accent" max={100} value={readiness.percent} aria-label="Plan readiness percent" />
+            <progress
+              className="h-2 w-full accent-accent"
+              max={100}
+              value={readiness.percent}
+              aria-label="Plan readiness percent"
+            />
           </div>
         )}
 
@@ -56,13 +62,23 @@ export function Header({ plan, onReset }: { plan: Plan | null; onReset: () => vo
       </div>
 
       <div className="mx-auto max-w-5xl px-4" aria-live="polite">
-        {share?.status === 'copied' && <p className="pb-3 text-sm font-medium text-ok">✓ Link copied. Anyone with it can open this plan.</p>}
+        {share?.status === 'copied' && (
+          <p className="pb-3 text-sm font-medium text-ok">
+            ✓ Link copied. Anyone with it can open this plan.
+          </p>
+        )}
         {share?.status === 'manual' && (
           <div className="pb-3">
             <label htmlFor="share-url" className="label">
               Copy this link
             </label>
-            <input id="share-url" readOnly className="input" value={share.url} onFocus={(e) => e.currentTarget.select()} />
+            <input
+              id="share-url"
+              readOnly
+              className="input"
+              value={share.url}
+              onFocus={(e) => e.currentTarget.select()}
+            />
           </div>
         )}
         {confirmReset && (

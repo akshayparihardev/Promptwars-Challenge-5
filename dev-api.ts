@@ -2,8 +2,17 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { loadEnv, type Plugin } from 'vite';
 
 type Handler = (
-  req: { method?: string; headers: IncomingMessage['headers']; body?: unknown; socket?: { remoteAddress?: string } },
-  res: { status(code: number): unknown; json(body: unknown): void; setHeader(name: string, value: string): void },
+  req: {
+    method?: string;
+    headers: IncomingMessage['headers'];
+    body?: unknown;
+    socket?: { remoteAddress?: string };
+  },
+  res: {
+    status(code: number): unknown;
+    json(body: unknown): void;
+    setHeader(name: string, value: string): void;
+  },
 ) => Promise<void>;
 
 function readBody(req: IncomingMessage): Promise<string> {
@@ -26,44 +35,56 @@ export function devApi(): Plugin {
       for (const key of ['GEMINI_API_KEY', 'GEMINI_MODEL']) {
         if (env[key] && !process.env[key]) process.env[key] = env[key];
       }
-      server.middlewares.use(async (req: IncomingMessage, res: ServerResponse, next: () => void) => {
-        const match = /^\/api\/([a-z-]+)(?:\?.*)?$/.exec(req.url ?? '');
-        if (!match) return next();
-        const raw = await readBody(req);
-        let body: unknown = raw;
-        if ((req.headers['content-type'] ?? '').startsWith('application/json')) {
-          try {
-            body = raw ? JSON.parse(raw) : {};
-          } catch {
-            body = raw;
+      server.middlewares.use(
+        async (req: IncomingMessage, res: ServerResponse, next: () => void) => {
+          const match = /^\/api\/([a-z-]+)(?:\?.*)?$/.exec(req.url ?? '');
+          if (!match) return next();
+          const raw = await readBody(req);
+          let body: unknown = raw;
+          if ((req.headers['content-type'] ?? '').startsWith('application/json')) {
+            try {
+              body = raw ? JSON.parse(raw) : {};
+            } catch {
+              body = raw;
+            }
           }
-        }
-        const reply = (status: number, payload: unknown) => {
-          res.statusCode = status;
-          res.setHeader('Content-Type', 'application/json');
-          res.end(JSON.stringify(payload));
-        };
-        try {
-          const mod = (await server.ssrLoadModule(`/api/${match[1]}.ts`)) as { default?: Handler };
-          if (typeof mod.default !== 'function') return reply(404, { error: 'NOT_FOUND' });
-          let status = 200;
-          const adapter = {
-            status(code: number) {
-              status = code;
-              return adapter;
-            },
-            json(payload: unknown) {
-              reply(status, payload);
-            },
-            setHeader(name: string, value: string) {
-              res.setHeader(name, value);
-            },
+          const reply = (status: number, payload: unknown) => {
+            res.statusCode = status;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify(payload));
           };
-          await mod.default({ method: req.method, headers: req.headers, body, socket: { remoteAddress: req.socket.remoteAddress } }, adapter);
-        } catch {
-          reply(404, { error: 'NOT_FOUND' });
-        }
-      });
+          try {
+            const mod = (await server.ssrLoadModule(`/api/${match[1]}.ts`)) as {
+              default?: Handler;
+            };
+            if (typeof mod.default !== 'function') return reply(404, { error: 'NOT_FOUND' });
+            let status = 200;
+            const adapter = {
+              status(code: number) {
+                status = code;
+                return adapter;
+              },
+              json(payload: unknown) {
+                reply(status, payload);
+              },
+              setHeader(name: string, value: string) {
+                res.setHeader(name, value);
+              },
+            };
+            await mod.default(
+              {
+                method: req.method,
+                headers: req.headers,
+                body,
+                socket: { remoteAddress: req.socket.remoteAddress },
+              },
+              adapter,
+            );
+          } catch {
+            reply(404, { error: 'NOT_FOUND' });
+          }
+        },
+      );
     },
   };
 }

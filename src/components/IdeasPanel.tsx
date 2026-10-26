@@ -43,15 +43,24 @@ export default function IdeasPanel({ plan }: { plan: Plan }) {
           <h2 id="ideas-h" className="text-lg">
             Ideas for your celebration
           </h2>
-          <p className="hint">AI suggestions · no prices. Tuned to your occasion, style and guest count.</p>
+          <p className="hint">
+            AI suggestions · no prices. Tuned to your occasion, style and guest count.
+          </p>
         </div>
-        <button type="button" className="btn-secondary" onClick={() => void generate()} disabled={ai.state.status === 'loading'}>
+        <button
+          type="button"
+          className="btn-secondary"
+          onClick={() => void generate()}
+          disabled={ai.state.status === 'loading'}
+        >
           {data ? 'Regenerate ideas' : 'Get ideas'}
         </button>
       </div>
       <div aria-live="polite" className="mt-4">
         {ai.state.status === 'loading' && <AiLoading label="Thinking up ideas for your event…" />}
-        {ai.state.status === 'error' && <AiError message={ai.state.message} onRetry={() => void generate()} />}
+        {ai.state.status === 'error' && (
+          <AiError message={ai.state.message} onRetry={() => void generate()} />
+        )}
         {data && (
           <div className="space-y-4">
             <div>

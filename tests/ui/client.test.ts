@@ -1,16 +1,33 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ApiError, explainTradeoffs, extractQuote, parseIntake, suggestIdeas } from '../../src/lib/api';
+import {
+  ApiError,
+  explainTradeoffs,
+  extractQuote,
+  parseIntake,
+  suggestIdeas,
+} from '../../src/lib/api';
 import { formatDate, signedINR, describeChanges } from '../../src/lib/format';
 import { newId, todayISO } from '../../src/lib/today';
 import { jsonResponse } from './helpers';
 
-const intake = { occasion: null, totalBudget: null, guests: null, eventDate: null, vibe: null, nonNegotiables: [], city: null };
+const intake = {
+  occasion: null,
+  totalBudget: null,
+  guests: null,
+  eventDate: null,
+  vibe: null,
+  nonNegotiables: [],
+  city: null,
+};
 
 describe('api client', () => {
   it('posts JSON and validates the response', async () => {
     const f = vi.fn().mockResolvedValue(jsonResponse(intake));
     await expect(parseIntake('hello', f)).resolves.toEqual(intake);
-    expect(f).toHaveBeenCalledWith('/api/parse-intake', expect.objectContaining({ method: 'POST' }));
+    expect(f).toHaveBeenCalledWith(
+      '/api/parse-intake',
+      expect.objectContaining({ method: 'POST' }),
+    );
   });
 
   it.each([
@@ -28,17 +45,30 @@ describe('api client', () => {
   });
 
   it('maps network failure, bad JSON and bad shapes', async () => {
-    await expect(parseIntake('x', vi.fn().mockRejectedValue(new TypeError('offline')))).rejects.toMatchObject({ kind: 'network' });
-    await expect(parseIntake('x', vi.fn().mockResolvedValue(new Response('not json', { status: 200 })))).rejects.toMatchObject({ kind: 'ai_invalid' });
-    await expect(parseIntake('x', vi.fn().mockResolvedValue(jsonResponse({ occasion: 'rave' })))).rejects.toMatchObject({ kind: 'ai_invalid' });
-    await expect(parseIntake('x', vi.fn().mockResolvedValue(new Response('<html>', { status: 500 })))).rejects.toMatchObject({ kind: 'server' });
+    await expect(
+      parseIntake('x', vi.fn().mockRejectedValue(new TypeError('offline'))),
+    ).rejects.toMatchObject({ kind: 'network' });
+    await expect(
+      parseIntake('x', vi.fn().mockResolvedValue(new Response('not json', { status: 200 }))),
+    ).rejects.toMatchObject({ kind: 'ai_invalid' });
+    await expect(
+      parseIntake('x', vi.fn().mockResolvedValue(jsonResponse({ occasion: 'rave' }))),
+    ).rejects.toMatchObject({ kind: 'ai_invalid' });
+    await expect(
+      parseIntake('x', vi.fn().mockResolvedValue(new Response('<html>', { status: 500 }))),
+    ).rejects.toMatchObject({ kind: 'server' });
   });
 
   it('times out slow requests', async () => {
     vi.useFakeTimers();
-    const f = vi.fn((_url: string, init?: RequestInit) => new Promise<Response>((_, reject) => {
-      init?.signal?.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError')));
-    }));
+    const f = vi.fn(
+      (_url: string, init?: RequestInit) =>
+        new Promise<Response>((_, reject) => {
+          init?.signal?.addEventListener('abort', () =>
+            reject(new DOMException('aborted', 'AbortError')),
+          );
+        }),
+    );
     const pending = parseIntake('x', f as unknown as typeof fetch).catch((e: unknown) => e);
     await vi.advanceTimersByTimeAsync(20_001);
     expect(await pending).toMatchObject({ kind: 'timeout' });
@@ -47,11 +77,47 @@ describe('api client', () => {
 
   it('has friendly messages and wraps the other endpoints', async () => {
     expect(new ApiError('network').message).toMatch(/connection/);
-    const quote = { vendorName: null, category: 'misc', totalPrice: null, pricePerPlate: null, guestMinimum: null, overtimeFeePerHour: null, taxIncluded: null, advancePercent: null, inclusions: [], exclusions: [], cancellationPolicy: null };
-    await expect(extractQuote('q', 'misc', vi.fn().mockResolvedValue(jsonResponse(quote)))).resolves.toEqual(quote);
-    await expect(explainTradeoffs({ occasion: 'wedding', guests: 1, totalBudget: 1, overBy: 1, priorities: [], options: [{ id: 'a', title: 't', coversRupees: 1, summary: 's' }] }, vi.fn().mockResolvedValue(jsonResponse({ explanations: [] })))).resolves.toEqual({ explanations: [] });
-    const ideas = { themes: [{ title: 't', description: 'd' }], activities: ['a'], foodStyle: ['f'], personalTouches: [] };
-    await expect(suggestIdeas({ occasion: 'wedding', vibe: '', guests: 1, budgetTier: 'modest', nonNegotiables: [] }, vi.fn().mockResolvedValue(jsonResponse(ideas)))).resolves.toEqual(ideas);
+    const quote = {
+      vendorName: null,
+      category: 'misc',
+      totalPrice: null,
+      pricePerPlate: null,
+      guestMinimum: null,
+      overtimeFeePerHour: null,
+      taxIncluded: null,
+      advancePercent: null,
+      inclusions: [],
+      exclusions: [],
+      cancellationPolicy: null,
+    };
+    await expect(
+      extractQuote('q', 'misc', vi.fn().mockResolvedValue(jsonResponse(quote))),
+    ).resolves.toEqual(quote);
+    await expect(
+      explainTradeoffs(
+        {
+          occasion: 'wedding',
+          guests: 1,
+          totalBudget: 1,
+          overBy: 1,
+          priorities: [],
+          options: [{ id: 'a', title: 't', coversRupees: 1, summary: 's' }],
+        },
+        vi.fn().mockResolvedValue(jsonResponse({ explanations: [] })),
+      ),
+    ).resolves.toEqual({ explanations: [] });
+    const ideas = {
+      themes: [{ title: 't', description: 'd' }],
+      activities: ['a'],
+      foodStyle: ['f'],
+      personalTouches: [],
+    };
+    await expect(
+      suggestIdeas(
+        { occasion: 'wedding', vibe: '', guests: 1, budgetTier: 'modest', nonNegotiables: [] },
+        vi.fn().mockResolvedValue(jsonResponse(ideas)),
+      ),
+    ).resolves.toEqual(ideas);
   });
 });
 
@@ -61,9 +127,12 @@ describe('format helpers', () => {
     expect(formatDate('garbage')).toBe('garbage');
     expect(signedINR(40_000)).toBe('+₹40,000');
     expect(signedINR(-25_000)).toBe('−₹25,000');
-    expect(describeChanges('wedding', [{ category: 'photography', delta: 40_000 }, { category: 'decor', delta: -25_000 }])).toBe(
-      'Photography & video +₹40,000 · Decor −₹25,000',
-    );
+    expect(
+      describeChanges('wedding', [
+        { category: 'photography', delta: 40_000 },
+        { category: 'decor', delta: -25_000 },
+      ]),
+    ).toBe('Photography & video +₹40,000 · Decor −₹25,000');
   });
   it('today and ids', () => {
     expect(todayISO(new Date(2026, 0, 5))).toBe('2026-01-05');

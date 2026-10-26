@@ -9,10 +9,42 @@ export const OCCASION_LABELS: Record<Occasion, string> = {
 
 /** Allocation percentages (assumptions, documented in README). Each row sums to 100. */
 export const ALLOCATION_PRESETS: Record<Occasion, Record<Category, number>> = {
-  wedding: { venue: 20, catering: 35, decor: 12, photography: 10, entertainment: 8, misc: 5, contingency: 10 },
-  kids_birthday: { venue: 15, catering: 30, decor: 15, photography: 5, entertainment: 20, misc: 5, contingency: 10 },
-  milestone: { venue: 20, catering: 35, decor: 10, photography: 10, entertainment: 10, misc: 5, contingency: 10 },
-  community: { venue: 20, catering: 25, decor: 15, photography: 5, entertainment: 15, misc: 10, contingency: 10 },
+  wedding: {
+    venue: 20,
+    catering: 35,
+    decor: 12,
+    photography: 10,
+    entertainment: 8,
+    misc: 5,
+    contingency: 10,
+  },
+  kids_birthday: {
+    venue: 15,
+    catering: 30,
+    decor: 15,
+    photography: 5,
+    entertainment: 20,
+    misc: 5,
+    contingency: 10,
+  },
+  milestone: {
+    venue: 20,
+    catering: 35,
+    decor: 10,
+    photography: 10,
+    entertainment: 10,
+    misc: 5,
+    contingency: 10,
+  },
+  community: {
+    venue: 20,
+    catering: 25,
+    decor: 15,
+    photography: 5,
+    entertainment: 15,
+    misc: 10,
+    contingency: 10,
+  },
 };
 
 const BASE_LABELS: Record<Category, string> = {
@@ -63,13 +95,18 @@ export const TASK_TEMPLATES: Record<Occasion, Template[]> = {
     t('rsvp', 'Collect RSVPs, travel and stay needs', 'misc', 21, 14, ['invites-send']),
     t('final-count', 'Give final guest count to caterer', 'catering', 10, 2, ['rsvp', 'tasting']),
     t('walkthrough', 'Venue and decor walkthrough', 'decor', 7, 1, ['decor']),
-    t('run-sheet', 'Prepare day-of run sheet and vendor contacts', 'misc', 3, 1, ['final-count', 'walkthrough']),
+    t('run-sheet', 'Prepare day-of run sheet and vendor contacts', 'misc', 3, 1, [
+      'final-count',
+      'walkthrough',
+    ]),
     t('balances', 'Settle vendor balances and tip envelopes', 'misc', 1, 1, ['run-sheet']),
   ],
   kids_birthday: [
     t('venue', 'Book party hall or plan the home setup', 'venue', 45, 3),
     t('theme', 'Pick theme and guest list', 'decor', 42, 3),
-    t('caterer', 'Order cake and kid-friendly menu (check allergies)', 'catering', 30, 3, ['venue']),
+    t('caterer', 'Order cake and kid-friendly menu (check allergies)', 'catering', 30, 3, [
+      'venue',
+    ]),
     t('games', 'Plan games and book an entertainer', 'entertainment', 28, 5, ['theme']),
     t('decor', 'Order decor, balloons and backdrop', 'decor', 21, 5, ['theme']),
     t('invites', 'Send invitations to parents', 'misc', 21, 3, ['venue', 'theme']),
@@ -77,7 +114,10 @@ export const TASK_TEMPLATES: Record<Occasion, Template[]> = {
     t('photo', 'Arrange a photographer or helper for photos', 'photography', 10, 2, ['venue']),
     t('rsvp', 'Confirm RSVPs and allergies', 'misc', 7, 4, ['invites']),
     t('safety', 'Safety check: space, snacks and supervision plan', 'venue', 5, 1, ['venue']),
-    t('final-count', 'Final headcount to caterer and cake order', 'catering', 4, 1, ['rsvp', 'caterer']),
+    t('final-count', 'Final headcount to caterer and cake order', 'catering', 4, 1, [
+      'rsvp',
+      'caterer',
+    ]),
     t('run-sheet', 'Party run sheet and helper roster', 'misc', 2, 1, ['games', 'final-count']),
   ],
   milestone: [
@@ -97,16 +137,30 @@ export const TASK_TEMPLATES: Record<Occasion, Template[]> = {
   ],
   community: [
     t('committee', 'Form organising committee and fix budget owners', 'misc', 110, 7),
-    t('permits', 'Apply for permissions (police, municipal, loudspeaker)', 'misc', 90, 14, ['committee']),
+    t('permits', 'Apply for permissions (police, municipal, loudspeaker)', 'misc', 90, 14, [
+      'committee',
+    ]),
     t('venue', 'Book ground or hall', 'venue', 95, 7, ['committee']),
     t('caterer', 'Book caterer or plan the prasad/langar kitchen', 'catering', 60, 7, ['venue']),
     t('decor', 'Plan decor, pandal and stage', 'decor', 50, 7, ['venue', 'permits']),
-    t('entertainment', 'Book performers, sound and lights', 'entertainment', 45, 5, ['venue', 'permits']),
+    t('entertainment', 'Book performers, sound and lights', 'entertainment', 45, 5, [
+      'venue',
+      'permits',
+    ]),
     t('volunteers', 'Build volunteer roster and roles', 'misc', 40, 7, ['committee']),
     t('safety', 'Crowd, fire and first-aid safety plan', 'misc', 30, 5, ['permits', 'volunteers']),
     t('publicity', 'Publicity: posters and WhatsApp groups', 'misc', 30, 7, ['venue']),
-    t('headcount', 'Estimate headcount and food quantity', 'catering', 7, 2, ['caterer', 'publicity']),
-    t('walkthrough', 'Walkthrough: layout, power backup and parking', 'venue', 4, 1, ['decor', 'safety']),
-    t('briefing', 'Final volunteer briefing and run sheet', 'misc', 1, 1, ['headcount', 'walkthrough']),
+    t('headcount', 'Estimate headcount and food quantity', 'catering', 7, 2, [
+      'caterer',
+      'publicity',
+    ]),
+    t('walkthrough', 'Walkthrough: layout, power backup and parking', 'venue', 4, 1, [
+      'decor',
+      'safety',
+    ]),
+    t('briefing', 'Final volunteer briefing and run sheet', 'misc', 1, 1, [
+      'headcount',
+      'walkthrough',
+    ]),
   ],
 };

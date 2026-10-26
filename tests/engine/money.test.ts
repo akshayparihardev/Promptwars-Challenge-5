@@ -20,12 +20,20 @@ describe('parseINR', () => {
     expect(parseINR(input)).toBe(expected);
   });
 
-  it.each(['', 'abc', '8 lakh crore', '-5 lakh', '0', '0 lakh', '1e9', '8..5', '₹', '999999999999999999'])(
-    'rejects %j',
-    (input) => {
-      expect(parseINR(input)).toBeNull();
-    },
-  );
+  it.each([
+    '',
+    'abc',
+    '8 lakh crore',
+    '-5 lakh',
+    '0',
+    '0 lakh',
+    '1e9',
+    '8..5',
+    '₹',
+    '999999999999999999',
+  ])('rejects %j', (input) => {
+    expect(parseINR(input)).toBeNull();
+  });
 
   it('rejects non-strings', () => {
     expect(parseINR(undefined as unknown as string)).toBeNull();

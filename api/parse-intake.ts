@@ -13,6 +13,9 @@ export default createHandler({
       user: `Today's date: ${today}\n${wrapUserText(text)}`,
       schema: IntakeParseSchema,
     });
-    return { ...result, eventDate: result.eventDate && isValidISO(result.eventDate) ? result.eventDate : null };
+    return {
+      ...result,
+      eventDate: result.eventDate && isValidISO(result.eventDate) ? result.eventDate : null,
+    };
   },
 });

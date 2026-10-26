@@ -23,13 +23,23 @@ function Flag({ icon, text }: { icon: string; text: string }) {
   );
 }
 
-export function TaskRow({ task, occasion, titles, pushedBy, onStatus, onDelay, onAssignee }: TaskRowProps) {
+export function TaskRow({
+  task,
+  occasion,
+  titles,
+  pushedBy,
+  onStatus,
+  onDelay,
+  onAssignee,
+}: TaskRowProps) {
   const [editing, setEditing] = useState(false);
   const [days, setDays] = useState(String(task.delayDays ?? 7));
   const done = task.status === 'done';
   const delayed = task.status === 'delayed';
   const shifted = task.effectiveDate !== task.dueDate;
-  const problem = !done && (task.flags.atRisk || task.flags.overdue || task.flags.impossible || task.flags.tooLate);
+  const problem =
+    !done &&
+    (task.flags.atRisk || task.flags.overdue || task.flags.impossible || task.flags.tooLate);
   const dayCount = Number(days);
   const daysValid = Number.isInteger(dayCount) && dayCount >= 1 && dayCount <= 365;
 
@@ -41,7 +51,9 @@ export function TaskRow({ task, occasion, titles, pushedBy, onStatus, onDelay, o
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h4 className={`text-base font-semibold ${done ? 'text-ink-soft line-through' : ''}`}>{task.title}</h4>
+          <h4 className={`text-base font-semibold ${done ? 'text-ink-soft line-through' : ''}`}>
+            {task.title}
+          </h4>
           <p className="text-sm text-ink-soft">
             {categoryLabel(occasion, task.category)} · Due {formatDate(task.dueDate)}
             {shifted && !done && <> · Now expected {formatDate(task.effectiveDate)}</>}
@@ -56,7 +68,9 @@ export function TaskRow({ task, occasion, titles, pushedBy, onStatus, onDelay, o
         <div className="mt-2 flex flex-wrap gap-2">
           {pushedBy && <Flag icon="⚠" text={`Pushed by delay in "${pushedBy}"`} />}
           {task.flags.overdue && <Flag icon="⏰" text="Overdue" />}
-          {task.flags.tooLate && !task.flags.overdue && <Flag icon="⏰" text="Due date already passed" />}
+          {task.flags.tooLate && !task.flags.overdue && (
+            <Flag icon="⏰" text="Due date already passed" />
+          )}
           {task.flags.atRisk && !pushedBy && <Flag icon="⚠" text="At risk" />}
           {task.flags.impossible && <Flag icon="⛔" text="Cannot finish before the event" />}
         </div>
@@ -66,7 +80,10 @@ export function TaskRow({ task, occasion, titles, pushedBy, onStatus, onDelay, o
         <p className="mt-2 flex flex-wrap items-center gap-2 text-sm">
           <span className="text-ink-soft">Needs:</span>
           {task.dependsOn.map((d) => (
-            <span key={d} className="rounded-full border border-line bg-paper px-2.5 py-0.5 text-xs">
+            <span
+              key={d}
+              className="rounded-full border border-line bg-paper px-2.5 py-0.5 text-xs"
+            >
               {titles[d] ?? d}
             </span>
           ))}
@@ -87,7 +104,12 @@ export function TaskRow({ task, occasion, titles, pushedBy, onStatus, onDelay, o
           )}
         </Field>
         <div className="flex flex-wrap gap-2">
-          <button type="button" className="btn-secondary" aria-pressed={done} onClick={() => onStatus(task.id, done ? 'todo' : 'done')}>
+          <button
+            type="button"
+            className="btn-secondary"
+            aria-pressed={done}
+            onClick={() => onStatus(task.id, done ? 'todo' : 'done')}
+          >
             {done ? 'Mark as to do' : 'Done'}
           </button>
           {!done && !editing && (
@@ -101,7 +123,17 @@ export function TaskRow({ task, occasion, titles, pushedBy, onStatus, onDelay, o
       {editing && !done && (
         <div className="mt-3 flex flex-wrap items-end gap-3 rounded-xl border border-line bg-paper p-3">
           <Field label="Delayed by (days)" error={daysValid ? null : 'Enter 1 to 365 days.'}>
-            {(p) => <input {...p} className="input w-32" type="number" min={1} max={365} value={days} onChange={(e) => setDays(e.target.value)} />}
+            {(p) => (
+              <input
+                {...p}
+                className="input w-32"
+                type="number"
+                min={1}
+                max={365}
+                value={days}
+                onChange={(e) => setDays(e.target.value)}
+              />
+            )}
           </Field>
           <button
             type="button"

@@ -15,7 +15,13 @@ import {
 import { OCCASIONS, type Task } from '../../src/schemas';
 import { makePlan, EVENT, TODAY } from '../helpers';
 
-const task = (id: string, lead: number, dur: number, deps: string[] = [], over: Partial<Task> = {}): Task => ({
+const task = (
+  id: string,
+  lead: number,
+  dur: number,
+  deps: string[] = [],
+  over: Partial<Task> = {},
+): Task => ({
   id,
   title: id,
   category: 'misc',
@@ -59,7 +65,9 @@ describe('templates', () => {
 
 describe('detectCycles', () => {
   it('finds a cycle and returns [] otherwise', () => {
-    expect(detectCycles([task('a', 10, 1, ['b']), task('b', 20, 1, ['a'])]).length).toBeGreaterThan(0);
+    expect(detectCycles([task('a', 10, 1, ['b']), task('b', 20, 1, ['a'])]).length).toBeGreaterThan(
+      0,
+    );
     expect(detectCycles([task('a', 10, 1, ['a'])]).length).toBeGreaterThan(0);
     expect(detectCycles([task('a', 10, 1), task('b', 5, 1, ['a'])])).toEqual([]);
     expect(detectCycles([task('a', 10, 1, ['ghost'])])).toEqual([]);
@@ -67,28 +75,39 @@ describe('detectCycles', () => {
   });
 
   it('buildSchedule throws typed errors', () => {
-    expect(() => buildSchedule([task('a', 10, 1, ['b']), task('b', 20, 1, ['a'])], EVENT, TODAY)).toThrow(ScheduleError);
+    expect(() =>
+      buildSchedule([task('a', 10, 1, ['b']), task('b', 20, 1, ['a'])], EVENT, TODAY),
+    ).toThrow(ScheduleError);
     try {
       buildSchedule([task('a', 10, 1, ['b']), task('b', 20, 1, ['a'])], EVENT, TODAY);
     } catch (e) {
       expect(e).toBeInstanceOf(ScheduleError);
       expect((e as ScheduleError).kind).toBe('cycle');
     }
-    expect(() => buildSchedule([task('a', 10, 1, ['ghost'])], EVENT, TODAY)).toThrow(/Unknown dependency/);
+    expect(() => buildSchedule([task('a', 10, 1, ['ghost'])], EVENT, TODAY)).toThrow(
+      /Unknown dependency/,
+    );
     expect(() => propagateDelay([task('a', 10, 1, ['ghost'])], 'a', 3)).toThrow(ScheduleError);
   });
 });
 
 describe('buildSchedule', () => {
   it('computes due dates from lead days and orders dependencies first', () => {
-    const s = buildSchedule([task('b', 10, 2, ['a']), task('a', 30, 1)], '2026-07-15', '2026-01-01');
+    const s = buildSchedule(
+      [task('b', 10, 2, ['a']), task('a', 30, 1)],
+      '2026-07-15',
+      '2026-01-01',
+    );
     expect(s.map((t) => t.id)).toEqual(['a', 'b']);
     expect(s[0]?.dueDate).toBe('2026-06-15');
     expect(s[1]?.dueDate).toBe('2026-07-05');
   });
 
   it('a delay pushes dependents and flags them at risk', () => {
-    const tasks = [task('a', 30, 1, [], { status: 'delayed', delayDays: 25 }), task('b', 10, 2, ['a'])];
+    const tasks = [
+      task('a', 30, 1, [], { status: 'delayed', delayDays: 25 }),
+      task('b', 10, 2, ['a']),
+    ];
     const s = buildSchedule(tasks, '2026-07-15', '2026-01-01');
     const b = s.find((t) => t.id === 'b');
     expect(b?.effectiveDate).toBe('2026-07-12');
@@ -97,7 +116,11 @@ describe('buildSchedule', () => {
   });
 
   it('flags impossible when a delay runs past the event', () => {
-    const s = buildSchedule([task('a', 5, 1, [], { status: 'delayed', delayDays: 30 })], '2026-07-15', '2026-01-01');
+    const s = buildSchedule(
+      [task('a', 5, 1, [], { status: 'delayed', delayDays: 30 })],
+      '2026-07-15',
+      '2026-01-01',
+    );
     expect(s[0]?.flags.impossible).toBe(true);
   });
 
@@ -105,13 +128,26 @@ describe('buildSchedule', () => {
     const tasks = [task('a', 30, 1), task('b', 30, 1, [], { status: 'done' })];
     const s = buildSchedule(tasks, '2026-07-15', '2026-07-10');
     expect(s[0]?.flags).toMatchObject({ overdue: true, tooLate: true });
-    expect(s[1]?.flags).toEqual({ overdue: false, atRisk: false, impossible: false, tooLate: false });
+    expect(s[1]?.flags).toEqual({
+      overdue: false,
+      atRisk: false,
+      impossible: false,
+      tooLate: false,
+    });
   });
 
   it('handles an event date today or in the past', () => {
-    const today = buildSchedule(TASK_TEMPLATES.kids_birthday.map((t) => ({ ...t, status: 'todo' as const })), '2026-01-01', '2026-01-01');
+    const today = buildSchedule(
+      TASK_TEMPLATES.kids_birthday.map((t) => ({ ...t, status: 'todo' as const })),
+      '2026-01-01',
+      '2026-01-01',
+    );
     expect(today.every((t) => t.flags.tooLate || t.leadDays === 0)).toBe(true);
-    const past = buildSchedule(TASK_TEMPLATES.kids_birthday.map((t) => ({ ...t, status: 'todo' as const })), '2025-01-01', '2026-01-01');
+    const past = buildSchedule(
+      TASK_TEMPLATES.kids_birthday.map((t) => ({ ...t, status: 'todo' as const })),
+      '2025-01-01',
+      '2026-01-01',
+    );
     expect(past.every((t) => t.flags.overdue)).toBe(true);
   });
 
@@ -122,7 +158,12 @@ describe('buildSchedule', () => {
 
 describe('propagateDelay', () => {
   it('returns downstream tasks only', () => {
-    const tasks = [task('a', 40, 1), task('b', 30, 2, ['a']), task('c', 20, 1, ['b']), task('d', 25, 1)];
+    const tasks = [
+      task('a', 40, 1),
+      task('b', 30, 2, ['a']),
+      task('c', 20, 1, ['b']),
+      task('d', 25, 1),
+    ];
     const affected = propagateDelay(tasks, 'a', 20);
     expect(affected).toEqual(['b', 'c']);
     expect(propagateDelay(tasks, 'a', 0)).toEqual([]);

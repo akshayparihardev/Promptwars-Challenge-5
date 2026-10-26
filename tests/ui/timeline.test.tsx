@@ -26,7 +26,9 @@ describe('timeline', () => {
     expect(within(venue).getByText('Delayed 40 days')).toBeInTheDocument();
     const caterer = screen.getByTestId('task-caterer');
     expect(caterer).toHaveAttribute('data-affected', 'true');
-    expect(within(caterer).getByText(/Pushed by delay in "Book venue and fix muhurat date"/)).toBeInTheDocument();
+    expect(
+      within(caterer).getByText(/Pushed by delay in "Book venue and fix muhurat date"/),
+    ).toBeInTheDocument();
     expect(within(caterer).getByText(/Now expected/)).toBeInTheDocument();
     expect(screen.getByTestId('task-outfits')).not.toHaveAttribute('data-affected');
     expect(screen.getByText(/tasks need attention/)).toBeInTheDocument();

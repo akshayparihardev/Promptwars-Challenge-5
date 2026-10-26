@@ -26,12 +26,19 @@ export function BudgetTab({ plan, dispatch }: { plan: Plan; dispatch: (action: A
   const [budgetText, setBudgetText] = useSyncedText(String(plan.totalBudget));
   const [perPlateText, setPerPlateText] = useSyncedText(String(Math.round(plan.perPlate)));
 
-  const onChange = useCallback((category: Category, amount: number) => dispatch({ type: 'setAmount', category, amount }), [dispatch]);
-  const onToggleLock = useCallback((category: Category) => dispatch({ type: 'toggleLock', category }), [dispatch]);
+  const onChange = useCallback(
+    (category: Category, amount: number) => dispatch({ type: 'setAmount', category, amount }),
+    [dispatch],
+  );
+  const onToggleLock = useCallback(
+    (category: Category) => dispatch({ type: 'toggleLock', category }),
+    [dispatch],
+  );
 
   function commitGuests(value: string) {
     const n = Number(value);
-    if (Number.isInteger(n) && n >= 1 && n <= MAX_GUESTS) dispatch({ type: 'setGuests', guests: n });
+    if (Number.isInteger(n) && n >= 1 && n <= MAX_GUESTS)
+      dispatch({ type: 'setGuests', guests: n });
     else setGuestsText(String(plan.guests));
   }
   function commitBudget() {
@@ -77,7 +84,8 @@ export function BudgetTab({ plan, dispatch }: { plan: Plan; dispatch: (action: A
               Over budget by {formatINR(status.overBy)} ({status.overByPct}% of your total)
             </p>
             <p className="mt-1 text-sm">
-              Your plan needs more than you have set aside. Nothing was changed automatically. Choose an option below.
+              Your plan needs more than you have set aside. Nothing was changed automatically.
+              Choose an option below.
             </p>
           </div>
         )}
@@ -101,7 +109,8 @@ export function BudgetTab({ plan, dispatch }: { plan: Plan; dispatch: (action: A
                 onChange={(e) => {
                   setGuestsText(e.target.value);
                   const n = Number(e.target.value);
-                  if (Number.isInteger(n) && n >= 1 && n <= MAX_GUESTS) dispatch({ type: 'setGuests', guests: n });
+                  if (Number.isInteger(n) && n >= 1 && n <= MAX_GUESTS)
+                    dispatch({ type: 'setGuests', guests: n });
                 }}
                 onBlur={(e) => commitGuests(e.target.value)}
               />
@@ -109,12 +118,29 @@ export function BudgetTab({ plan, dispatch }: { plan: Plan; dispatch: (action: A
           </Field>
           <Field label="Total budget (₹)" hint="Try 8 lakh or 8,00,000">
             {(p) => (
-              <input {...p} className="input" value={budgetText} onChange={(e) => setBudgetText(e.target.value)} onBlur={commitBudget} onKeyDown={(e) => e.key === 'Enter' && commitBudget()} />
+              <input
+                {...p}
+                className="input"
+                value={budgetText}
+                onChange={(e) => setBudgetText(e.target.value)}
+                onBlur={commitBudget}
+                onKeyDown={(e) => e.key === 'Enter' && commitBudget()}
+              />
             )}
           </Field>
-          <Field label="Catering cost per plate (₹)" hint="Starts from your catering share. Edit if you know better.">
+          <Field
+            label="Catering cost per plate (₹)"
+            hint="Starts from your catering share. Edit if you know better."
+          >
             {(p) => (
-              <input {...p} className="input" value={perPlateText} onChange={(e) => setPerPlateText(e.target.value)} onBlur={commitPerPlate} onKeyDown={(e) => e.key === 'Enter' && commitPerPlate()} />
+              <input
+                {...p}
+                className="input"
+                value={perPlateText}
+                onChange={(e) => setPerPlateText(e.target.value)}
+                onBlur={commitPerPlate}
+                onKeyDown={(e) => e.key === 'Enter' && commitPerPlate()}
+              />
             )}
           </Field>
         </div>
@@ -132,14 +158,22 @@ export function BudgetTab({ plan, dispatch }: { plan: Plan; dispatch: (action: A
         </p>
       </section>
 
-      {over && <TradeoffPanel plan={plan} options={options} overBy={status.overBy} onApply={(option) => dispatch({ type: 'applyOption', option })} />}
+      {over && (
+        <TradeoffPanel
+          plan={plan}
+          options={options}
+          overBy={status.overBy}
+          onApply={(option) => dispatch({ type: 'applyOption', option })}
+        />
+      )}
 
       <section aria-labelledby="cats-h">
         <h2 id="cats-h" className="mb-3 text-lg">
           Where the money goes
         </h2>
         <p className="mb-4 text-sm text-ink-soft">
-          Move one slider and the others adjust to keep the total the same. Lock a category to protect it.
+          Move one slider and the others adjust to keep the total the same. Lock a category to
+          protect it.
         </p>
         <div className="grid gap-4 md:grid-cols-2">
           {CATEGORIES.map((c) => {
@@ -161,7 +195,8 @@ export function BudgetTab({ plan, dispatch }: { plan: Plan; dispatch: (action: A
           })}
         </div>
         <p className="mt-4 text-xs text-ink-soft">
-          Splits start from typical presets for a {OCCASION_LABELS[plan.occasion].toLowerCase()} and stay estimates until you accept a vendor quote.
+          Splits start from typical presets for a {OCCASION_LABELS[plan.occasion].toLowerCase()} and
+          stay estimates until you accept a vendor quote.
         </p>
       </section>
     </div>

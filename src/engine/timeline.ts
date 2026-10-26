@@ -5,7 +5,11 @@ export class ScheduleError extends Error {
   readonly kind: 'cycle' | 'unknown_dependency';
   readonly ids: string[];
   constructor(kind: 'cycle' | 'unknown_dependency', ids: string[]) {
-    super(kind === 'cycle' ? `Circular task dependency: ${ids.join(' -> ')}` : `Unknown dependency: ${ids.join(', ')}`);
+    super(
+      kind === 'cycle'
+        ? `Circular task dependency: ${ids.join(' -> ')}`
+        : `Unknown dependency: ${ids.join(', ')}`,
+    );
     this.name = 'ScheduleError';
     this.kind = kind;
     this.ids = ids;
@@ -84,7 +88,11 @@ export interface ScheduledTask extends Task {
   flags: { overdue: boolean; atRisk: boolean; impossible: boolean; tooLate: boolean };
 }
 
-export function buildSchedule(tasks: readonly Task[], eventDate: string, today: string): ScheduledTask[] {
+export function buildSchedule(
+  tasks: readonly Task[],
+  eventDate: string,
+  today: string,
+): ScheduledTask[] {
   const ordered = topoOrder(tasks);
   const eff = effectiveOffsets(ordered);
   return ordered.map((t) => {
@@ -106,14 +114,24 @@ export function buildSchedule(tasks: readonly Task[], eventDate: string, today: 
 }
 
 /** Ids of downstream tasks whose effective date moves if `taskId` slips by `delayDays`. */
-export function propagateDelay(tasks: readonly Task[], taskId: string, delayDays: number): string[] {
+export function propagateDelay(
+  tasks: readonly Task[],
+  taskId: string,
+  delayDays: number,
+): string[] {
   const ordered = topoOrder(tasks);
   const before = effectiveOffsets(ordered);
   const days = Math.max(0, Math.floor(delayDays));
   const after = effectiveOffsets(
-    ordered.map((t) => (t.id === taskId ? { ...t, status: t.status === 'done' ? 'todo' : t.status, delayDays: days } : t)),
+    ordered.map((t) =>
+      t.id === taskId
+        ? { ...t, status: t.status === 'done' ? 'todo' : t.status, delayDays: days }
+        : t,
+    ),
   );
-  return ordered.filter((t) => t.id !== taskId && after.get(t.id) !== before.get(t.id)).map((t) => t.id);
+  return ordered
+    .filter((t) => t.id !== taskId && after.get(t.id) !== before.get(t.id))
+    .map((t) => t.id);
 }
 
 /** Maps each downstream task id to the id of the delayed task that pushes it. */
@@ -122,7 +140,9 @@ export function affectedByDelays(tasks: readonly Task[]): Record<string, string>
   for (const delayed of tasks) {
     const days = delayed.delayDays ?? 0;
     if (delayed.status !== 'delayed' || days <= 0) continue;
-    const baseline = tasks.map((t) => (t.id === delayed.id ? { ...t, status: 'todo' as const, delayDays: 0 } : t));
+    const baseline = tasks.map((t) =>
+      t.id === delayed.id ? { ...t, status: 'todo' as const, delayDays: 0 } : t,
+    );
     for (const id of propagateDelay(baseline, delayed.id, days)) out[id] ??= delayed.id;
   }
   return out;
@@ -145,5 +165,7 @@ const PHASES: { min: number; phase: Phase }[] = [
 /** Chunks tasks into a few phases by how many days before the event they are due. */
 export function phaseFor(leadDays: number): Phase {
   const found = PHASES.find((p) => leadDays >= p.min);
-  return (found ?? PHASES[PHASES.length - 1])?.phase ?? { key: 'p5', label: 'Final week', order: 5 };
+  return (
+    (found ?? PHASES[PHASES.length - 1])?.phase ?? { key: 'p5', label: 'Final week', order: 5 }
+  );
 }

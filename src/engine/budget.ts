@@ -36,14 +36,20 @@ function toList(allocation: Allocation): number[] {
  * Preset split with priority categories weighted x1.25, non-contingency renormalised to 90%,
  * contingency fixed at 10%. Integer rupees; parts always sum to `total`.
  */
-export function allocate(total: number, occasion: Occasion, priorities: readonly Category[]): Allocation {
+export function allocate(
+  total: number,
+  occasion: Occasion,
+  priorities: readonly Category[],
+): Allocation {
   const preset = ALLOCATION_PRESETS[occasion];
   const weights = CATEGORIES.map((c) =>
     c === 'contingency' ? 0 : preset[c] * (priorities.includes(c) ? PRIORITY_WEIGHT : 1),
   );
   const weightSum = sum(weights);
   const percents = CATEGORIES.map((c, i) =>
-    c === 'contingency' ? CONTINGENCY_PCT : ((weights[i] ?? 0) / weightSum) * (100 - CONTINGENCY_PCT),
+    c === 'contingency'
+      ? CONTINGENCY_PCT
+      : ((weights[i] ?? 0) / weightSum) * (100 - CONTINGENCY_PCT),
   );
   return fromList(largestRemainderRound(percents, total));
 }
@@ -92,10 +98,18 @@ export function redistribute(
       if (c) next[c] += add;
     });
   }
-  const changes: BudgetChange[] = CATEGORIES.map((c) => ({ category: c, delta: next[c] - allocation[c] })).filter(
-    (ch) => ch.delta !== 0,
-  );
-  return { allocation: next, capped: applied !== requested, maxAllowed, minAllowed, applied, changes };
+  const changes: BudgetChange[] = CATEGORIES.map((c) => ({
+    category: c,
+    delta: next[c] - allocation[c],
+  })).filter((ch) => ch.delta !== 0);
+  return {
+    allocation: next,
+    capped: applied !== requested,
+    maxAllowed,
+    minAllowed,
+    applied,
+    changes,
+  };
 }
 
 /** Re-scales every category to a new total budget, keeping the current proportions. */
@@ -150,7 +164,12 @@ export function categoryNeeds(plan: Plan): CategoryNeed[] {
     } else {
       amount = plan.allocation[category];
     }
-    return { category, amount, verified, shortfall: Math.max(0, amount - plan.allocation[category]) };
+    return {
+      category,
+      amount,
+      verified,
+      shortfall: Math.max(0, amount - plan.allocation[category]),
+    };
   });
 }
 
@@ -169,6 +188,11 @@ export function budgetStatus(plan: Plan): BudgetStatus {
   const committed = sum(needs.filter((n) => n.verified).map((n) => n.amount));
   const estimated = sum(needs.filter((n) => !n.verified).map((n) => n.amount));
   const overBy = sum(needs.map((n) => n.shortfall));
-  const overByPct = plan.totalBudget > 0 ? Math.round((overBy / plan.totalBudget) * 1000) / 10 : overBy > 0 ? 100 : 0;
+  const overByPct =
+    plan.totalBudget > 0
+      ? Math.round((overBy / plan.totalBudget) * 1000) / 10
+      : overBy > 0
+        ? 100
+        : 0;
   return { total: plan.totalBudget, committed, estimated, overBy, overByPct };
 }

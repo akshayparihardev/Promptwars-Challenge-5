@@ -21,7 +21,9 @@ import { parseIntake } from '../lib/api';
 import { useAiCall } from '../lib/useAiCall';
 import { AiError, AiLoading, Field } from './ui';
 
-const PRIORITY_CATEGORIES = CATEGORIES.filter((c): c is Exclude<Category, 'contingency'> => c !== 'contingency');
+const PRIORITY_CATEGORIES = CATEGORIES.filter(
+  (c): c is Exclude<Category, 'contingency'> => c !== 'contingency',
+);
 
 interface Errors {
   budget?: string;
@@ -57,7 +59,9 @@ export function PlanSetup({
         ? `Reads as ${formatINR(budget)} (${toLakh(budget)})`
         : undefined;
   const budgetError =
-    budgetText.trim() !== '' && budget === null ? "Couldn't read that amount. Try 8 lakh or 8,00,000." : errors.budget;
+    budgetText.trim() !== '' && budget === null
+      ? "Couldn't read that amount. Try 8 lakh or 8,00,000."
+      : errors.budget;
 
   async function fillFromDescription() {
     setFilled(null);
@@ -96,7 +100,9 @@ export function PlanSetup({
   }
 
   function togglePriority(category: Category) {
-    setPriorities((current) => (current.includes(category) ? current.filter((c) => c !== category) : [...current, category]));
+    setPriorities((current) =>
+      current.includes(category) ? current.filter((c) => c !== category) : [...current, category],
+    );
   }
 
   function submit(event: FormEvent) {
@@ -120,7 +126,9 @@ export function PlanSetup({
       priorities,
     });
     if (!parsed.success) {
-      setErrors({ budget: 'Those details could not be used. Please check the budget and guest count.' });
+      setErrors({
+        budget: 'Those details could not be used. Please check the budget and guest count.',
+      });
       return;
     }
     onCreate(createPlan(parsed.data));
@@ -132,7 +140,9 @@ export function PlanSetup({
         <h2 id="describe-h" className="text-lg">
           Describe your event
         </h2>
-        <p className="hint">Write it the way you would tell a friend. We will fill the form for you.</p>
+        <p className="hint">
+          Write it the way you would tell a friend. We will fill the form for you.
+        </p>
         <label htmlFor="describe" className="sr-only">
           Event description
         </label>
@@ -153,12 +163,18 @@ export function PlanSetup({
           >
             Fill form from description
           </button>
-          <span className="text-xs text-ink-soft">{description.length}/1000 · AI suggestion, always check it</span>
+          <span className="text-xs text-ink-soft">
+            {description.length}/1000 · AI suggestion, always check it
+          </span>
         </div>
         <div className="mt-3" aria-live="polite">
           {ai.state.status === 'loading' && <AiLoading label="Reading your description…" />}
-          {ai.state.status === 'error' && <AiError message={ai.state.message} onRetry={() => void fillFromDescription()} />}
-          {filled && ai.state.status === 'done' && <p className="text-sm font-medium text-accent">{filled}</p>}
+          {ai.state.status === 'error' && (
+            <AiError message={ai.state.message} onRetry={() => void fillFromDescription()} />
+          )}
+          {filled && ai.state.status === 'done' && (
+            <p className="text-sm font-medium text-accent">{filled}</p>
+          )}
         </div>
       </section>
 
@@ -168,7 +184,12 @@ export function PlanSetup({
         </h2>
         <Field label="Occasion">
           {(p) => (
-            <select {...p} className="input" value={occasion} onChange={(e) => setOccasion(e.target.value as Occasion)}>
+            <select
+              {...p}
+              className="input"
+              value={occasion}
+              onChange={(e) => setOccasion(e.target.value as Occasion)}
+            >
               {OCCASIONS.map((o) => (
                 <option key={o} value={o}>
                   {OCCASION_LABELS[o]}
@@ -179,32 +200,77 @@ export function PlanSetup({
         </Field>
         <Field label="Total budget (₹)" hint={budgetHint} error={budgetError}>
           {(p) => (
-            <input {...p} className="input" inputMode="text" autoComplete="off" value={budgetText} onChange={(e) => setBudgetText(e.target.value)} />
+            <input
+              {...p}
+              className="input"
+              inputMode="text"
+              autoComplete="off"
+              value={budgetText}
+              onChange={(e) => setBudgetText(e.target.value)}
+            />
           )}
         </Field>
         <div className="grid gap-5 sm:grid-cols-2">
           <Field label="Number of guests" error={errors.guests}>
             {(p) => (
-              <input {...p} className="input" type="number" inputMode="numeric" min={1} max={MAX_GUESTS} value={guestsText} onChange={(e) => setGuestsText(e.target.value)} />
+              <input
+                {...p}
+                className="input"
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={MAX_GUESTS}
+                value={guestsText}
+                onChange={(e) => setGuestsText(e.target.value)}
+              />
             )}
           </Field>
           <Field label="Event date" error={errors.date}>
-            {(p) => <input {...p} className="input" type="date" min={today} value={date} onChange={(e) => setDate(e.target.value)} />}
+            {(p) => (
+              <input
+                {...p}
+                className="input"
+                type="date"
+                min={today}
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+              />
+            )}
           </Field>
         </div>
 
         <details className="rounded-xl border border-line p-4">
-          <summary className="min-h-11 cursor-pointer font-medium">Make it yours (optional)</summary>
+          <summary className="min-h-11 cursor-pointer font-medium">
+            Make it yours (optional)
+          </summary>
           <div className="mt-4 space-y-5">
             <Field label="Style or vibe" hint="For example: traditional, minimal, fun for kids.">
-              {(p) => <input {...p} className="input" maxLength={200} value={vibe} onChange={(e) => setVibe(e.target.value)} />}
+              {(p) => (
+                <input
+                  {...p}
+                  className="input"
+                  maxLength={200}
+                  value={vibe}
+                  onChange={(e) => setVibe(e.target.value)}
+                />
+              )}
             </Field>
             <fieldset>
-              <legend className="label">What matters most? We give these categories more of the budget.</legend>
+              <legend className="label">
+                What matters most? We give these categories more of the budget.
+              </legend>
               <div className="grid gap-1 sm:grid-cols-2">
                 {PRIORITY_CATEGORIES.map((c) => (
-                  <label key={c} className="flex min-h-11 items-center gap-3 rounded-lg px-2 hover:bg-paper">
-                    <input type="checkbox" className="h-5 w-5 accent-accent" checked={priorities.includes(c)} onChange={() => togglePriority(c)} />
+                  <label
+                    key={c}
+                    className="flex min-h-11 items-center gap-3 rounded-lg px-2 hover:bg-paper"
+                  >
+                    <input
+                      type="checkbox"
+                      className="h-5 w-5 accent-accent"
+                      checked={priorities.includes(c)}
+                      onChange={() => togglePriority(c)}
+                    />
                     {categoryLabel(occasion, c)}
                   </label>
                 ))}
@@ -214,7 +280,9 @@ export function PlanSetup({
         </details>
 
         {existing && (
-          <p className="hint">Creating a new plan replaces your current budget, timeline and vendor quotes.</p>
+          <p className="hint">
+            Creating a new plan replaces your current budget, timeline and vendor quotes.
+          </p>
         )}
         <button type="submit" className="btn-primary w-full sm:w-auto">
           {existing ? 'Create new plan' : 'Create my plan'}

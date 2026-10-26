@@ -10,7 +10,10 @@ describe('accessibility (axe)', () => {
 
   it('has a skip link, landmarks and a proper tablist', () => {
     renderWithPlan();
-    expect(screen.getByRole('link', { name: 'Skip to main content' })).toHaveAttribute('href', '#main');
+    expect(screen.getByRole('link', { name: 'Skip to main content' })).toHaveAttribute(
+      'href',
+      '#main',
+    );
     expect(screen.getByRole('banner')).toBeInTheDocument();
     expect(screen.getByRole('main')).toBeInTheDocument();
     expect(screen.getByRole('tablist')).toBeInTheDocument();
@@ -26,7 +29,10 @@ describe('accessibility (axe)', () => {
     await user.keyboard('{End}');
     expect(screen.getByRole('tab', { name: 'Vendors' })).toHaveFocus();
     await user.keyboard('{Home}');
-    expect(screen.getByRole('tab', { name: 'Plan setup' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tab', { name: 'Plan setup' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
     await user.keyboard('{ArrowLeft}');
     expect(screen.getByRole('tab', { name: 'Vendors' })).toHaveAttribute('aria-selected', 'true');
   });
@@ -43,7 +49,9 @@ describe('accessibility (axe)', () => {
     await user.click(screen.getByRole('tab', { name: 'Budget' }));
     await expectNoA11yViolations(container);
     const { fireEvent } = await import('@testing-library/react');
-    fireEvent.change(screen.getAllByLabelText('Number of guests')[0] as HTMLElement, { target: { value: '260' } });
+    fireEvent.change(screen.getAllByLabelText('Number of guests')[0] as HTMLElement, {
+      target: { value: '260' },
+    });
     expect(screen.getByTestId('over-budget-region')).toHaveTextContent(/Over budget/);
     await expectNoA11yViolations(container);
   });

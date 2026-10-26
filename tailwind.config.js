@@ -12,7 +12,9 @@ export default {
         ok: '#2f6b45',
         warn: { DEFAULT: '#b3261e', soft: '#fdecea' },
       },
-      fontFamily: { sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'] },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+      },
     },
   },
   plugins: [],

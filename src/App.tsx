@@ -24,7 +24,13 @@ function readInitial(): InitialLoad {
   return loadInitial(typeof window === 'undefined' ? '' : window.location.hash, safeStorage());
 }
 
-export default function App({ initial, today: todayProp }: { initial?: InitialLoad; today?: string }) {
+export default function App({
+  initial,
+  today: todayProp,
+}: {
+  initial?: InitialLoad;
+  today?: string;
+}) {
   const [boot] = useState<InitialLoad>(() => initial ?? readInitial());
   const [today] = useState(() => todayProp ?? todayISO());
   const { state, dispatch } = usePlanStore(boot);
@@ -51,12 +57,19 @@ export default function App({ initial, today: todayProp }: { initial?: InitialLo
   }
 
   const needPlan = (
-    <EmptyState title="Create your plan first and this section comes alive." action="Go to Plan setup" onAction={() => setTab('setup')} />
+    <EmptyState
+      title="Create your plan first and this section comes alive."
+      action="Go to Plan setup"
+      onAction={() => setTab('setup')}
+    />
   );
 
   return (
     <>
-      <a href="#main" className="sr-only-focusable no-print fixed left-2 top-2 z-50 rounded-lg bg-accent px-4 py-2 font-semibold text-white">
+      <a
+        href="#main"
+        className="sr-only-focusable no-print fixed left-2 top-2 z-50 rounded-lg bg-accent px-4 py-2 font-semibold text-white"
+      >
         Skip to main content
       </a>
       <Header
@@ -70,7 +83,10 @@ export default function App({ initial, today: todayProp }: { initial?: InitialLo
 
       <main id="main" className="no-print mx-auto max-w-5xl px-4 pb-24 pt-6">
         {notice && (
-          <div role="status" className={`mb-4 flex items-start justify-between gap-3 rounded-xl border p-3 text-sm ${notice.kind === 'bad_link' ? 'border-warn bg-warn-soft text-warn' : 'border-line bg-accent-soft'}`}>
+          <div
+            role="status"
+            className={`mb-4 flex items-start justify-between gap-3 rounded-xl border p-3 text-sm ${notice.kind === 'bad_link' ? 'border-warn bg-warn-soft text-warn' : 'border-line bg-accent-soft'}`}
+          >
             <p>
               {notice.kind === 'bad_link' && <span aria-hidden="true">⚠ </span>}
               {notice.message}
@@ -81,7 +97,11 @@ export default function App({ initial, today: todayProp }: { initial?: InitialLo
           </div>
         )}
 
-        <div role="tablist" aria-label="Plan sections" className="mb-6 flex gap-1 rounded-2xl border border-line bg-card p-1">
+        <div
+          role="tablist"
+          aria-label="Plan sections"
+          className="mb-6 flex gap-1 rounded-2xl border border-line bg-card p-1"
+        >
           {TABS.map((t) => (
             <button
               key={t.id}
@@ -123,7 +143,8 @@ export default function App({ initial, today: todayProp }: { initial?: InitialLo
             </div>
           )}
           {tab === 'budget' && (plan ? <BudgetTab plan={plan} dispatch={dispatch} /> : needPlan)}
-          {tab === 'timeline' && (plan ? <TimelineTab plan={plan} today={today} dispatch={dispatch} /> : needPlan)}
+          {tab === 'timeline' &&
+            (plan ? <TimelineTab plan={plan} today={today} dispatch={dispatch} /> : needPlan)}
           {tab === 'vendors' &&
             (plan ? (
               <Suspense fallback={<p role="status">Loading vendors…</p>}>

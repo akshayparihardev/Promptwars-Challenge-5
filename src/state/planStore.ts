@@ -7,6 +7,7 @@ import {
   redistribute,
   removeQuote,
   setTotalBudget,
+  toggleContacted,
   type BudgetChange,
   type TradeoffOption,
 } from '../engine';
@@ -33,6 +34,7 @@ export type Action =
   | { type: 'reset' }
   | { type: 'setAmount'; category: Category; amount: number }
   | { type: 'toggleLock'; category: Category }
+  | { type: 'toggleContacted'; category: Category }
   | { type: 'setGuests'; guests: number }
   | { type: 'setPerPlate'; perPlate: number }
   | { type: 'setTotal'; total: number }
@@ -62,8 +64,14 @@ export function reducer(state: StoreState, action: Action): StoreState {
       if (plan.locked.includes(action.category)) return state;
       const result = redistribute(plan.allocation, action.category, action.amount, plan.locked);
       if (result.changes.length === 0 && !result.capped) return state;
-      const note = result.capped ? `Capped at ${formatINR(result.applied)}. Unlock other categories to go further.` : undefined;
-      return withPlan(state, { ...plan, allocation: result.allocation }, { changes: result.changes, note });
+      const note = result.capped
+        ? `Capped at ${formatINR(result.applied)}. Unlock other categories to go further.`
+        : undefined;
+      return withPlan(
+        state,
+        { ...plan, allocation: result.allocation },
+        { changes: result.changes, note },
+      );
     }
     case 'toggleLock': {
       const locked = plan.locked.includes(action.category)
@@ -71,15 +79,23 @@ export function reducer(state: StoreState, action: Action): StoreState {
         : [...plan.locked, action.category];
       return withPlan(state, { ...plan, locked });
     }
+    case 'toggleContacted':
+      return withPlan(state, toggleContacted(plan, action.category));
     case 'setGuests':
-      return withPlan(state, { ...plan, guests: Math.min(MAX_GUESTS, Math.max(1, Math.floor(action.guests))) });
+      return withPlan(state, {
+        ...plan,
+        guests: Math.min(MAX_GUESTS, Math.max(1, Math.floor(action.guests))),
+      });
     case 'setPerPlate':
       return withPlan(state, { ...plan, perPlate: Math.max(0, action.perPlate) });
     case 'setTotal':
       return withPlan(state, setTotalBudget(plan, action.total));
     case 'applyOption': {
       const next = applyOption(plan, action.option);
-      const note = action.option.newGuests != null ? `Guest count is now ${action.option.newGuests}.` : undefined;
+      const note =
+        action.option.newGuests != null
+          ? `Guest count is now ${action.option.newGuests}.`
+          : undefined;
       return withPlan(state, next, { changes: action.option.changes, note });
     }
     case 'setTaskStatus':
@@ -95,7 +111,11 @@ export function reducer(state: StoreState, action: Action): StoreState {
         tasks: plan.tasks.map((t) =>
           t.id === action.id
             ? action.days > 0
-              ? { ...t, status: 'delayed' as const, delayDays: Math.min(365, Math.floor(action.days)) }
+              ? {
+                  ...t,
+                  status: 'delayed' as const,
+                  delayDays: Math.min(365, Math.floor(action.days)),
+                }
               : { ...t, status: 'todo' as const, delayDays: undefined }
             : t,
         ),
@@ -103,7 +123,9 @@ export function reducer(state: StoreState, action: Action): StoreState {
     case 'setAssignee':
       return withPlan(state, {
         ...plan,
-        tasks: plan.tasks.map((t) => (t.id === action.id ? { ...t, assignee: action.assignee.slice(0, 60) } : t)),
+        tasks: plan.tasks.map((t) =>
+          t.id === action.id ? { ...t, assignee: action.assignee.slice(0, 60) } : t,
+        ),
       });
     case 'addQuote': {
       const added = addQuote(plan, action.quote, action.id);
@@ -127,7 +149,13 @@ export function loadInitial(hash: string, storage: Pick<Storage, 'getItem'> | nu
   const shared = planFromHash(hash);
   if (shared) {
     return shared.ok
-      ? { plan: shared.plan, notice: { kind: 'shared', message: 'Opened a shared plan. Your changes stay in this browser.' } }
+      ? {
+          plan: shared.plan,
+          notice: {
+            kind: 'shared',
+            message: 'Opened a shared plan. Your changes stay in this browser.',
+          },
+        }
       : {
           plan: loadStored(storage),
           notice: {

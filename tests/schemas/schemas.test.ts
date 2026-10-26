@@ -31,13 +31,18 @@ describe('PlanSchema', () => {
       { ...plan, tasks: Array.from({ length: 500 }, () => plan.tasks[0]) },
       { ...plan, vibe: 'x'.repeat(5000) },
       { ...plan, tasks: [{ ...plan.tasks[0], title: 'x'.repeat(1000) }] },
-      { ...plan, quotes: [{ id: 'q', category: 'catering', accepted: true, quote: { totalPrice: 'free' } }] },
+      {
+        ...plan,
+        quotes: [{ id: 'q', category: 'catering', accepted: true, quote: { totalPrice: 'free' } }],
+      },
     ];
     for (const b of bad) expect(PlanSchema.safeParse(b).success).toBe(false);
   });
 
   it('strips unknown keys such as __proto__ pollution attempts', () => {
-    const parsed = PlanSchema.parse(JSON.parse(JSON.stringify({ ...makePlan(), extra: 1, ['__proto__']: { x: 1 } })));
+    const parsed = PlanSchema.parse(
+      JSON.parse(JSON.stringify({ ...makePlan(), extra: 1, ['__proto__']: { x: 1 } })),
+    );
     expect('extra' in parsed).toBe(false);
     expect(({} as Record<string, unknown>).x).toBeUndefined();
   });
@@ -49,7 +54,9 @@ describe('IntakeSchema', () => {
     expect(IntakeSchema.safeParse(makeIntake({ totalBudget: 0 })).success).toBe(false);
     expect(IntakeSchema.safeParse(makeIntake({ guests: 0 })).success).toBe(false);
     expect(IntakeSchema.safeParse({ ...makeIntake(), eventDate: 'tomorrow' }).success).toBe(false);
-    expect(IntakeSchema.safeParse({ ...makeIntake(), priorities: ['contingency'] }).success).toBe(false);
+    expect(IntakeSchema.safeParse({ ...makeIntake(), priorities: ['contingency'] }).success).toBe(
+      false,
+    );
   });
 });
 
@@ -69,16 +76,35 @@ describe('QuoteSchema and AI outputs', () => {
   it('IntakeParse allows nulls but not bad enums', () => {
     expect(
       IntakeParseSchema.safeParse({
-        occasion: null, totalBudget: null, guests: null, eventDate: null, vibe: null, nonNegotiables: [], city: null,
+        occasion: null,
+        totalBudget: null,
+        guests: null,
+        eventDate: null,
+        vibe: null,
+        nonNegotiables: [],
+        city: null,
       }).success,
     ).toBe(true);
     expect(
       IntakeParseSchema.safeParse({
-        occasion: 'party', totalBudget: null, guests: null, eventDate: null, vibe: null, nonNegotiables: [], city: null,
+        occasion: 'party',
+        totalBudget: null,
+        guests: null,
+        eventDate: null,
+        vibe: null,
+        nonNegotiables: [],
+        city: null,
       }).success,
     ).toBe(false);
   });
   it('Ideas requires at least one theme', () => {
-    expect(IdeasSchema.safeParse({ themes: [], activities: ['a'], foodStyle: ['b'], personalTouches: [] }).success).toBe(false);
+    expect(
+      IdeasSchema.safeParse({
+        themes: [],
+        activities: ['a'],
+        foodStyle: ['b'],
+        personalTouches: [],
+      }).success,
+    ).toBe(false);
   });
 });

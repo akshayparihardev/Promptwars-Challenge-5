@@ -24,7 +24,8 @@ export function useAiCall<T, A extends unknown[]>(fn: (...args: A) => Promise<T>
       if (id === latest.current) setState({ status: 'done', data });
       return data;
     } catch (error) {
-      const message = error instanceof ApiError ? error.message : 'Something went wrong. Please try again.';
+      const message =
+        error instanceof ApiError ? error.message : 'Something went wrong. Please try again.';
       if (id === latest.current) setState({ status: 'error', message });
       return null;
     }

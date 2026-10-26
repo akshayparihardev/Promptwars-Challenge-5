@@ -92,9 +92,10 @@ export const PlanSchema = z.object({
   priorities: z.array(CategorySchema).max(7),
   allocation: AllocationSchema,
   locked: z.array(CategorySchema).max(7),
+  /** Categories where the family has already reached out to a vendor. */
+  contacted: z.array(CategorySchema).max(7).default([]),
   perPlate: z.number().min(0).max(MAX_BUDGET),
   tasks: z.array(TaskSchema).max(60),
   quotes: z.array(StoredQuoteSchema).max(30),
 });
 export type Plan = z.infer<typeof PlanSchema>;
-

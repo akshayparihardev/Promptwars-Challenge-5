@@ -21,5 +21,7 @@ export function signedINR(amount: number): string {
 
 /** "Photography +₹40,000 · Decor −₹25,000" */
 export function describeChanges(occasion: Occasion, changes: readonly BudgetChange[]): string {
-  return changes.map((c) => `${categoryLabel(occasion, c.category)} ${signedINR(c.delta)}`).join(' · ');
+  return changes
+    .map((c) => `${categoryLabel(occasion, c.category)} ${signedINR(c.delta)}`)
+    .join(' · ');
 }

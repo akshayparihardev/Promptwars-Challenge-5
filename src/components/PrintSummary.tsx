@@ -1,4 +1,14 @@
-import { buildSchedule, budgetStatus, categoryLabel, categoryNeeds, effectiveCost, formatINR, OCCASION_LABELS, planReadiness, percentOf } from '../engine';
+import {
+  buildSchedule,
+  budgetStatus,
+  categoryLabel,
+  categoryNeeds,
+  effectiveCost,
+  formatINR,
+  OCCASION_LABELS,
+  planReadiness,
+  percentOf,
+} from '../engine';
 import { CATEGORIES, type Plan } from '../schemas';
 import { formatDate } from '../lib/format';
 
@@ -21,11 +31,13 @@ export function PrintSummary({ plan, today }: { plan: Plan; today: string }) {
         <p className="text-sm uppercase tracking-widest">Aayojan · Celebration plan</p>
         <h1>{OCCASION_LABELS[plan.occasion]}</h1>
         <p>
-          {formatDate(plan.eventDate)} · {plan.guests} guests · Total budget {formatINR(plan.totalBudget)}
+          {formatDate(plan.eventDate)} · {plan.guests} guests · Total budget{' '}
+          {formatINR(plan.totalBudget)}
           {plan.vibe ? ` · ${plan.vibe}` : ''}
         </p>
         <p>
-          Plan readiness {readiness.percent}% · {readiness.tasksDone}/{readiness.tasksTotal} tasks done · {readiness.quotesVerified}/{readiness.quotesTotal} categories with verified quotes
+          Plan readiness {readiness.percent}% · {readiness.tasksDone}/{readiness.tasksTotal} tasks
+          done · {readiness.quotesVerified}/{readiness.quotesTotal} categories with verified quotes
         </p>
       </div>
 
@@ -45,7 +57,9 @@ export function PrintSummary({ plan, today }: { plan: Plan; today: string }) {
               <th scope="row">{categoryLabel(plan.occasion, c)}</th>
               <td>{formatINR(plan.allocation[c])}</td>
               <td>{percentOf(plan.allocation[c], plan.totalBudget)}%</td>
-              <td>{needs.find((n) => n.category === c)?.verified ? 'Verified quote' : 'Estimate'}</td>
+              <td>
+                {needs.find((n) => n.category === c)?.verified ? 'Verified quote' : 'Estimate'}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -61,7 +75,8 @@ export function PrintSummary({ plan, today }: { plan: Plan; today: string }) {
           <ul className="list-disc pl-5">
             {accepted.map((q) => (
               <li key={q.id}>
-                {categoryLabel(plan.occasion, q.category)}: {q.quote.vendorName ?? 'Vendor'} · {formatINR(effectiveCost(q.quote, plan.guests) ?? 0)}
+                {categoryLabel(plan.occasion, q.category)}: {q.quote.vendorName ?? 'Vendor'} ·{' '}
+                {formatINR(effectiveCost(q.quote, plan.guests) ?? 0)}
               </li>
             ))}
           </ul>
@@ -84,12 +99,20 @@ export function PrintSummary({ plan, today }: { plan: Plan; today: string }) {
               <th scope="row">{t.title}</th>
               <td>{formatDate(t.effectiveDate)}</td>
               <td>{t.assignee || '-'}</td>
-              <td>{t.status === 'done' ? 'Done' : t.status === 'delayed' ? `Delayed ${t.delayDays} days` : 'To do'}</td>
+              <td>
+                {t.status === 'done'
+                  ? 'Done'
+                  : t.status === 'delayed'
+                    ? `Delayed ${t.delayDays} days`
+                    : 'To do'}
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
-      <p className="mt-4 text-sm">Amounts are estimates unless marked as a verified quote. Planned with Aayojan.</p>
+      <p className="mt-4 text-sm">
+        Amounts are estimates unless marked as a verified quote. Planned with Aayojan.
+      </p>
     </article>
   );
 }

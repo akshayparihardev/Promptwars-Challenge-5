@@ -3,7 +3,17 @@ import { CATEGORIES, type Category, type Plan, type StoredQuote } from '../schem
 import type { Action } from '../state/planStore';
 import { EstimateBadge } from './ui';
 
-function CategoryTable({ plan, category, quotes, dispatch }: { plan: Plan; category: Category; quotes: StoredQuote[]; dispatch: (a: Action) => void }) {
+function CategoryTable({
+  plan,
+  category,
+  quotes,
+  dispatch,
+}: {
+  plan: Plan;
+  category: Category;
+  quotes: StoredQuote[];
+  dispatch: (a: Action) => void;
+}) {
   const label = categoryLabel(plan.occasion, category);
   const budget = plan.allocation[category];
   const cols = quotes.map((s) => {
@@ -56,7 +66,9 @@ function CategoryTable({ plan, category, quotes, dispatch }: { plan: Plan; categ
           </tr>
           <tr>
             <th scope="row">Per plate</th>
-            {cell((c) => (c.s.quote.pricePerPlate === null ? '-' : formatINR(c.s.quote.pricePerPlate)))}
+            {cell((c) =>
+              c.s.quote.pricePerPlate === null ? '-' : formatINR(c.s.quote.pricePerPlate),
+            )}
           </tr>
           <tr>
             <th scope="row">Guest minimum</th>
@@ -64,11 +76,19 @@ function CategoryTable({ plan, category, quotes, dispatch }: { plan: Plan; categ
           </tr>
           <tr>
             <th scope="row">Advance</th>
-            {cell((c) => (c.s.quote.advancePercent === null ? '-' : `${c.s.quote.advancePercent}%`))}
+            {cell((c) =>
+              c.s.quote.advancePercent === null ? '-' : `${c.s.quote.advancePercent}%`,
+            )}
           </tr>
           <tr>
             <th scope="row">Tax</th>
-            {cell((c) => (c.s.quote.taxIncluded === null ? 'Not stated' : c.s.quote.taxIncluded ? 'Included' : 'Extra'))}
+            {cell((c) =>
+              c.s.quote.taxIncluded === null
+                ? 'Not stated'
+                : c.s.quote.taxIncluded
+                  ? 'Included'
+                  : 'Extra',
+            )}
           </tr>
           <tr>
             <th scope="row">Things to check</th>
@@ -92,11 +112,20 @@ function CategoryTable({ plan, category, quotes, dispatch }: { plan: Plan; categ
             {cell((c) => (
               <div className="flex flex-wrap gap-2">
                 {!c.s.accepted && (
-                  <button type="button" className="btn-primary" disabled={c.cost === null} onClick={() => dispatch({ type: 'acceptQuote', id: c.s.id })}>
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    disabled={c.cost === null}
+                    onClick={() => dispatch({ type: 'acceptQuote', id: c.s.id })}
+                  >
                     Accept
                   </button>
                 )}
-                <button type="button" className="btn-secondary" onClick={() => dispatch({ type: 'removeQuote', id: c.s.id })}>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => dispatch({ type: 'removeQuote', id: c.s.id })}
+                >
                   Remove
                 </button>
               </div>
@@ -109,11 +138,15 @@ function CategoryTable({ plan, category, quotes, dispatch }: { plan: Plan; categ
 }
 
 export function QuoteComparison({ plan, dispatch }: { plan: Plan; dispatch: (a: Action) => void }) {
-  const groups = CATEGORIES.map((c) => ({ c, quotes: plan.quotes.filter((q) => q.category === c) })).filter((g) => g.quotes.length > 0);
+  const groups = CATEGORIES.map((c) => ({
+    c,
+    quotes: plan.quotes.filter((q) => q.category === c),
+  })).filter((g) => g.quotes.length > 0);
   if (groups.length === 0) {
     return (
       <p className="card text-sm text-ink-soft">
-        No quotes saved yet. Analyze a quote above and save it to compare up to three vendors per category.
+        No quotes saved yet. Analyze a quote above and save it to compare up to three vendors per
+        category.
       </p>
     );
   }

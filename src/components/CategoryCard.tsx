@@ -1,5 +1,12 @@
 import { memo, useState } from 'react';
-import { categoryLabel, formatINR, parseINR, percentOf, toLakh, type CategoryNeed } from '../engine';
+import {
+  categoryLabel,
+  formatINR,
+  parseINR,
+  percentOf,
+  toLakh,
+  type CategoryNeed,
+} from '../engine';
 import type { Category, Occasion } from '../schemas';
 import { EstimateBadge } from './ui';
 
@@ -21,7 +28,16 @@ function stepFor(total: number): number {
 }
 
 /** One card per category: label, badge, amount, slider, number input and lock live together. */
-export const CategoryCard = memo(function CategoryCard({ occasion, category, amount, total, locked, need, onChange, onToggleLock }: Props) {
+export const CategoryCard = memo(function CategoryCard({
+  occasion,
+  category,
+  amount,
+  total,
+  locked,
+  need,
+  onChange,
+  onToggleLock,
+}: Props) {
   const label = categoryLabel(occasion, category);
   const [text, setText] = useState(String(amount));
   const [invalid, setInvalid] = useState(false);

@@ -20,7 +20,8 @@ export function Field({
   const id = useId();
   const hintId = `${id}-hint`;
   const errorId = `${id}-error`;
-  const describedBy = [hint ? hintId : null, error ? errorId : null].filter(Boolean).join(' ') || undefined;
+  const describedBy =
+    [hint ? hintId : null, error ? errorId : null].filter(Boolean).join(' ') || undefined;
   return (
     <div>
       <label htmlFor={id} className="label">
@@ -66,7 +67,10 @@ export function AiLoading({ label }: { label: string }) {
 
 export function AiError({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
-    <div role="alert" className="rounded-xl border border-warn/40 bg-warn-soft p-3 text-sm text-warn">
+    <div
+      role="alert"
+      className="rounded-xl border border-warn/40 bg-warn-soft p-3 text-sm text-warn"
+    >
       <p className="font-medium">
         <span aria-hidden="true">⚠ </span>
         {message}
@@ -78,7 +82,15 @@ export function AiError({ message, onRetry }: { message: string; onRetry: () => 
   );
 }
 
-export function EmptyState({ title, action, onAction }: { title: string; action: string; onAction: () => void }) {
+export function EmptyState({
+  title,
+  action,
+  onAction,
+}: {
+  title: string;
+  action: string;
+  onAction: () => void;
+}) {
   return (
     <div className="card text-center">
       <p className="text-lg font-semibold">{title}</p>
@@ -102,7 +114,11 @@ export function Confirm({
   onCancel: () => void;
 }) {
   return (
-    <div role="group" aria-label="Confirm action" className="mt-3 rounded-xl border border-line bg-paper p-3">
+    <div
+      role="group"
+      aria-label="Confirm action"
+      className="mt-3 rounded-xl border border-line bg-paper p-3"
+    >
       <p className="text-sm font-medium">{prompt}</p>
       <div className="mt-2 flex flex-wrap gap-2">
         <button type="button" className="btn-primary" onClick={onConfirm}>

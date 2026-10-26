@@ -55,7 +55,10 @@ function trimOption(plan: Plan, overBy: number): TradeoffOption | null {
       n.shortfall === 0 &&
       plan.allocation[n.category] > 0,
   );
-  const capacity = sources.reduce((s, n) => s + Math.floor(plan.allocation[n.category] * MAX_TRIM_SHARE), 0);
+  const capacity = sources.reduce(
+    (s, n) => s + Math.floor(plan.allocation[n.category] * MAX_TRIM_SHARE),
+    0,
+  );
   if (sources.length === 0 || capacity < overBy) return null;
   const cuts = largestRemainderRound(
     sources.map((n) => plan.allocation[n.category]),
@@ -94,9 +97,11 @@ function contingencyOption(plan: Plan, overBy: number): TradeoffOption | null {
 export function generateOverBudgetOptions(plan: Plan): TradeoffOption[] {
   const { overBy } = budgetStatus(plan);
   if (overBy <= 0) return [];
-  return [guestOption(plan, overBy), trimOption(plan, overBy), contingencyOption(plan, overBy)].filter(
-    (o): o is TradeoffOption => o !== null,
-  );
+  return [
+    guestOption(plan, overBy),
+    trimOption(plan, overBy),
+    contingencyOption(plan, overBy),
+  ].filter((o): o is TradeoffOption => o !== null);
 }
 
 /** Explicit, separate step: returns a new plan with the chosen option applied. */

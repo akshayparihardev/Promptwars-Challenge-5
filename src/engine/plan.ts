@@ -16,9 +16,14 @@ export function createPlan(intake: Intake): Plan {
     priorities,
     allocation,
     locked: [],
+    contacted: [],
     // Kept as an exact ratio so unchanged guests never read as an overspend.
     perPlate: allocation.catering / intake.guests,
-    tasks: TASK_TEMPLATES[intake.occasion].map((t) => ({ ...t, dependsOn: [...t.dependsOn], status: 'todo' as const })),
+    tasks: TASK_TEMPLATES[intake.occasion].map((t) => ({
+      ...t,
+      dependsOn: [...t.dependsOn],
+      status: 'todo' as const,
+    })),
     quotes: [],
   };
 }
@@ -44,7 +49,9 @@ export interface Readiness {
 /** Plan readiness for the header: tasks done plus categories backed by a verified quote. */
 export function planReadiness(plan: Plan): Readiness {
   const quotable = CATEGORIES.filter((c): c is Category => c !== 'contingency');
-  const verified = quotable.filter((c) => plan.quotes.some((q) => q.category === c && q.accepted)).length;
+  const verified = quotable.filter((c) =>
+    plan.quotes.some((q) => q.category === c && q.accepted),
+  ).length;
   const done = plan.tasks.filter((t) => t.status === 'done').length;
   const total = plan.tasks.length + quotable.length;
   return {

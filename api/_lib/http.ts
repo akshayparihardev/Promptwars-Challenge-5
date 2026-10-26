@@ -109,7 +109,10 @@ export function createHandler<I>(config: HandlerConfig<I>) {
       return fail(res, 429, 'RATE_LIMITED');
     }
     const declared = Number(header(req, 'content-length'));
-    if ((Number.isFinite(declared) && declared > MAX_BODY_BYTES) || bodyBytes(req.body) > MAX_BODY_BYTES) {
+    if (
+      (Number.isFinite(declared) && declared > MAX_BODY_BYTES) ||
+      bodyBytes(req.body) > MAX_BODY_BYTES
+    ) {
       return fail(res, 413, 'PAYLOAD_TOO_LARGE');
     }
     let body: unknown = req.body;

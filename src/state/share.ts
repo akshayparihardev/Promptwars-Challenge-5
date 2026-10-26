@@ -29,7 +29,8 @@ export function shareHash(plan: Plan): string {
   return `${SHARE_PREFIX}${encodePlan(plan)}`;
 }
 
-export type DecodeResult = { ok: true; plan: Plan } | { ok: false; reason: 'too_large' | 'malformed' | 'invalid' };
+export type DecodeResult =
+  { ok: true; plan: Plan } | { ok: false; reason: 'too_large' | 'malformed' | 'invalid' };
 
 export function decodePlan(encoded: string): DecodeResult {
   if (encoded.length > MAX_SHARE_CHARS) return { ok: false, reason: 'too_large' };

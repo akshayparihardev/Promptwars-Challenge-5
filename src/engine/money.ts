@@ -75,7 +75,9 @@ export function parseINR(input: string): number | null {
     .replace(/,/g, '')
     .replace(/\s+/g, '')
     .replace(/\/-$/, '');
-  const match = /^(\d+(?:\.\d+)?|\.\d+)(l|lac|lacs|lakh|lakhs|cr|crore|crores|k|thousand)?$/.exec(text);
+  const match = /^(\d+(?:\.\d+)?|\.\d+)(l|lac|lacs|lakh|lakhs|cr|crore|crores|k|thousand)?$/.exec(
+    text,
+  );
   if (!match) return null;
   const value = Number(match[1]) * (UNIT[match[2] ?? ''] ?? 1);
   if (!Number.isFinite(value) || value <= 0 || value > 100_000_000_000) return null;

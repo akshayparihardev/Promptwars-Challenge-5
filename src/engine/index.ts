@@ -6,3 +6,4 @@ export * from './timeline';
 export * from './tradeoffs';
 export * from './quotes';
 export * from './plan';
+export * from './checklist';

@@ -63,7 +63,10 @@ export const ExplanationsSchema = z.object({
 export type Explanations = z.infer<typeof ExplanationsSchema>;
 
 export const IdeasSchema = z.object({
-  themes: z.array(z.object({ title: z.string().max(80), description: z.string().max(300) })).min(1).max(5),
+  themes: z
+    .array(z.object({ title: z.string().max(80), description: z.string().max(300) }))
+    .min(1)
+    .max(5),
   activities: z.array(z.string().max(200)).min(1).max(8),
   foodStyle: z.array(z.string().max(200)).min(1).max(6),
   personalTouches: z.array(z.string().max(200)).max(5),

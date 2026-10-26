@@ -55,7 +55,12 @@ function kindFromStatus(status: number, code: unknown): ApiErrorKind {
 
 export const CLIENT_TIMEOUT_MS = 20_000;
 
-async function post<T>(path: string, body: unknown, schema: ZodType<T>, fetcher: typeof fetch = fetch): Promise<T> {
+async function post<T>(
+  path: string,
+  body: unknown,
+  schema: ZodType<T>,
+  fetcher: typeof fetch = fetch,
+): Promise<T> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), CLIENT_TIMEOUT_MS);
   try {
@@ -72,7 +77,10 @@ async function post<T>(path: string, body: unknown, schema: ZodType<T>, fetcher:
       data = null;
     }
     if (!response.ok) {
-      const code = typeof data === 'object' && data !== null && 'error' in data ? (data as { error: unknown }).error : null;
+      const code =
+        typeof data === 'object' && data !== null && 'error' in data
+          ? (data as { error: unknown }).error
+          : null;
       throw new ApiError(kindFromStatus(response.status, code));
     }
     const parsed = schema.safeParse(data);
@@ -91,7 +99,11 @@ export function parseIntake(text: string, fetcher?: typeof fetch): Promise<Intak
   return post('/api/parse-intake', { text }, IntakeParseSchema, fetcher);
 }
 
-export function extractQuote(text: string, category: Category, fetcher?: typeof fetch): Promise<Quote> {
+export function extractQuote(
+  text: string,
+  category: Category,
+  fetcher?: typeof fetch,
+): Promise<Quote> {
   return post('/api/extract-quote', { text, category }, QuoteSchema, fetcher);
 }
 
