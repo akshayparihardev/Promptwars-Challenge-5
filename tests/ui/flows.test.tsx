@@ -1,5 +1,6 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { makePlan } from '../helpers';
 import { jsonResponse, renderApp, renderWithPlan } from './helpers';
 
 afterEach(() => vi.unstubAllGlobals());
@@ -207,6 +208,52 @@ describe('vendors', () => {
     await user.type(await screen.findByLabelText('Quote text'), 'some quote');
     await user.click(screen.getByRole('button', { name: 'Analyze quote' }));
     expect(await screen.findByRole('alert')).toHaveTextContent(/could not trust/);
+  });
+});
+
+describe('planning assistant', () => {
+  it('shows what needs attention and jumps to the right tab', async () => {
+    const { user } = renderWithPlan({ guests: 200 });
+    const panel = screen.getByRole('region', { name: 'Your planning assistant' });
+    expect(within(panel).getByText(/Next up:/)).toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: 'Budget' }));
+    fireEvent.change(screen.getAllByLabelText('Number of guests')[0] as HTMLElement, {
+      target: { value: '260' },
+    });
+    expect(within(panel).getByText(/Urgent/)).toBeInTheDocument();
+    expect(
+      within(panel).getByText(/thing needs your attention|things need your attention/),
+    ).toBeInTheDocument();
+    await user.click(
+      within(panel).getAllByRole('button', { name: 'Open Timeline' })[0] as HTMLElement,
+    );
+    expect(screen.getByRole('tab', { name: 'Timeline' })).toHaveAttribute('aria-selected', 'true');
+  });
+
+  it('asks Gemini for a review of the computed facts and shows it', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse({
+        summary: 'Good start. Lock in vendors next.',
+        steps: [{ title: 'Get catering quotes', why: 'Food is your priority.' }],
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const { user } = renderWithPlan();
+    await user.click(screen.getByRole('button', { name: 'Ask AI for a plan review' }));
+    expect(await screen.findByTestId('ai-review')).toHaveTextContent('Get catering quotes');
+    const sent = JSON.parse(fetchMock.mock.calls[0]?.[1]?.body as string);
+    expect(sent.insights.length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: 'Refresh AI review' })).toBeInTheDocument();
+  });
+
+  it('expands to show every insight', async () => {
+    const { user } = renderApp({ ...makePlan({ eventDate: '2026-01-20' }), guests: 260 });
+    const panel = screen.getByRole('region', { name: 'Your planning assistant' });
+    await user.click(within(panel).getByRole('button', { name: /Show all/ }));
+    expect(within(panel).getByRole('button', { name: 'Show less' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
   });
 });
 

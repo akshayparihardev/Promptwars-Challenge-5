@@ -3,14 +3,20 @@ import {
   ExplanationsSchema,
   IdeasSchema,
   IntakeParseSchema,
+  PlanReviewSchema,
   QuoteSchema,
   type Category,
   type Explanations,
   type Ideas,
   type IntakeParse,
+  type PlanReview,
   type Quote,
 } from '../schemas';
-import type { ExplainTradeoffsRequestSchema, SuggestIdeasRequestSchema } from '../schemas';
+import type {
+  ExplainTradeoffsRequestSchema,
+  ReviewPlanRequestSchema,
+  SuggestIdeasRequestSchema,
+} from '../schemas';
 import type { z } from 'zod';
 
 export type ApiErrorKind =
@@ -119,4 +125,11 @@ export function suggestIdeas(
   fetcher?: typeof fetch,
 ): Promise<Ideas> {
   return post('/api/suggest-ideas', request, IdeasSchema, fetcher);
+}
+
+export function reviewPlan(
+  request: z.input<typeof ReviewPlanRequestSchema>,
+  fetcher?: typeof fetch,
+): Promise<PlanReview> {
+  return post('/api/review-plan', request, PlanReviewSchema, fetcher);
 }

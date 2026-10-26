@@ -23,3 +23,15 @@ export function addDays(iso: string, days: number): string {
 export function diffDays(a: string, b: string): number {
   return toDayNumber(b) - toDayNumber(a);
 }
+
+const dayMonth = new Intl.DateTimeFormat('en-IN', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+
+/** "15 Feb 2027" for messages the engine writes. */
+export function formatDayMonth(iso: string): string {
+  return dayMonth.format(new Date(`${iso}T00:00:00Z`));
+}

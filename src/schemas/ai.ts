@@ -72,3 +72,30 @@ export const IdeasSchema = z.object({
   personalTouches: z.array(z.string().max(200)).max(5),
 });
 export type Ideas = z.infer<typeof IdeasSchema>;
+
+export const ReviewPlanRequestSchema = z.object({
+  occasion: OccasionSchema,
+  guests: z.number().int().min(1),
+  totalBudget: z.number().int().min(0),
+  daysToEvent: z.number().int().min(-3650).max(3650),
+  vibe: z.string().max(200).default(''),
+  insights: z
+    .array(
+      z.object({
+        severity: z.enum(['critical', 'warning', 'suggestion']),
+        title: z.string().max(200),
+        detail: z.string().max(400),
+      }),
+    )
+    .min(1)
+    .max(10),
+});
+
+export const PlanReviewSchema = z.object({
+  summary: z.string().min(1).max(400),
+  steps: z
+    .array(z.object({ title: z.string().min(1).max(120), why: z.string().max(300) }))
+    .min(1)
+    .max(3),
+});
+export type PlanReview = z.infer<typeof PlanReviewSchema>;

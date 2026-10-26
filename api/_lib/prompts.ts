@@ -43,6 +43,13 @@ Tailor themes, activities and food style to the occasion, vibe, guest count, bud
 NEVER mention prices, costs, discounts, vendor names, brands, or availability.
 ${GUARD}`;
 
+export const REVIEW_PROMPT = `You are a calm, experienced Indian family event planner reviewing a plan.
+You receive facts the app has already computed (budget gaps, overdue or at-risk tasks, unconfirmed vendors) plus the occasion and days to go.
+- summary: two short sentences on where the plan stands overall, warm and direct.
+- steps: the three most important next actions, in order. Each has a short imperative title and one sentence on why it matters now.
+Use only the facts given. Do not add new numbers, dates, prices, vendor names or availability. If everything is on track, say so and suggest the next sensible preparations.
+${GUARD}`;
+
 /** Wraps untrusted text so the model treats it as data; strips any attempt to close the tag. */
 export function wrapUserText(text: string): string {
   return `<user_text>\n${text.replace(/<\/?user_text>/gi, '')}\n</user_text>`;

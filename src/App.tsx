@@ -1,4 +1,5 @@
 import { lazy, Suspense, useCallback, useRef, useState, type KeyboardEvent } from 'react';
+import { AssistantPanel } from './components/AssistantPanel';
 import { BudgetTab } from './components/BudgetTab';
 import { Header } from './components/Header';
 import { Icon, type IconName } from './components/Icon';
@@ -102,6 +103,7 @@ export default function App({
         )}
 
         {plan && <PlanMasthead plan={plan} today={today} />}
+        {plan && <AssistantPanel plan={plan} today={today} onNavigate={setTab} />}
 
         <div role="tablist" aria-label="Plan sections" className="mb-6 flex border-b border-line">
           {TABS.map((t) => (
