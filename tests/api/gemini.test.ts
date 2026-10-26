@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 const generateContent = vi.fn();
 vi.mock('@google/genai', () => ({
+  ThinkingLevel: { MINIMAL: 'MINIMAL' },
   GoogleGenAI: class {
     models = { generateContent };
   },
@@ -54,6 +55,29 @@ describe('callModel', () => {
     expect(String((error as Error).message)).not.toContain('test-key');
     expect(spy.mock.calls.flat().join(' ')).not.toContain('test-key');
     spy.mockRestore();
+  });
+
+  it('retries once on a busy model, but not on other errors', async () => {
+    vi.useFakeTimers();
+    const busy = Object.assign(new Error('high demand'), { status: 503 });
+    generateContent.mockRejectedValueOnce(busy).mockResolvedValueOnce({ text: '{"ok":1}' });
+    const pending = callModel(req);
+    await vi.advanceTimersByTimeAsync(700);
+    await expect(pending).resolves.toBe('{"ok":1}');
+    expect(generateContent).toHaveBeenCalledTimes(2);
+    expect(generateContent.mock.calls[0]?.[0].config.thinkingConfig).toEqual({ thinkingLevel: 'MINIMAL' });
+
+    generateContent.mockReset();
+    generateContent.mockRejectedValue(busy);
+    const failing = callModel(req).catch((e: unknown) => e);
+    await vi.advanceTimersByTimeAsync(700);
+    expect(await failing).toMatchObject({ status: 503, code: 'AI_UNAVAILABLE' });
+    expect(generateContent).toHaveBeenCalledTimes(2);
+
+    generateContent.mockReset();
+    generateContent.mockRejectedValue(Object.assign(new Error('bad'), { status: 400 }));
+    await expect(callModel(req)).rejects.toMatchObject({ code: 'AI_UNAVAILABLE' });
+    expect(generateContent).toHaveBeenCalledTimes(1);
   });
 
   it('times out after 15 seconds', async () => {

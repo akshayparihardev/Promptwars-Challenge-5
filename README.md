@@ -71,9 +71,9 @@ Data flow: the UI dispatches an action, the reducer asks the engine for the new 
 
 ## GenAI usage
 
-- Model: `gemini-2.5-flash` by default, overridable with `GEMINI_MODEL`, via the `@google/genai` SDK.
+- Model: `gemini-3.6-flash` by default, overridable with `GEMINI_MODEL`, via the `@google/genai` SDK.
 - Called **only from serverless functions**. `GEMINI_API_KEY` is read from `process.env` on the server and never reaches the browser, the repo or logs.
-- Every call uses `responseMimeType: application/json` with a JSON schema generated from the zod schema, a 15 s timeout, and the result is **validated with zod** before it is returned. Invalid output returns `502 AI_RESPONSE_INVALID`.
+- Calls use minimal "thinking" (extraction and short writing need speed) and retry once if the model is busy. Every call uses `responseMimeType: application/json` with a JSON schema generated from the zod schema, a 15 s timeout, and the result is **validated with zod** before it is returned. Invalid output returns `502 AI_RESPONSE_INVALID`.
 - **Injection guard:** user text is wrapped in `<user_text>` tags and the system prompt states that it is data, never instructions; closing-tag tricks are stripped; the model is told never to invent prices, vendors or availability and to return null for unknown fields.
 - If AI is unavailable the app keeps working: only the AI panels show a retry message.
 
@@ -142,7 +142,7 @@ npm run coverage       # engine coverage
 npm run build
 ```
 
-Environment variables: `GEMINI_API_KEY` (required for AI), `GEMINI_MODEL` (optional, default `gemini-2.5-flash`).
+Environment variables: `GEMINI_API_KEY` (required for AI), `GEMINI_MODEL` (optional, default `gemini-3.6-flash`).
 
 ## Deploy
 

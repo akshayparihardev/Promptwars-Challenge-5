@@ -42,7 +42,7 @@ Every screen reacts to real user input.
   sum exactly to the budget.
 - GEMINI_API_KEY is read ONLY on the server (`process.env.GEMINI_API_KEY`). Never in client code,
   never committed, never logged. `.env` is gitignored; `.env.example` holds placeholders.
-- Model name from `process.env.GEMINI_MODEL`, default `gemini-2.5-flash`.
+- Model name from `process.env.GEMINI_MODEL`, default `gemini-3.8-flash`.
 - Git: work on `main` only. Do NOT create branches. Small commits with clear messages
   (`feat(engine): ...`, `test: ...`, `fix(api): ...`). Push after each phase.
 - Repo must stay under 10 MB. No images/videos/fonts committed beyond a tiny favicon. No build output.
