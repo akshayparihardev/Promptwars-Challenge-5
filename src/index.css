@@ -174,6 +174,36 @@
   }
 }
 
+/* Category swatches: background for dots, fill for the SVG split bar. */
+.sw-venue {
+  background-color: rgb(var(--sw-venue));
+  fill: rgb(var(--sw-venue));
+}
+.sw-catering {
+  background-color: rgb(var(--sw-catering));
+  fill: rgb(var(--sw-catering));
+}
+.sw-decor {
+  background-color: rgb(var(--sw-decor));
+  fill: rgb(var(--sw-decor));
+}
+.sw-photography {
+  background-color: rgb(var(--sw-photography));
+  fill: rgb(var(--sw-photography));
+}
+.sw-entertainment {
+  background-color: rgb(var(--sw-entertainment));
+  fill: rgb(var(--sw-entertainment));
+}
+.sw-misc {
+  background-color: rgb(var(--sw-misc));
+  fill: rgb(var(--sw-misc));
+}
+.sw-contingency {
+  background-color: rgb(var(--sw-contingency));
+  fill: rgb(var(--sw-contingency));
+}
+
 .sr-only-focusable:not(:focus):not(:focus-within) {
   position: absolute;
   width: 1px;

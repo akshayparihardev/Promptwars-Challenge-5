@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { budgetTier } from '../engine';
 import type { Plan } from '../schemas';
-import { suggestIdeas } from '../lib/api';
+import { suggestIdeas, type RequestOptions } from '../lib/api';
 import { useAiCall } from '../lib/useAiCall';
 import { AiError, AiLoading } from './ui';
 
@@ -21,7 +21,9 @@ function List({ title, items }: { title: string; items: string[] }) {
 
 export default function IdeasPanel({ plan }: { plan: Plan }) {
   const [round, setRound] = useState(0);
-  const ai = useAiCall(suggestIdeas);
+  const ai = useAiCall((options: RequestOptions, request: Parameters<typeof suggestIdeas>[0]) =>
+    suggestIdeas(request, options),
+  );
 
   const generate = () => {
     setRound((r) => r + 1);

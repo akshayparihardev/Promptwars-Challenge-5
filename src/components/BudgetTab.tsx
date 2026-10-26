@@ -13,7 +13,7 @@ import {
 } from '../engine';
 import { CATEGORIES, MAX_GUESTS, type Category, type Plan } from '../schemas';
 import type { Action } from '../state/planStore';
-import { AllocationBar, SWATCHES } from './AllocationBar';
+import { AllocationBar, SWATCH_CLASS } from './AllocationBar';
 import { CategoryRow } from './CategoryRow';
 import { Icon } from './Icon';
 import { TradeoffPanel } from './TradeoffPanel';
@@ -192,7 +192,7 @@ export function BudgetTab({ plan, dispatch }: { plan: Plan; dispatch: (action: A
                 total={plan.totalBudget}
                 locked={plan.locked.includes(c)}
                 need={need}
-                swatch={SWATCHES[c]}
+                swatchClass={SWATCH_CLASS[c]}
                 onChange={onChange}
                 onToggleLock={onToggleLock}
               />

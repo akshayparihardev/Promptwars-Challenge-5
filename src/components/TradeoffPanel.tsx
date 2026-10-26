@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { formatINR, type TradeoffOption } from '../engine';
 import type { Plan } from '../schemas';
-import { explainTradeoffs } from '../lib/api';
+import { explainTradeoffs, type RequestOptions } from '../lib/api';
 import { describeChanges } from '../lib/format';
 import { useAiCall } from '../lib/useAiCall';
 import { Icon } from './Icon';
@@ -19,7 +19,9 @@ export function TradeoffPanel({
   onApply: (option: TradeoffOption) => void;
 }) {
   const [confirming, setConfirming] = useState<string | null>(null);
-  const ai = useAiCall(explainTradeoffs);
+  const ai = useAiCall((options: RequestOptions, request: Parameters<typeof explainTradeoffs>[0]) =>
+    explainTradeoffs(request, options),
+  );
 
   const explain = () =>
     ai.run({

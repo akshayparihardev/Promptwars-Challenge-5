@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { IntakeParse } from '../schemas';
-import { parseIntake } from '../lib/api';
+import { parseIntake, type RequestOptions } from '../lib/api';
 import { useAiCall } from '../lib/useAiCall';
 import { AiError, AiLoading } from './ui';
 
@@ -11,7 +11,7 @@ import { AiError, AiLoading } from './ui';
 export function DescribeEvent({ onParsed }: { onParsed: (result: IntakeParse) => string[] }) {
   const [description, setDescription] = useState('');
   const [filled, setFilled] = useState<string | null>(null);
-  const ai = useAiCall(parseIntake);
+  const ai = useAiCall((options: RequestOptions, text: string) => parseIntake(text, options));
 
   async function fill() {
     setFilled(null);

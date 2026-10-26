@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ApiError } from './api';
+import { ApiError, type RequestOptions } from './api';
 
 export type AiState<T> =
   | { status: 'idle' }
@@ -7,32 +7,44 @@ export type AiState<T> =
   | { status: 'error'; message: string }
   | { status: 'done'; data: T };
 
-/** Runs an AI request with loading/error/done state. Late responses from older calls are ignored. */
-export function useAiCall<T, A extends unknown[]>(fn: (...args: A) => Promise<T>) {
+/**
+ * Runs an AI request with loading/error/done state. Starting a new request, resetting, or
+ * unmounting cancels the one in flight, so stale answers never land and no work is wasted.
+ */
+export function useAiCall<T, A extends unknown[]>(
+  fn: (options: RequestOptions, ...args: A) => Promise<T>,
+) {
   const [state, setState] = useState<AiState<T>>({ status: 'idle' });
-  const latest = useRef(0);
+  const inFlight = useRef<AbortController | null>(null);
   const fnRef = useRef(fn);
   useEffect(() => {
     fnRef.current = fn;
   });
+  useEffect(() => () => inFlight.current?.abort(), []);
 
   const run = useCallback(async (...args: A): Promise<T | null> => {
-    const id = ++latest.current;
+    inFlight.current?.abort();
+    const controller = new AbortController();
+    inFlight.current = controller;
     setState({ status: 'loading' });
     try {
-      const data = await fnRef.current(...args);
-      if (id === latest.current) setState({ status: 'done', data });
+      const data = await fnRef.current({ signal: controller.signal }, ...args);
+      if (!controller.signal.aborted) setState({ status: 'done', data });
       return data;
     } catch (error) {
+      if (controller.signal.aborted) return null;
       const message =
         error instanceof ApiError ? error.message : 'Something went wrong. Please try again.';
-      if (id === latest.current) setState({ status: 'error', message });
+      setState({ status: 'error', message });
       return null;
+    } finally {
+      if (inFlight.current === controller) inFlight.current = null;
     }
   }, []);
 
   const reset = useCallback(() => {
-    latest.current += 1;
+    inFlight.current?.abort();
+    inFlight.current = null;
     setState({ status: 'idle' });
   }, []);
 

@@ -77,6 +77,22 @@ test('a share link reopens the same plan in a fresh browser', async ({ page, bro
   await fresh.close();
 });
 
+test('runs under the production CSP with no console errors or CSP violations', async ({ page }) => {
+  const problems: string[] = [];
+  page.on('console', (msg) => {
+    if (msg.type() === 'error') problems.push(msg.text());
+  });
+  page.on('pageerror', (err) => problems.push(err.message));
+  const response = await page.goto('/');
+  expect(response?.headers()['content-security-policy']).toContain("style-src 'self';");
+  await createPlan(page);
+  for (const tab of ['Budget', 'Timeline', 'Vendors', 'Plan setup']) {
+    await page.getByRole('tab', { name: tab }).click();
+  }
+  await page.getByRole('button', { name: /Switch to (dark|light) theme/ }).click();
+  expect(problems).toEqual([]);
+});
+
 test('no horizontal scrolling on any tab', async ({ page }) => {
   await createPlan(page);
   for (const tab of ['Plan setup', 'Budget', 'Timeline', 'Vendors']) {

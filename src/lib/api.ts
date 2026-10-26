@@ -27,6 +27,7 @@ export type ApiErrorKind =
   | 'invalid_input'
   | 'ai_invalid'
   | 'ai_unavailable'
+  | 'cancelled'
   | 'server';
 
 const MESSAGES: Record<ApiErrorKind, string> = {
@@ -37,6 +38,7 @@ const MESSAGES: Record<ApiErrorKind, string> = {
   invalid_input: 'That input could not be used. Please check it and try again.',
   ai_invalid: 'The AI gave an answer we could not trust. Please try again.',
   ai_unavailable: 'AI help is unavailable right now. Everything else still works.',
+  cancelled: 'The request was cancelled.',
   server: 'Something went wrong on our side. Please try again.',
 };
 
@@ -61,14 +63,28 @@ function kindFromStatus(status: number, code: unknown): ApiErrorKind {
 
 export const CLIENT_TIMEOUT_MS = 20_000;
 
+export interface RequestOptions {
+  /** Injected in tests; defaults to the global fetch. */
+  fetcher?: typeof fetch;
+  /** Lets the caller cancel a request it no longer needs (newer request, unmounted panel). */
+  signal?: AbortSignal;
+}
+
 async function post<T>(
   path: string,
   body: unknown,
   schema: ZodType<T>,
-  fetcher: typeof fetch = fetch,
+  { fetcher = fetch, signal }: RequestOptions = {},
 ): Promise<T> {
+  if (signal?.aborted) throw new ApiError('cancelled');
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), CLIENT_TIMEOUT_MS);
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, CLIENT_TIMEOUT_MS);
+  const cancel = () => controller.abort();
+  signal?.addEventListener('abort', cancel);
   try {
     const response = await fetcher(path, {
       method: 'POST',
@@ -83,10 +99,7 @@ async function post<T>(
       data = null;
     }
     if (!response.ok) {
-      const code =
-        typeof data === 'object' && data !== null && 'error' in data
-          ? (data as { error: unknown }).error
-          : null;
+      const code = typeof data === 'object' && data !== null && 'error' in data ? data.error : null;
       throw new ApiError(kindFromStatus(response.status, code));
     }
     const parsed = schema.safeParse(data);
@@ -94,42 +107,43 @@ async function post<T>(
     return parsed.data;
   } catch (error) {
     if (error instanceof ApiError) throw error;
-    if (controller.signal.aborted) throw new ApiError('timeout');
+    if (controller.signal.aborted) throw new ApiError(timedOut ? 'timeout' : 'cancelled');
     throw new ApiError('network');
   } finally {
     clearTimeout(timer);
+    signal?.removeEventListener('abort', cancel);
   }
 }
 
-export function parseIntake(text: string, fetcher?: typeof fetch): Promise<IntakeParse> {
-  return post('/api/parse-intake', { text }, IntakeParseSchema, fetcher);
+export function parseIntake(text: string, options?: RequestOptions): Promise<IntakeParse> {
+  return post('/api/parse-intake', { text }, IntakeParseSchema, options);
 }
 
 export function extractQuote(
   text: string,
   category: Category,
-  fetcher?: typeof fetch,
+  options?: RequestOptions,
 ): Promise<Quote> {
-  return post('/api/extract-quote', { text, category }, QuoteSchema, fetcher);
+  return post('/api/extract-quote', { text, category }, QuoteSchema, options);
 }
 
 export function explainTradeoffs(
   request: z.input<typeof ExplainTradeoffsRequestSchema>,
-  fetcher?: typeof fetch,
+  options?: RequestOptions,
 ): Promise<Explanations> {
-  return post('/api/explain-tradeoffs', request, ExplanationsSchema, fetcher);
+  return post('/api/explain-tradeoffs', request, ExplanationsSchema, options);
 }
 
 export function suggestIdeas(
   request: z.input<typeof SuggestIdeasRequestSchema>,
-  fetcher?: typeof fetch,
+  options?: RequestOptions,
 ): Promise<Ideas> {
-  return post('/api/suggest-ideas', request, IdeasSchema, fetcher);
+  return post('/api/suggest-ideas', request, IdeasSchema, options);
 }
 
 export function reviewPlan(
   request: z.input<typeof ReviewPlanRequestSchema>,
-  fetcher?: typeof fetch,
+  options?: RequestOptions,
 ): Promise<PlanReview> {
-  return post('/api/review-plan', request, PlanReviewSchema, fetcher);
+  return post('/api/review-plan', request, PlanReviewSchema, options);
 }

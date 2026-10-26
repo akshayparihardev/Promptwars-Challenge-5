@@ -18,7 +18,7 @@ interface Props {
   total: number;
   locked: boolean;
   need: CategoryNeed;
-  swatch: string;
+  swatchClass: string;
   onChange: (category: Category, amount: number) => void;
   onToggleLock: (category: Category) => void;
 }
@@ -37,7 +37,7 @@ export const CategoryRow = memo(function CategoryRow({
   total,
   locked,
   need,
-  swatch,
+  swatchClass,
   onChange,
   onToggleLock,
 }: Props) {
@@ -69,11 +69,7 @@ export const CategoryRow = memo(function CategoryRow({
     >
       <div>
         <div className="flex items-center gap-2">
-          <span
-            aria-hidden="true"
-            className="h-3 w-3 shrink-0 rounded-full"
-            style={{ background: swatch }}
-          />
+          <span aria-hidden="true" className={`h-3 w-3 shrink-0 rounded-full ${swatchClass}`} />
           <h3>{label}</h3>
         </div>
         <p className="tabular mt-0.5 text-sm text-ink-soft">

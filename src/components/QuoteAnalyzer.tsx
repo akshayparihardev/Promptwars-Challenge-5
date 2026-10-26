@@ -7,7 +7,7 @@ import {
   type Category,
   type Plan,
 } from '../schemas';
-import { extractQuote } from '../lib/api';
+import { extractQuote, type RequestOptions } from '../lib/api';
 import { newId } from '../lib/today';
 import { useAiCall } from '../lib/useAiCall';
 import type { Action } from '../state/planStore';
@@ -27,7 +27,9 @@ export function QuoteAnalyzer({
   const [category, setCategory] = useState<Category>('catering');
   const [pasted, setPasted] = useState('');
   const [saved, setSaved] = useState<string | null>(null);
-  const ai = useAiCall(extractQuote);
+  const ai = useAiCall((options: RequestOptions, text: string, category: Category) =>
+    extractQuote(text, category, options),
+  );
 
   const result = ai.state.status === 'done' ? { ...ai.state.data, category } : null;
   const full = plan.quotes.filter((q) => q.category === category).length >= MAX_QUOTES_PER_CATEGORY;

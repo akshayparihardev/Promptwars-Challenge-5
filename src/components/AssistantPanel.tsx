@@ -7,7 +7,7 @@ import {
   type InsightTab,
 } from '../engine';
 import type { Plan } from '../schemas';
-import { reviewPlan } from '../lib/api';
+import { reviewPlan, type RequestOptions } from '../lib/api';
 import { useAiCall } from '../lib/useAiCall';
 import { Icon, type IconName } from './Icon';
 import { AiError, AiLoading } from './ui';
@@ -70,7 +70,9 @@ export function AssistantPanel({
 }) {
   const insights = useMemo(() => planInsights(plan, today), [plan, today]);
   const [expanded, setExpanded] = useState(false);
-  const ai = useAiCall(reviewPlan);
+  const ai = useAiCall((options: RequestOptions, request: Parameters<typeof reviewPlan>[0]) =>
+    reviewPlan(request, options),
+  );
   const shown = expanded ? insights : insights.slice(0, COLLAPSED);
   const urgent = insights.filter((i) => i.severity !== 'suggestion').length;
 

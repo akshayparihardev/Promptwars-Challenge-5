@@ -23,7 +23,7 @@ const intake = {
 describe('api client', () => {
   it('posts JSON and validates the response', async () => {
     const f = vi.fn().mockResolvedValue(jsonResponse(intake));
-    await expect(parseIntake('hello', f)).resolves.toEqual(intake);
+    await expect(parseIntake('hello', { fetcher: f })).resolves.toEqual(intake);
     expect(f).toHaveBeenCalledWith(
       '/api/parse-intake',
       expect.objectContaining({ method: 'POST' }),
@@ -41,21 +41,25 @@ describe('api client', () => {
     [500, {}, 'server'],
   ])('maps HTTP %i to %s', async (status, body, kind) => {
     const f = vi.fn().mockResolvedValue(jsonResponse(body, status));
-    await expect(parseIntake('x', f)).rejects.toMatchObject({ kind });
+    await expect(parseIntake('x', { fetcher: f })).rejects.toMatchObject({ kind });
   });
 
   it('maps network failure, bad JSON and bad shapes', async () => {
     await expect(
-      parseIntake('x', vi.fn().mockRejectedValue(new TypeError('offline'))),
+      parseIntake('x', { fetcher: vi.fn().mockRejectedValue(new TypeError('offline')) }),
     ).rejects.toMatchObject({ kind: 'network' });
     await expect(
-      parseIntake('x', vi.fn().mockResolvedValue(new Response('not json', { status: 200 }))),
+      parseIntake('x', {
+        fetcher: vi.fn().mockResolvedValue(new Response('not json', { status: 200 })),
+      }),
     ).rejects.toMatchObject({ kind: 'ai_invalid' });
     await expect(
-      parseIntake('x', vi.fn().mockResolvedValue(jsonResponse({ occasion: 'rave' }))),
+      parseIntake('x', { fetcher: vi.fn().mockResolvedValue(jsonResponse({ occasion: 'rave' })) }),
     ).rejects.toMatchObject({ kind: 'ai_invalid' });
     await expect(
-      parseIntake('x', vi.fn().mockResolvedValue(new Response('<html>', { status: 500 }))),
+      parseIntake('x', {
+        fetcher: vi.fn().mockResolvedValue(new Response('<html>', { status: 500 })),
+      }),
     ).rejects.toMatchObject({ kind: 'server' });
   });
 
@@ -69,10 +73,35 @@ describe('api client', () => {
           );
         }),
     );
-    const pending = parseIntake('x', f as unknown as typeof fetch).catch((e: unknown) => e);
+    const pending = parseIntake('x', { fetcher: f as unknown as typeof fetch }).catch(
+      (e: unknown) => e,
+    );
     await vi.advanceTimersByTimeAsync(20_001);
     expect(await pending).toMatchObject({ kind: 'timeout' });
     vi.useRealTimers();
+  });
+
+  it('a caller can cancel a request; cancelling is not reported as a timeout', async () => {
+    const f = vi.fn(
+      (_url: string, init?: RequestInit) =>
+        new Promise<Response>((_, reject) => {
+          init?.signal?.addEventListener('abort', () =>
+            reject(new DOMException('aborted', 'AbortError')),
+          );
+        }),
+    );
+    const controller = new AbortController();
+    const pending = parseIntake('x', {
+      fetcher: f as unknown as typeof fetch,
+      signal: controller.signal,
+    }).catch((e: unknown) => e);
+    controller.abort();
+    expect(await pending).toMatchObject({ kind: 'cancelled' });
+    const already = new AbortController();
+    already.abort();
+    await expect(
+      parseIntake('x', { fetcher: f as unknown as typeof fetch, signal: already.signal }),
+    ).rejects.toMatchObject({ kind: 'cancelled' });
   });
 
   it('has friendly messages and wraps the other endpoints', async () => {
@@ -91,7 +120,7 @@ describe('api client', () => {
       cancellationPolicy: null,
     };
     await expect(
-      extractQuote('q', 'misc', vi.fn().mockResolvedValue(jsonResponse(quote))),
+      extractQuote('q', 'misc', { fetcher: vi.fn().mockResolvedValue(jsonResponse(quote)) }),
     ).resolves.toEqual(quote);
     await expect(
       explainTradeoffs(
@@ -103,7 +132,7 @@ describe('api client', () => {
           priorities: [],
           options: [{ id: 'a', title: 't', coversRupees: 1, summary: 's' }],
         },
-        vi.fn().mockResolvedValue(jsonResponse({ explanations: [] })),
+        { fetcher: vi.fn().mockResolvedValue(jsonResponse({ explanations: [] })) },
       ),
     ).resolves.toEqual({ explanations: [] });
     const ideas = {
@@ -115,7 +144,7 @@ describe('api client', () => {
     await expect(
       suggestIdeas(
         { occasion: 'wedding', vibe: '', guests: 1, budgetTier: 'modest', nonNegotiables: [] },
-        vi.fn().mockResolvedValue(jsonResponse(ideas)),
+        { fetcher: vi.fn().mockResolvedValue(jsonResponse(ideas)) },
       ),
     ).resolves.toEqual(ideas);
   });
