@@ -207,3 +207,15 @@ describe('readiness', () => {
     expect(planReadiness({ ...plan, tasks: [], quotes: [] }).percent).toBe(0);
   });
 });
+
+describe('percentOf and budgetTier', () => {
+  it('computes one-decimal percentages and guards zero totals', async () => {
+    const { percentOf, budgetTier } = await import('../../src/engine');
+    expect(percentOf(1, 3)).toBe(33.3);
+    expect(percentOf(5, 0)).toBe(0);
+    expect(budgetTier({ totalBudget: 100_000, guests: 100 })).toBe('modest');
+    expect(budgetTier({ totalBudget: 300_000, guests: 100 })).toBe('comfortable');
+    expect(budgetTier({ totalBudget: 800_000, guests: 100 })).toBe('premium');
+    expect(budgetTier({ totalBudget: 800_000, guests: 0 })).toBe('premium');
+  });
+});

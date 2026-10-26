@@ -6,6 +6,11 @@ export function formatINR(amount: number): string {
   return `${n < 0 ? '−' : ''}₹${inr.format(Math.abs(n))}`;
 }
 
+/** Share of `total` as a percentage rounded to one decimal; 0 when the total is 0. */
+export function percentOf(part: number, total: number): number {
+  return total > 0 ? Math.round((part / total) * 1000) / 10 : 0;
+}
+
 function trim(n: number): string {
   return String(Math.round(n * 100) / 100);
 }

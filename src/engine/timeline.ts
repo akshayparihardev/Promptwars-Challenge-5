@@ -116,6 +116,18 @@ export function propagateDelay(tasks: readonly Task[], taskId: string, delayDays
   return ordered.filter((t) => t.id !== taskId && after.get(t.id) !== before.get(t.id)).map((t) => t.id);
 }
 
+/** Maps each downstream task id to the id of the delayed task that pushes it. */
+export function affectedByDelays(tasks: readonly Task[]): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const delayed of tasks) {
+    const days = delayed.delayDays ?? 0;
+    if (delayed.status !== 'delayed' || days <= 0) continue;
+    const baseline = tasks.map((t) => (t.id === delayed.id ? { ...t, status: 'todo' as const, delayDays: 0 } : t));
+    for (const id of propagateDelay(baseline, delayed.id, days)) out[id] ??= delayed.id;
+  }
+  return out;
+}
+
 export interface Phase {
   key: string;
   label: string;

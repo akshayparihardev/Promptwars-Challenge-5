@@ -18,3 +18,5 @@ BUILD_PROMPTS.md
 .DS_Store
 Thumbs.db
 *.log
+
+.claude/launch.json

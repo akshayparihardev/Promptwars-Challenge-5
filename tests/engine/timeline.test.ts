@@ -150,3 +150,17 @@ describe('phaseFor', () => {
     expect(phaseFor(-3).order).toBe(5);
   });
 });
+
+describe('affectedByDelays', () => {
+  it('maps downstream tasks to the delayed task that pushes them', async () => {
+    const { affectedByDelays } = await import('../../src/engine');
+    const tasks = [
+      task('a', 40, 1, [], { status: 'delayed', delayDays: 20 }),
+      task('b', 30, 2, ['a']),
+      task('c', 5, 1, ['b']),
+      task('d', 25, 1),
+    ];
+    expect(affectedByDelays(tasks)).toEqual({ b: 'a', c: 'a' });
+    expect(affectedByDelays(tasks.map((t) => ({ ...t, status: 'todo' as const })))).toEqual({});
+  });
+});

@@ -8,7 +8,7 @@ export default {
         card: '#ffffff',
         ink: { DEFAULT: '#2b2622', soft: '#5c534b' },
         line: '#e6dfd5',
-        accent: { DEFAULT: '#9a3d1f', dark: '#7d3018', soft: '#f6e7df' },
+        accent: { DEFAULT: '#0e5a5f', dark: '#0a4247', soft: '#e3f0ef' },
         ok: '#2f6b45',
         warn: { DEFAULT: '#b3261e', soft: '#fdecea' },
       },
