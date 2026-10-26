@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import {
   createPlan,
   formatINR,
@@ -19,6 +19,7 @@ import {
   type Plan,
 } from '../schemas';
 import { DescribeEvent } from './DescribeEvent';
+import { ErrorSummary } from './ErrorSummary';
 import { PlanExtras } from './PlanExtras';
 import { Field } from './ui';
 
@@ -45,13 +46,6 @@ export function PlanSetup({
   const [priorities, setPriorities] = useState<Category[]>(existing?.priorities ?? []);
   const [errors, setErrors] = useState<Errors>({});
   const [failedSubmits, setFailedSubmits] = useState(0);
-  const formRef = useRef<HTMLFormElement>(null);
-
-  // After a failed submit, move focus to the first field with an error so it is read out.
-  useEffect(() => {
-    if (failedSubmits === 0) return;
-    formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
-  }, [failedSubmits]);
 
   const budget = parseINR(budgetText);
   const budgetHint =
@@ -142,16 +136,18 @@ export function PlanSetup({
       )}
       <DescribeEvent onParsed={applyParsed} />
 
-      <form
-        ref={formRef}
-        className="card space-y-5"
-        onSubmit={submit}
-        noValidate
-        aria-labelledby="essentials-h"
-      >
+      <form className="card space-y-5" onSubmit={submit} noValidate aria-labelledby="essentials-h">
         <h2 id="essentials-h" className="text-lg">
           The essentials
         </h2>
+        <ErrorSummary
+          attempt={failedSubmits}
+          errors={[
+            ...(budgetError ? [{ fieldId: 'intake-budget', message: budgetError }] : []),
+            ...(errors.guests ? [{ fieldId: 'intake-guests', message: errors.guests }] : []),
+            ...(errors.date ? [{ fieldId: 'intake-date', message: errors.date }] : []),
+          ]}
+        />
         <Field label="Occasion">
           {(p) => (
             <select
@@ -171,7 +167,7 @@ export function PlanSetup({
             </select>
           )}
         </Field>
-        <Field label="Total budget (₹)" hint={budgetHint} error={budgetError}>
+        <Field id="intake-budget" label="Total budget (₹)" hint={budgetHint} error={budgetError}>
           {(p) => (
             <input
               {...p}
@@ -184,7 +180,7 @@ export function PlanSetup({
           )}
         </Field>
         <div className="grid gap-5 sm:grid-cols-2">
-          <Field label="Number of guests" error={errors.guests}>
+          <Field id="intake-guests" label="Number of guests" error={errors.guests}>
             {(p) => (
               <input
                 {...p}
@@ -198,7 +194,7 @@ export function PlanSetup({
               />
             )}
           </Field>
-          <Field label="Event date" error={errors.date}>
+          <Field id="intake-date" label="Event date" error={errors.date}>
             {(p) => (
               <input
                 {...p}

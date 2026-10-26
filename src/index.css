@@ -59,6 +59,19 @@
     --sw-misc: 168 158 150;
     --sw-contingency: 214 190 110;
   }
+  /* People who ask the system for more contrast get full-strength secondary text and borders. */
+  @media (prefers-contrast: more) {
+    :root,
+    :root[data-theme='dark'] {
+      --ink-soft: var(--ink);
+    }
+    :root {
+      --line: 128 116 104;
+    }
+    :root[data-theme='dark'] {
+      --line: 168 154 172;
+    }
+  }
   html {
     -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
@@ -202,6 +215,22 @@
 .sw-contingency {
   background-color: rgb(var(--sw-contingency));
   fill: rgb(var(--sw-contingency));
+}
+
+/* Windows high contrast / forced colours: keep edges and the category key visible. */
+@media (forced-colors: active) {
+  .card,
+  .badge,
+  .btn,
+  .input {
+    border: 1px solid CanvasText;
+  }
+  [class*='sw-'] {
+    forced-color-adjust: none;
+  }
+  :focus-visible {
+    outline-color: Highlight;
+  }
 }
 
 .sr-only-focusable:not(:focus):not(:focus-within) {

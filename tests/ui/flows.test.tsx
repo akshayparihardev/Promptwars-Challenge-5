@@ -17,6 +17,7 @@ describe('create a plan and watch it react', () => {
     await user.click(screen.getByRole('button', { name: 'Create my plan' }));
 
     expect(await screen.findByRole('heading', { name: 'Budget at a glance' })).toBeInTheDocument();
+    expect(document.getElementById('plan-title')).toHaveFocus();
     expect(screen.getByTestId('over-budget-region')).toBeEmptyDOMElement();
     const catering = screen.getByRole('article', { name: 'Catering' });
     expect(within(catering).getByText('Estimate')).toBeInTheDocument();
@@ -37,15 +38,23 @@ describe('create a plan and watch it react', () => {
     await waitFor(() => expect(screen.getByTestId('over-budget-region')).toBeEmptyDOMElement());
   });
 
-  it('shows friendly validation errors and creates nothing', async () => {
+  it('shows an error summary that takes focus and links to each field', async () => {
     const { user } = renderApp();
     await user.click(screen.getByRole('button', { name: 'Create my plan' }));
-    expect(screen.getByText('Enter your total budget, for example 8 lakh.')).toBeInTheDocument();
-    expect(screen.getByText(/Enter a guest count/)).toBeInTheDocument();
-    expect(screen.getByText('Pick the event date.')).toBeInTheDocument();
+    const summary = screen.getByRole('alert', { name: /Please fix 3 things/ });
+    expect(summary).toHaveFocus();
+    const links = within(summary).getAllByRole('link');
+    expect(links.map((l) => l.textContent)).toEqual([
+      'Enter your total budget, for example 8 lakh.',
+      expect.stringMatching(/Enter a guest count/) as string,
+      'Pick the event date.',
+    ]);
+    await user.click(first(links));
     expect(screen.getByLabelText('Total budget (₹)')).toHaveFocus();
+    expect(screen.getByLabelText('Total budget (₹)')).toHaveAttribute('aria-invalid', 'true');
     await user.type(screen.getByLabelText('Total budget (₹)'), 'lots');
-    expect(screen.getByText(/Couldn't read that amount/)).toBeInTheDocument();
+    expect(screen.getAllByText(/Couldn't read that amount/).length).toBeGreaterThan(0);
+    expect(screen.queryByRole('heading', { name: 'Budget at a glance' })).not.toBeInTheDocument();
   });
 
   it('rejects past dates', async () => {
@@ -54,7 +63,9 @@ describe('create a plan and watch it react', () => {
     await user.type(screen.getByLabelText('Number of guests'), '50');
     fireEvent.change(screen.getByLabelText('Event date'), { target: { value: '2025-01-01' } });
     await user.click(screen.getByRole('button', { name: 'Create my plan' }));
-    expect(screen.getByText('Pick today or a future date.')).toBeInTheDocument();
+    expect(screen.getByRole('alert', { name: /Please fix 1 thing/ })).toHaveTextContent(
+      'Pick today or a future date.',
+    );
   });
 });
 

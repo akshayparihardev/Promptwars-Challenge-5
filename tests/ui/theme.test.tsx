@@ -121,6 +121,11 @@ describe('colour contrast in both themes (WCAG AA 4.5:1)', () => {
     },
   );
 
+  it('supports prefers-contrast: more and forced colours', () => {
+    expect(css).toMatch(/@media \(prefers-contrast: more\)[\s\S]*--ink-soft: var\(--ink\)/);
+    expect(css).toMatch(/@media \(forced-colors: active\)[\s\S]*CanvasText/);
+  });
+
   it('dark surfaces get lighter as they rise (paper < card < field)', () => {
     const d = themes.dark;
     if (d.paper && d.card && d.field) {

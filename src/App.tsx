@@ -1,4 +1,12 @@
-import { lazy, Suspense, useCallback, useRef, useState, type KeyboardEvent } from 'react';
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from 'react';
 import { AssistantPanel } from './components/AssistantPanel';
 import { BudgetTab } from './components/BudgetTab';
 import { Header } from './components/Header';
@@ -42,6 +50,13 @@ export default function App({
   const refs = useRef<Record<string, HTMLButtonElement | null>>({});
   const dismissToast = useCallback(() => dispatch({ type: 'dismissToast' }), [dispatch]);
   const plan = state.plan;
+  // After a plan is created, move focus to its title so keyboard and screen-reader users land on it.
+  const focusTitleNext = useRef(false);
+  useEffect(() => {
+    if (!focusTitleNext.current || !plan) return;
+    focusTitleNext.current = false;
+    document.getElementById('plan-title')?.focus();
+  }, [plan]);
 
   function onKeyDown(event: KeyboardEvent<HTMLElement>) {
     const index = TABS.findIndex((t) => t.id === tab);
@@ -143,6 +158,7 @@ export default function App({
                 today={today}
                 existing={plan}
                 onCreate={(created) => {
+                  focusTitleNext.current = true;
                   dispatch({ type: 'create', plan: created });
                   setTab('budget');
                 }}

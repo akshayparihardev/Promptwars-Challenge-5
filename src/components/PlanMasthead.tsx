@@ -15,7 +15,7 @@ export function PlanMasthead({ plan, today }: { plan: Plan; today: string }) {
   const days = diffDays(today, plan.eventDate);
   return (
     <section aria-label="Plan summary" className="mb-6">
-      <h2 className="text-3xl leading-tight sm:text-4xl">
+      <h2 id="plan-title" tabIndex={-1} className="text-3xl leading-tight sm:text-4xl">
         {OCCASION_LABELS[plan.occasion]}
         <span className="block text-ink-soft sm:inline">
           <span className="hidden sm:inline"> · </span>

@@ -8,17 +8,21 @@ export interface FieldControlProps {
 }
 
 export function Field({
+  id: fixedId,
   label,
   hint,
   error,
   children,
 }: {
+  /** Stable id, needed when something else links to this field (an error summary). */
+  id?: string;
   label: string;
   hint?: string;
   error?: string | null;
   children: (props: FieldControlProps) => ReactNode;
 }) {
-  const id = useId();
+  const generated = useId();
+  const id = fixedId ?? generated;
   const hintId = `${id}-hint`;
   const errorId = `${id}-error`;
   const describedBy =
