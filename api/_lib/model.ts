@@ -9,10 +9,14 @@ const RETRY_DELAY_MS = 600;
 /** Busy or briefly unavailable model: worth one quick retry inside the same time budget. */
 function isTransient(error: unknown): boolean {
   const status =
-    typeof error === 'object' && error !== null && 'status' in error
-      ? (error as { status: unknown }).status
-      : null;
+    typeof error === 'object' && error !== null && 'status' in error ? error.status : null;
   return status === 429 || status === 500 || status === 503;
+}
+
+/** Model from the environment; an empty value falls back to the default. */
+export function modelName(): string {
+  const configured = process.env.GEMINI_MODEL?.trim();
+  return configured === undefined || configured === '' ? DEFAULT_MODEL : configured;
 }
 
 export interface ModelRequest {
@@ -40,7 +44,7 @@ export async function callModel(request: ModelRequest): Promise<string> {
   const ai = new GoogleGenAI({ apiKey });
   const attempt = () =>
     ai.models.generateContent({
-      model: process.env.GEMINI_MODEL || DEFAULT_MODEL,
+      model: modelName(),
       contents: request.user,
       config: {
         systemInstruction: request.system,

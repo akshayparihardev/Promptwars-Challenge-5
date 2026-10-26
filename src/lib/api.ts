@@ -78,9 +78,9 @@ async function post<T>(
 ): Promise<T> {
   if (signal?.aborted) throw new ApiError('cancelled');
   const controller = new AbortController();
-  let timedOut = false;
+  const outcome = { timedOut: false };
   const timer = setTimeout(() => {
-    timedOut = true;
+    outcome.timedOut = true;
     controller.abort();
   }, CLIENT_TIMEOUT_MS);
   const cancel = () => controller.abort();
@@ -107,7 +107,7 @@ async function post<T>(
     return parsed.data;
   } catch (error) {
     if (error instanceof ApiError) throw error;
-    if (controller.signal.aborted) throw new ApiError(timedOut ? 'timeout' : 'cancelled');
+    if (controller.signal.aborted) throw new ApiError(outcome.timedOut ? 'timeout' : 'cancelled');
     throw new ApiError('network');
   } finally {
     clearTimeout(timer);

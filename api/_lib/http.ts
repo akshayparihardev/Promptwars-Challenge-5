@@ -50,7 +50,9 @@ export function clientIp(req: ApiRequest): string {
   // Vercel sets these itself; prefer them over a header a caller could add.
   const platform = header(req, 'x-vercel-forwarded-for') || header(req, 'x-real-ip');
   const forwarded = header(req, 'x-forwarded-for').split(',')[0]?.trim();
-  return platform || forwarded || req.socket?.remoteAddress || 'unknown';
+  if (platform) return platform;
+  if (forwarded) return forwarded;
+  return req.socket?.remoteAddress ?? 'unknown';
 }
 
 const hits = new Map<string, number[]>();
@@ -79,7 +81,9 @@ export function resetRateLimit(): void {
 function bodyBytes(body: unknown): number {
   if (typeof body === 'string') return Buffer.byteLength(body);
   try {
-    return Buffer.byteLength(JSON.stringify(body) ?? '');
+    // JSON.stringify returns undefined for undefined input, despite its declared type.
+    const stringify: (value: unknown) => string | undefined = JSON.stringify;
+    return Buffer.byteLength(stringify(body) ?? '');
   } catch {
     return Number.POSITIVE_INFINITY;
   }
@@ -119,33 +123,44 @@ export function createHandler<I>(config: HandlerConfig<I>) {
     res.setHeader('Cache-Control', 'no-store');
     if (req.method !== 'POST') {
       res.setHeader('Allow', 'POST');
-      return fail(res, 405, 'METHOD_NOT_ALLOWED');
+      fail(res, 405, 'METHOD_NOT_ALLOWED');
+      return;
     }
-    if (!sameOrigin(req)) return fail(res, 403, 'FORBIDDEN_ORIGIN');
+    if (!sameOrigin(req)) {
+      fail(res, 403, 'FORBIDDEN_ORIGIN');
+      return;
+    }
     if (!header(req, 'content-type').toLowerCase().startsWith('application/json')) {
-      return fail(res, 415, 'UNSUPPORTED_MEDIA_TYPE');
+      fail(res, 415, 'UNSUPPORTED_MEDIA_TYPE');
+      return;
     }
     if (rateLimited(clientIp(req))) {
       res.setHeader('Retry-After', String(RATE_LIMIT_WINDOW_MS / 1000));
-      return fail(res, 429, 'RATE_LIMITED');
+      fail(res, 429, 'RATE_LIMITED');
+      return;
     }
     const declared = Number(header(req, 'content-length'));
     if (
       (Number.isFinite(declared) && declared > MAX_BODY_BYTES) ||
       bodyBytes(req.body) > MAX_BODY_BYTES
     ) {
-      return fail(res, 413, 'PAYLOAD_TOO_LARGE');
+      fail(res, 413, 'PAYLOAD_TOO_LARGE');
+      return;
     }
     let body: unknown = req.body;
     if (typeof body === 'string') {
       try {
         body = JSON.parse(body);
       } catch {
-        return fail(res, 400, 'INVALID_INPUT');
+        fail(res, 400, 'INVALID_INPUT');
+        return;
       }
     }
     const parsed = config.input.safeParse(body);
-    if (!parsed.success) return fail(res, 400, 'INVALID_INPUT');
+    if (!parsed.success) {
+      fail(res, 400, 'INVALID_INPUT');
+      return;
+    }
     const key = cacheKey(config.name, parsed.data);
     const cached = cacheGet(key);
     if (cached !== undefined) {
@@ -158,9 +173,13 @@ export function createHandler<I>(config: HandlerConfig<I>) {
       cacheSet(key, result);
       res.status(200).json(result);
     } catch (error) {
-      if (error instanceof ApiFailure) return fail(res, error.status, error.code);
+      if (error instanceof ApiFailure) {
+        fail(res, error.status, error.code);
+        return;
+      }
       console.error('api: unexpected failure');
-      return fail(res, 500, 'INTERNAL');
+      fail(res, 500, 'INTERNAL');
+      return;
     }
   };
 }

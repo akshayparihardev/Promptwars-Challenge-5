@@ -1,7 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 
-const generateContent = vi.fn();
+interface GenerateRequest {
+  model: string;
+  config: Record<string, unknown>;
+}
+const generateContent = vi.fn<(request: GenerateRequest) => Promise<{ text?: string }>>();
 vi.mock('@google/genai', () => ({
   ThinkingLevel: { MINIMAL: 'MINIMAL' },
   GoogleGenAI: class {
@@ -36,8 +40,8 @@ describe('callModel', () => {
     generateContent.mockResolvedValue({ text: '{"a":1}' });
     await expect(callModel(req)).resolves.toBe('{"a":1}');
     const arg = generateContent.mock.calls[0]?.[0];
-    expect(arg.model).toBe(DEFAULT_MODEL);
-    expect(arg.config.responseMimeType).toBe('application/json');
+    expect(arg?.model).toBe(DEFAULT_MODEL);
+    expect(arg?.config.responseMimeType).toBe('application/json');
   });
 
   it('reads the model name from env and tolerates empty text', async () => {
@@ -52,7 +56,7 @@ describe('callModel', () => {
     generateContent.mockRejectedValue(new Error('boom test-key'));
     const error = await callModel(req).catch((e: unknown) => e);
     expect(error).toBeInstanceOf(ApiFailure);
-    expect(String((error as Error).message)).not.toContain('test-key');
+    expect((error as Error).message).not.toContain('test-key');
     expect(spy.mock.calls.flat().join(' ')).not.toContain('test-key');
     spy.mockRestore();
   });

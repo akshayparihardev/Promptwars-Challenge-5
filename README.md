@@ -190,6 +190,13 @@ Everything below is an estimate and is user-editable.
 
 ## ✅ Quality
 
+### 🧹 Code quality
+
+- TypeScript `strict` with `noUncheckedIndexedAccess`; no `any`, no `@ts-ignore`, no non-null assertions.
+- ESLint with **typescript-eslint `strictTypeChecked` + `stylisticTypeChecked`**, `jsx-a11y` and `react-hooks`; Prettier formatting; all enforced in CI.
+- Business logic lives only in `src/engine` as pure functions; components render and dispatch, nothing more. API handlers are thin: guard, validate, call, validate, respond.
+- Small, single-purpose modules (largest component about 230 lines) with one shared schema layer used by client, server and tests.
+
 ### 🧪 Testing: 266 unit and integration tests, 14 end-to-end
 
 `npm run check` runs typecheck, lint and the whole unit suite; `npm run e2e` runs the browser suite. CI runs both on every push.

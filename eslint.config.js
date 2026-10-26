@@ -18,16 +18,25 @@ export default tseslint.config(
     ],
   },
   js.configs.recommended,
-  ...tseslint.configs.recommended,
+  ...tseslint.configs.strictTypeChecked,
+  ...tseslint.configs.stylisticTypeChecked,
   jsxA11y.flatConfigs.recommended,
+  { files: ['**/*.js'], extends: [tseslint.configs.disableTypeChecked] },
   {
     files: ['**/*.{ts,tsx}'],
-    languageOptions: { globals: { ...globals.browser, ...globals.node } },
+    languageOptions: {
+      globals: { ...globals.browser, ...globals.node },
+      parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
+    },
     plugins: { 'react-hooks': reactHooks },
     rules: {
       ...reactHooks.configs.recommended.rules,
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/ban-ts-comment': 'error',
+      // Numbers in template strings are intentional (counts, rupees already formatted elsewhere).
+      '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true }],
+      // `onClick={() => setState(x)}` is idiomatic React.
+      '@typescript-eslint/no-confusing-void-expression': ['error', { ignoreArrowShorthand: true }],
     },
   },
 );

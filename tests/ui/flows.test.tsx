@@ -1,7 +1,7 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { makePlan } from '../helpers';
-import { jsonResponse, renderApp, renderWithPlan } from './helpers';
+import { jsonResponse, renderApp, renderWithPlan, first } from './helpers';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -21,7 +21,7 @@ describe('create a plan and watch it react', () => {
     const catering = screen.getByRole('article', { name: 'Catering' });
     expect(within(catering).getByText('Estimate')).toBeInTheDocument();
 
-    fireEvent.change(screen.getAllByLabelText('Number of guests')[0] as HTMLElement, {
+    fireEvent.change(first(screen.getAllByLabelText('Number of guests')), {
       target: { value: '260' },
     });
     const banner = screen.getByTestId('over-budget-region');
@@ -31,7 +31,7 @@ describe('create a plan and watch it react', () => {
     expect(screen.getByRole('heading', { name: /Reduce guests by/ })).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: 'Apply' }).length).toBeLessThanOrEqual(3);
 
-    await user.click(screen.getAllByRole('button', { name: 'Apply' })[0] as HTMLElement);
+    await user.click(first(screen.getAllByRole('button', { name: 'Apply' })));
     expect(screen.getByText(/Apply "Reduce guests by/)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Yes, apply' }));
     await waitFor(() => expect(screen.getByTestId('over-budget-region')).toBeEmptyDOMElement());
@@ -75,7 +75,7 @@ describe('budget interactions', () => {
     await user.tab();
     const toast = screen
       .getAllByRole('status')
-      .find((el) => /Photography & video \+/.test(el.textContent ?? ''));
+      .find((el) => el.textContent.includes('Photography & video +'));
     expect(toast).toBeDefined();
     expect(toast?.textContent).toMatch(/−₹/);
     expect(toast?.textContent).not.toMatch(/Catering/);
@@ -93,7 +93,7 @@ describe('budget interactions', () => {
 
   it('explain options calls the AI and shows plain-language text; failure offers retry', async () => {
     const fetchMock = vi
-      .fn()
+      .fn<typeof fetch>()
       .mockResolvedValueOnce(jsonResponse({ error: 'AI_UNAVAILABLE' }, 503))
       .mockResolvedValueOnce(
         jsonResponse({
@@ -109,7 +109,7 @@ describe('budget interactions', () => {
     vi.stubGlobal('fetch', fetchMock);
     const { user } = renderWithPlan({ guests: 200 });
     await user.click(screen.getByRole('tab', { name: 'Budget' }));
-    fireEvent.change(screen.getAllByLabelText('Number of guests')[0] as HTMLElement, {
+    fireEvent.change(first(screen.getAllByLabelText('Number of guests')), {
       target: { value: '260' },
     });
     await user.click(screen.getByRole('button', { name: 'Explain these options' }));
@@ -118,9 +118,10 @@ describe('budget interactions', () => {
     expect(screen.getByTestId('over-budget-region')).toHaveTextContent(/Over budget/);
     await user.click(screen.getByRole('button', { name: 'Try again' }));
     expect(await screen.findByText('Invite a few fewer people.')).toBeInTheDocument();
-    expect(JSON.parse(fetchMock.mock.calls[1]?.[1]?.body as string).options.length).toBeGreaterThan(
-      0,
-    );
+    const explained = JSON.parse(fetchMock.mock.calls[1]?.[1]?.body as string) as {
+      options: unknown[];
+    };
+    expect(explained.options.length).toBeGreaterThan(0);
   });
 });
 
@@ -218,21 +219,19 @@ describe('planning assistant', () => {
     const panel = screen.getByRole('region', { name: 'Your planning assistant' });
     expect(within(panel).getByText(/Next up:/)).toBeInTheDocument();
     await user.click(screen.getByRole('tab', { name: 'Budget' }));
-    fireEvent.change(screen.getAllByLabelText('Number of guests')[0] as HTMLElement, {
+    fireEvent.change(first(screen.getAllByLabelText('Number of guests')), {
       target: { value: '260' },
     });
     expect(within(panel).getByText(/Urgent/)).toBeInTheDocument();
     expect(
       within(panel).getByText(/thing needs your attention|things need your attention/),
     ).toBeInTheDocument();
-    await user.click(
-      within(panel).getAllByRole('button', { name: 'Open Timeline' })[0] as HTMLElement,
-    );
+    await user.click(first(within(panel).getAllByRole('button', { name: 'Open Timeline' })));
     expect(screen.getByRole('tab', { name: 'Timeline' })).toHaveAttribute('aria-selected', 'true');
   });
 
   it('asks Gemini for a review of the computed facts and shows it', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
       jsonResponse({
         summary: 'Good start. Lock in vendors next.',
         steps: [{ title: 'Get catering quotes', why: 'Food is your priority.' }],
@@ -242,7 +241,9 @@ describe('planning assistant', () => {
     const { user } = renderWithPlan();
     await user.click(screen.getByRole('button', { name: 'Ask AI for a plan review' }));
     expect(await screen.findByTestId('ai-review')).toHaveTextContent('Get catering quotes');
-    const sent = JSON.parse(fetchMock.mock.calls[0]?.[1]?.body as string);
+    const sent = JSON.parse(fetchMock.mock.calls[0]?.[1]?.body as string) as {
+      insights: unknown[];
+    };
     expect(sent.insights.length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: 'Refresh AI review' })).toBeInTheDocument();
   });
@@ -290,9 +291,8 @@ describe('header and ideas', () => {
     });
     expect(within(screen.getByRole('banner')).getByText(/Plan readiness 0%/)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Share link' }));
-    expect(((await screen.findByLabelText('Copy this link')) as HTMLInputElement).value).toContain(
-      '#plan=',
-    );
+    const link = await screen.findByLabelText<HTMLInputElement>('Copy this link');
+    expect(link.value).toContain('#plan=');
   });
 
   it('ideas panel is labelled as AI with no prices and can retry', async () => {

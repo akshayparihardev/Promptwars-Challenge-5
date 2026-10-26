@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { loadEnv, type Plugin } from 'vite';
+import { loadEnv, type Plugin, type ViteDevServer } from 'vite';
 
 type Handler = (
   req: {
@@ -25,6 +25,64 @@ function readBody(req: IncomingMessage): Promise<string> {
   });
 }
 
+async function handleApi(
+  server: ViteDevServer,
+  req: IncomingMessage,
+  res: ServerResponse,
+  next: () => void,
+): Promise<void> {
+  const route = /^\/api\/([a-z-]+)(?:\?.*)?$/.exec(req.url ?? '')?.[1];
+  if (!route) {
+    next();
+    return;
+  }
+  const raw = await readBody(req);
+  let body: unknown = raw;
+  if ((req.headers['content-type'] ?? '').startsWith('application/json')) {
+    try {
+      body = raw ? (JSON.parse(raw) as unknown) : {};
+    } catch {
+      body = raw;
+    }
+  }
+  const reply = (status: number, payload: unknown) => {
+    res.statusCode = status;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify(payload));
+  };
+  try {
+    const mod = (await server.ssrLoadModule(`/api/${route}.ts`)) as { default?: Handler };
+    if (typeof mod.default !== 'function') {
+      reply(404, { error: 'NOT_FOUND' });
+      return;
+    }
+    let status = 200;
+    const adapter = {
+      status(code: number) {
+        status = code;
+        return adapter;
+      },
+      json(payload: unknown) {
+        reply(status, payload);
+      },
+      setHeader(name: string, value: string) {
+        res.setHeader(name, value);
+      },
+    };
+    await mod.default(
+      {
+        method: req.method,
+        headers: req.headers,
+        body,
+        socket: { remoteAddress: req.socket.remoteAddress },
+      },
+      adapter,
+    );
+  } catch {
+    reply(404, { error: 'NOT_FOUND' });
+  }
+}
+
 /** Serves /api/* from the same handlers Vercel runs, so `npm run dev` works end to end. */
 export function devApi(): Plugin {
   return {
@@ -35,56 +93,9 @@ export function devApi(): Plugin {
       for (const key of ['GEMINI_API_KEY', 'GEMINI_MODEL']) {
         if (env[key] && !process.env[key]) process.env[key] = env[key];
       }
-      server.middlewares.use(
-        async (req: IncomingMessage, res: ServerResponse, next: () => void) => {
-          const match = /^\/api\/([a-z-]+)(?:\?.*)?$/.exec(req.url ?? '');
-          if (!match) return next();
-          const raw = await readBody(req);
-          let body: unknown = raw;
-          if ((req.headers['content-type'] ?? '').startsWith('application/json')) {
-            try {
-              body = raw ? JSON.parse(raw) : {};
-            } catch {
-              body = raw;
-            }
-          }
-          const reply = (status: number, payload: unknown) => {
-            res.statusCode = status;
-            res.setHeader('Content-Type', 'application/json');
-            res.end(JSON.stringify(payload));
-          };
-          try {
-            const mod = (await server.ssrLoadModule(`/api/${match[1]}.ts`)) as {
-              default?: Handler;
-            };
-            if (typeof mod.default !== 'function') return reply(404, { error: 'NOT_FOUND' });
-            let status = 200;
-            const adapter = {
-              status(code: number) {
-                status = code;
-                return adapter;
-              },
-              json(payload: unknown) {
-                reply(status, payload);
-              },
-              setHeader(name: string, value: string) {
-                res.setHeader(name, value);
-              },
-            };
-            await mod.default(
-              {
-                method: req.method,
-                headers: req.headers,
-                body,
-                socket: { remoteAddress: req.socket.remoteAddress },
-              },
-              adapter,
-            );
-          } catch {
-            reply(404, { error: 'NOT_FOUND' });
-          }
-        },
-      );
+      server.middlewares.use((req: IncomingMessage, res: ServerResponse, next: () => void) => {
+        void handleApi(server, req, res, next);
+      });
     },
   };
 }

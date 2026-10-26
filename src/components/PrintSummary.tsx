@@ -98,7 +98,7 @@ export function PrintSummary({ plan, today }: { plan: Plan; today: string }) {
             <tr key={t.id}>
               <th scope="row">{t.title}</th>
               <td>{formatDate(t.effectiveDate)}</td>
-              <td>{t.assignee || '-'}</td>
+              <td>{t.assignee?.trim() ? t.assignee : '-'}</td>
               <td>
                 {t.status === 'done'
                   ? 'Done'

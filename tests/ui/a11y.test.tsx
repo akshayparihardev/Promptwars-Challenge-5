@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { expectNoA11yViolations, jsonResponse, renderApp, renderWithPlan } from './helpers';
+import { expectNoA11yViolations, jsonResponse, renderApp, renderWithPlan, first } from './helpers';
 
 describe('accessibility (axe)', () => {
   it('empty state / plan setup has no violations', async () => {
@@ -49,7 +49,7 @@ describe('accessibility (axe)', () => {
     await user.click(screen.getByRole('tab', { name: 'Budget' }));
     await expectNoA11yViolations(container);
     const { fireEvent } = await import('@testing-library/react');
-    fireEvent.change(screen.getAllByLabelText('Number of guests')[0] as HTMLElement, {
+    fireEvent.change(first(screen.getAllByLabelText('Number of guests')), {
       target: { value: '260' },
     });
     expect(screen.getByTestId('over-budget-region')).toHaveTextContent(/Over budget/);
@@ -60,7 +60,7 @@ describe('accessibility (axe)', () => {
     const { user, container } = renderWithPlan();
     await user.click(screen.getByRole('tab', { name: 'Timeline' }));
     await expectNoA11yViolations(container);
-    await user.click(screen.getAllByRole('button', { name: 'Mark delayed' })[0] as HTMLElement);
+    await user.click(first(screen.getAllByRole('button', { name: 'Mark delayed' })));
     await expectNoA11yViolations(container);
   });
 

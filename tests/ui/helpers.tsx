@@ -28,3 +28,10 @@ export function jsonResponse(body: unknown, status = 200): Response {
     headers: { 'Content-Type': 'application/json' },
   });
 }
+
+/** First match from a getAll* query, failing loudly instead of using a non-null assertion. */
+export function first<T>(items: readonly T[]): T {
+  const item = items[0];
+  if (item === undefined) throw new Error('Expected at least one match');
+  return item;
+}
