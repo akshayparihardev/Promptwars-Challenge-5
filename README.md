@@ -8,7 +8,7 @@ One connected plan for budget, timeline and vendors, built for Indian families.<
 Change the guest count and watch catering, budget and warnings move together.
 
 [![CI](https://github.com/akshayparihardev/Promptwars-Challenge-5/actions/workflows/ci.yml/badge.svg)](https://github.com/akshayparihardev/Promptwars-Challenge-5/actions)
-![Tests](https://img.shields.io/badge/tests-380%20unit%20%2B%2014%20e2e-2f6b45)
+![Tests](https://img.shields.io/badge/tests-403%20unit%20%2B%2014%20e2e-2f6b45)
 ![a11y](https://img.shields.io/badge/axe-0%20violations%20(light%20%26%20dark)-2f6b45)
 ![Coverage](https://img.shields.io/badge/coverage-100%25%20lines-2f6b45)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)
@@ -178,8 +178,9 @@ The injected line was treated as data, and fields that were not stated stayed `n
 
 ## 🧠 GenAI usage
 
-- **Model:** `gemini-3.6-flash` by default (override with `GEMINI_MODEL`, one name or a list), through the `@google/genai` SDK.
-- **Model failover.** If a model is out of quota, overloaded or retired, the next one (`gemini-3.5-flash-lite`) answers, and the failing model is set aside for a cooldown so later requests go straight to one that works.
+- **Model:** a four-model chain, `gemini-3-flash-preview` → `gemini-2.5-flash` → `gemini-3.1-flash-lite` → `gemini-2.5-flash-lite` (put your own first with `GEMINI_MODEL`, one name or a list), through the `@google/genai` SDK.
+- **Model failover.** If a model is out of quota, overloaded, retired or simply slow (9 s per model, 24 s overall), the next one answers, and the failing model is set aside for a cooldown so later requests go straight to one that works.
+- **Live thinking.** The planner chat and plan review stream Gemini's own thought summaries (NDJSON, validated line by line) so the family can see what it is doing, and keep them under the answer.
 - **Server only.** The key is read from `process.env` inside serverless functions and never reaches the browser, the repo or the logs.
 - **Cached.** Identical validated requests within 10 minutes are served from cache (`X-Cache: HIT`), so repeats cost nothing. With Vercel KV / Upstash configured the cache is **shared by every serverless instance**; otherwise each instance keeps a bounded in-memory copy.
 - **JSON mode with a schema** generated from the same zod schemas the app uses, a 15 s timeout, minimal "thinking" for speed (a typical call takes about 2 seconds).
@@ -216,7 +217,7 @@ Everything below is an estimate and is user-editable.
 - Business logic lives only in `src/engine` as pure functions; components render and dispatch, nothing more. API handlers are thin: guard, validate, call, validate, respond.
 - Small, single-purpose modules (every component under 250 lines) with one shared schema layer used by client, server and tests.
 
-### 🧪 Testing: 380 unit and integration tests, 14 end-to-end
+### 🧪 Testing: 403 unit and integration tests, 14 end-to-end
 
 `npm run check` runs typecheck, lint and the whole unit suite; `npm run e2e` runs the browser suite. CI runs both on every push.
 
@@ -287,7 +288,7 @@ npm run dev              # UI and /api together (same handlers as production)
 | `npm run format:check` | Prettier check (also run in CI) |
 | `npm run build` | production build |
 
-Environment variables: `GEMINI_API_KEY` (required for AI features), `GEMINI_MODEL` (optional, default `gemini-3.6-flash`), and optionally `KV_REST_API_URL` + `KV_REST_API_TOKEN` (set automatically by Vercel's Upstash Redis integration) to share the rate limit and AI cache across instances.
+Environment variables: `GEMINI_API_KEY` (required for AI features), `GEMINI_MODEL` (optional, put a model first in the chain), and optionally `KV_REST_API_URL` + `KV_REST_API_TOKEN` (set automatically by Vercel's Upstash Redis integration) to share the rate limit and AI cache across instances.
 
 ## ☁️ Deploy
 
@@ -300,7 +301,7 @@ Import the repo into Vercel (Framework: Vite), add `GEMINI_API_KEY` and `GEMINI_
 | Code quality | Strict TypeScript, typescript-eslint `strictTypeChecked` with zero findings, pure engine separate from UI and API, thin handlers, files under 250 lines, shared schemas | `src/engine`, `api/_lib`, [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
 | Security | Server-only key, same-origin guard, zod on every input and AI output, size caps, rate limit (shareable via KV), strict CSP without `unsafe-inline`, HSTS, prompt-injection guard, no HTML injection | [SECURITY.md](SECURITY.md), `api/_lib/http.ts`, `vercel.json` |
 | Efficiency | Deterministic engine (no AI for maths), AI cache, request cancellation, model failover with cooldowns, minimal thinking, memoisation, lazy tabs, no web fonts, under 100 kB gzipped | `api/_lib/model.ts`, `api/_lib/cache.ts`, `src/lib/useAiCall.ts` |
-| Testing | 380 unit and integration tests, 14 real-browser e2e, 100% line, statement and function coverage and 99.6% branches enforced, property test for compression, all in CI | [docs/TESTING.md](docs/TESTING.md), `tests/`, `e2e/` |
+| Testing | 403 unit and integration tests, 14 real-browser e2e, 100% line, statement and function coverage and 99.6% branches enforced, property test for compression, all in CI | [docs/TESTING.md](docs/TESTING.md), `tests/`, `e2e/` |
 | Accessibility | WCAG 2.1 AA: axe with contrast in real Chromium in both themes, error summary, keyboard tabs, live regions, contrast and forced-colours modes | [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md) |
 | Problem alignment | Weddings, birthdays, milestones and community events; budgets, timelines, vendor checklists, personalised ideas; a GenAI assistant that reviews, answers and explains | The table below |
 

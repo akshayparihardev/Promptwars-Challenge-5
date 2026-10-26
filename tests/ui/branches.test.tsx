@@ -115,7 +115,7 @@ describe('vendors', () => {
   it('quote category select accepts real categories and ignores anything else', async () => {
     const { user } = renderWithPlan();
     await user.click(screen.getByRole('tab', { name: 'Vendors' }));
-    const select = await screen.findByLabelText('What is this quote for?');
+    const select = await screen.findByLabelText('What is this quotation for?');
     await user.selectOptions(select, 'decor');
     expect(select).toHaveValue('decor');
     fireEvent.change(select, { target: { value: 'robots' } });
@@ -127,8 +127,10 @@ describe('vendors', () => {
     plan = addQuote(plan, makeQuote({ vendorName: null, taxIncluded: false }), 'q1').plan;
     const { user } = renderApp(plan);
     await user.click(screen.getByRole('tab', { name: 'Vendors' }));
-    const table = await screen.findByRole('table', { name: /Side-by-side quotes for Catering/ });
-    expect(within(table).getByText('Quote 1')).toBeInTheDocument();
+    const table = await screen.findByRole('table', {
+      name: /Side-by-side quotations for Catering/,
+    });
+    expect(within(table).getByText('Quotation 1')).toBeInTheDocument();
     expect(within(table).getByText('Not stated')).toBeInTheDocument();
     expect(within(table).getByText('Extra')).toBeInTheDocument();
   });
@@ -141,11 +143,11 @@ describe('vendors', () => {
     expect(screen.getByText('Crockery')).toBeInTheDocument();
     expect(screen.getByText('Cannot be worked out yet')).toBeInTheDocument();
     render(<QuoteResult quote={quote} plan={plan} full onSave={noop} />);
-    expect(screen.getByText(/You already have 3 quotes/)).toBeInTheDocument();
+    expect(screen.getByText(/You already have 3 quotations/)).toBeInTheDocument();
     expect(screen.getByText(/needs a price before it can be accepted/)).toBeInTheDocument();
   });
 
-  it('the print summary names unnamed vendors and copes with an unpriced accepted quote', () => {
+  it('the print summary names unnamed vendors and copes with an unpriced accepted quotation', () => {
     const plan = acceptQuote(addQuote(makePlan(), makeQuote({ vendorName: null }), 'q').plan, 'q');
     render(<PrintSummary plan={plan} today={TODAY} />);
     expect(screen.getByText(/Catering: Vendor/)).toBeInTheDocument();

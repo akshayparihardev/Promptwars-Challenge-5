@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useState, type KeyboardEvent } from 'react';
 import type { IntakeParse } from '../schemas';
 import { parseIntake, type RequestOptions } from '../lib/api';
 import { useAiCall } from '../lib/useAiCall';
 import { AiError, AiLoading } from './ui';
+
+export const EXAMPLE_EVENT =
+  'Shaadi in Pune, 200 guests, 8 lakh budget, mid-Feb, simple ceremony but premium food';
 
 /**
  * Free-text intake. Gemini reads the description; the parent decides which fields to fill and
@@ -12,6 +15,13 @@ export function DescribeEvent({ onParsed }: { onParsed: (result: IntakeParse) =>
   const [description, setDescription] = useState('');
   const [filled, setFilled] = useState<string | null>(null);
   const ai = useAiCall((options: RequestOptions, text: string) => parseIntake(text, options));
+
+  /** Tab on an empty box accepts the example, like ghost-text autocomplete in an editor. */
+  function acceptExample(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key !== 'Tab' || event.shiftKey || description !== '') return;
+    event.preventDefault();
+    setDescription(EXAMPLE_EVENT);
+  }
 
   async function fill() {
     setFilled(null);
@@ -42,12 +52,20 @@ export function DescribeEvent({ onParsed }: { onParsed: (result: IntakeParse) =>
         maxLength={1000}
         value={description}
         onChange={(e) => setDescription(e.target.value)}
-        placeholder="Shaadi in Pune, 200 guests, 8 lakh budget, mid-Feb, simple ceremony but premium food"
+        placeholder={EXAMPLE_EVENT}
+        aria-describedby={description === '' ? 'describe-tab-hint' : undefined}
+        onKeyDown={acceptExample}
       />
+      {description === '' && (
+        <p id="describe-tab-hint" className="hint">
+          Press <kbd className="rounded border border-line px-1.5 text-xs">Tab</kbd> to use this
+          example.
+        </p>
+      )}
       <div className="mt-3 flex flex-wrap items-center gap-3">
         <button
           type="button"
-          className="btn-secondary w-full sm:w-auto"
+          className="btn-primary w-full sm:w-auto"
           onClick={() => void fill()}
           disabled={description.trim() === '' || ai.state.status === 'loading'}
         >

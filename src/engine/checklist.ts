@@ -6,8 +6,8 @@ export type VendorStatus = 'not_started' | 'contacted' | 'quote_received' | 'quo
 export const VENDOR_STATUS_LABELS: Record<VendorStatus, string> = {
   not_started: 'Not started',
   contacted: 'Contacted',
-  quote_received: 'Quote received',
-  quote_accepted: 'Quote accepted',
+  quote_received: 'Quotation received',
+  quote_accepted: 'Quotation accepted',
 };
 
 type Bookable = Exclude<Category, 'contingency'>;

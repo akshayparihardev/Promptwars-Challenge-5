@@ -1,11 +1,13 @@
 import type { ZodType } from 'zod';
 import {
+  AiStreamLineSchema,
   ExplanationsSchema,
   IdeasSchema,
   IntakeParseSchema,
   PlanReviewSchema,
   PlannerAnswerSchema,
   QuoteSchema,
+  type AiStreamEvent,
   type Category,
   type Explanations,
   type Ideas,
@@ -60,24 +62,67 @@ function kindFromStatus(status: number, code: unknown): ApiErrorKind {
   if (status === 413) return 'too_large';
   if (status === 400 || status === 415) return 'invalid_input';
   if (status === 504 || code === 'AI_TIMEOUT') return 'timeout';
-  if (status === 503) return 'ai_unavailable';
+  if (status === 503 || code === 'AI_UNAVAILABLE') return 'ai_unavailable';
   return 'server';
 }
 
-export const CLIENT_TIMEOUT_MS = 20_000;
+/** A little above the server's own 24 s budget for the whole model chain. */
+export const CLIENT_TIMEOUT_MS = 30_000;
 
 export interface RequestOptions {
   /** Injected in tests; defaults to the global fetch. */
   fetcher?: typeof fetch;
   /** Lets the caller cancel a request it no longer needs (newer request, unmounted panel). */
   signal?: AbortSignal;
+  /** Asks for a streamed answer and receives the model's thoughts while it works. */
+  onEvent?: (event: AiStreamEvent) => void;
+}
+
+/**
+ * Reads an NDJSON answer: passes thoughts on as they arrive and returns the final `result` data.
+ * Any line that does not match the expected shape makes the whole answer untrusted.
+ */
+async function readStream(
+  body: ReadableStream<Uint8Array>,
+  onEvent: (event: AiStreamEvent) => void,
+): Promise<unknown> {
+  const reader = body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  const handle = (line: string): { data: unknown } | null => {
+    if (!line.trim()) return null;
+    let raw: unknown;
+    try {
+      raw = JSON.parse(line);
+    } catch {
+      throw new ApiError('ai_invalid');
+    }
+    const parsed = AiStreamLineSchema.safeParse(raw);
+    if (!parsed.success) throw new ApiError('ai_invalid');
+    const event = parsed.data;
+    if (event.type === 'result') return { data: event.data };
+    if (event.type === 'error') throw new ApiError(kindFromStatus(500, event.error));
+    onEvent(event);
+    return null;
+  };
+  for (;;) {
+    const { done, value } = await reader.read();
+    buffer += decoder.decode(value, { stream: !done });
+    const lines = buffer.split('\n');
+    buffer = done ? '' : (lines.pop() ?? '');
+    for (const line of lines) {
+      const result = handle(line);
+      if (result) return result.data;
+    }
+    if (done) throw new ApiError('server');
+  }
 }
 
 async function post<T>(
   path: string,
   body: unknown,
   schema: ZodType<T>,
-  { fetcher = fetch, signal }: RequestOptions = {},
+  { fetcher = fetch, signal, onEvent }: RequestOptions = {},
 ): Promise<T> {
   if (signal?.aborted) throw new ApiError('cancelled');
   const controller = new AbortController();
@@ -91,15 +136,23 @@ async function post<T>(
   try {
     const response = await fetcher(path, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(onEvent ? { Accept: 'application/x-ndjson, application/json' } : {}),
+      },
       body: JSON.stringify(body),
       signal: controller.signal,
     });
     let data: unknown = null;
-    try {
-      data = await response.json();
-    } catch {
-      data = null;
+    const streamed = (response.headers.get('content-type') ?? '').includes('ndjson');
+    if (streamed && onEvent && response.body) {
+      data = await readStream(response.body, onEvent);
+    } else {
+      try {
+        data = await response.json();
+      } catch {
+        data = null;
+      }
     }
     if (!response.ok) {
       const code = typeof data === 'object' && data !== null && 'error' in data ? data.error : null;

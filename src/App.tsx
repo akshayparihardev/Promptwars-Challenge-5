@@ -13,11 +13,13 @@ import { Header } from './components/Header';
 import { Icon, type IconName } from './components/Icon';
 import { PlanMasthead } from './components/PlanMasthead';
 import { PlanSetup } from './components/PlanSetup';
+import { ProgressPanel } from './components/ProgressPanel';
 import { PrintSummary } from './components/PrintSummary';
 import { TimelineTab } from './components/TimelineTab';
 import { Toast } from './components/Toast';
 import { EmptyState } from './components/ui';
 import { todayISO } from './lib/today';
+import type { Plan } from './schemas';
 import { loadInitial, safeStorage, usePlanStore, type InitialLoad } from './state/planStore';
 
 const VendorsTab = lazy(() => import('./components/VendorsTab'));
@@ -47,9 +49,23 @@ export default function App({
   const { state, dispatch } = usePlanStore(boot);
   const [tab, setTab] = useState<TabId>(boot.plan ? 'budget' : 'setup');
   const [notice, setNotice] = useState(boot.notice);
+  const [progressOpen, setProgressOpen] = useState(false);
+  // While a slider is held, the assistant above keeps showing the plan from before the drag, so
+  // nothing above the sliders changes height under the pointer.
+  const [grabbed, setGrabbed] = useState<Plan | null>(null);
   const refs = useRef<Record<string, HTMLButtonElement | null>>({});
   const dismissToast = useCallback(() => dispatch({ type: 'dismissToast' }), [dispatch]);
   const plan = state.plan;
+  useEffect(() => {
+    if (!grabbed) return;
+    const release = () => setGrabbed(null);
+    document.addEventListener('pointerup', release);
+    document.addEventListener('pointercancel', release);
+    return () => {
+      document.removeEventListener('pointerup', release);
+      document.removeEventListener('pointercancel', release);
+    };
+  }, [grabbed]);
   // After a plan is created, move focus to its title so keyboard and screen-reader users land on it.
   const focusTitleNext = useRef(false);
   useEffect(() => {
@@ -99,7 +115,15 @@ export default function App({
         }}
       />
 
-      <main id="main" className="no-print mx-auto max-w-5xl px-4 pb-24 pt-6">
+      <main
+        id="main"
+        className="no-print mx-auto max-w-5xl px-4 pb-24 pt-6"
+        onPointerDownCapture={(event) => {
+          if (plan && event.target instanceof HTMLInputElement && event.target.type === 'range') {
+            setGrabbed(plan);
+          }
+        }}
+      >
         {notice && (
           <div
             role="status"
@@ -118,7 +142,7 @@ export default function App({
         )}
 
         {plan && <PlanMasthead plan={plan} today={today} />}
-        {plan && <AssistantPanel plan={plan} today={today} onNavigate={setTab} />}
+        {plan && <AssistantPanel plan={grabbed ?? plan} today={today} onNavigate={setTab} />}
 
         <div role="tablist" aria-label="Plan sections" className="mb-6 flex border-b border-line">
           {TABS.map((t) => (
@@ -184,6 +208,17 @@ export default function App({
         </div>
       </main>
 
+      {plan && (
+        <ProgressPanel
+          plan={plan}
+          open={progressOpen}
+          onToggle={() => setProgressOpen((v) => !v)}
+          onNavigate={(next) => {
+            setTab(next);
+            setProgressOpen(false);
+          }}
+        />
+      )}
       {plan && <PrintSummary plan={plan} today={today} />}
       <Toast toast={state.toast} occasion={plan?.occasion ?? 'wedding'} onDismiss={dismissToast} />
     </>

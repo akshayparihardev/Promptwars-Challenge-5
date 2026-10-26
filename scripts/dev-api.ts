@@ -12,6 +12,8 @@ type Handler = (
     status(code: number): unknown;
     json(body: unknown): void;
     setHeader(name: string, value: string): void;
+    write(chunk: string): unknown;
+    end(): unknown;
   },
 ) => Promise<void>;
 
@@ -67,6 +69,13 @@ async function handleApi(
       },
       setHeader(name: string, value: string) {
         res.setHeader(name, value);
+      },
+      write(chunk: string) {
+        res.statusCode = status;
+        return res.write(chunk);
+      },
+      end() {
+        return res.end();
       },
     };
     await mod.default(

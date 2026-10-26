@@ -31,8 +31,8 @@ export function VendorChecklist({
         </p>
       </div>
       <p className="hint">
-        Tick &quot;Contacted&quot; when you reach out. Saving or accepting a quote below updates the
-        status.
+        Tick &quot;Contacted&quot; when you reach out. Saving or accepting a quotation below updates
+        the status.
       </p>
       <ul className="mt-3 divide-y divide-line">
         {items.map((item) => (

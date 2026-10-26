@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { useSyncedText } from '../lib/useSyncedText';
 import {
   budgetStatus,
@@ -55,6 +55,11 @@ export function BudgetTab({ plan, dispatch }: { plan: Plan; dispatch: (action: A
   }
 
   const over = status.overBy > 0;
+  const optionsRef = useRef<HTMLDivElement>(null);
+  const showOptions = () => {
+    optionsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    optionsRef.current?.focus({ preventScroll: true });
+  };
   return (
     <div className="space-y-6">
       <section className="card" aria-labelledby="summary-h">
@@ -66,7 +71,7 @@ export function BudgetTab({ plan, dispatch }: { plan: Plan; dispatch: (action: A
             <dd className="text-sm text-ink-soft">{toLakh(status.total)}</dd>
           </div>
           <div className="py-3 sm:px-6 sm:py-0">
-            <dt className="text-sm text-ink-soft">Committed (verified quotes)</dt>
+            <dt className="text-sm text-ink-soft">Committed (verified quotations)</dt>
             <dd className="tabular font-display text-3xl">{formatINR(status.committed)}</dd>
           </div>
           <div className="py-3 sm:py-0 sm:pl-6">
@@ -79,23 +84,65 @@ export function BudgetTab({ plan, dispatch }: { plan: Plan; dispatch: (action: A
         </div>
       </section>
 
-      <div role="status" aria-live="polite" data-testid="over-budget-region">
-        {over && (
-          <div className="flex items-start gap-3 rounded-2xl border border-warn/50 bg-warn-soft p-4 text-warn">
-            <Icon name="alert" className="mt-0.5 h-5 w-5" />
-            <div>
-              <p className="font-semibold">
-                Over budget by {formatINR(status.overBy)} ({status.overByPct}% of your total)
+      <div
+        role="status"
+        aria-live="polite"
+        data-testid="over-budget-region"
+        className="sticky top-2 z-10"
+      >
+        {/* Same fixed height in both states, so the sliders below never move when this flips. */}
+        {over ? (
+          <div className="flex h-[4.5rem] items-center gap-3 rounded-2xl border border-warn/50 bg-warn-soft px-4 text-warn shadow-sm">
+            <Icon name="alert" className="h-5 w-5 shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold sm:text-base">
+                Over budget by {formatINR(status.overBy)}
               </p>
-              <p className="mt-1 text-sm">
-                Your plan needs more than you have set aside. Nothing was changed automatically.
-                Choose an option below.
+              <p className="truncate text-xs sm:text-sm">
+                {status.overByPct}% of your total. Nothing was changed automatically.
               </p>
             </div>
+            <button type="button" className="btn-secondary shrink-0" onClick={showOptions}>
+              Options
+            </button>
+          </div>
+        ) : (
+          <div className="flex h-[4.5rem] items-center gap-3 rounded-2xl border border-line bg-card px-4 text-ink-soft shadow-sm">
+            <Icon name="check" className="h-5 w-5 shrink-0 text-ok" />
+            <p className="truncate text-sm font-medium">
+              Within budget. Everything adds up to {formatINR(status.total)}.
+            </p>
           </div>
         )}
       </div>
 
+      <section aria-labelledby="cats-h">
+        <h2 id="cats-h">Where the money goes</h2>
+        <p className="mb-4 mt-1 text-sm text-ink-soft">
+          Move one slider and the others adjust to keep the total the same. Lock a category to
+          protect it.
+        </p>
+        <div className="card divide-y divide-line !p-0">
+          {needs.map((need) => (
+            <CategoryRow
+              key={need.category}
+              occasion={plan.occasion}
+              category={need.category}
+              amount={plan.allocation[need.category]}
+              total={plan.totalBudget}
+              locked={plan.locked.includes(need.category)}
+              need={need}
+              swatchClass={SWATCH_CLASS[need.category]}
+              onChange={onChange}
+              onToggleLock={onToggleLock}
+            />
+          ))}
+        </div>
+        <p className="mt-4 text-xs text-ink-soft">
+          Splits start from typical presets for a {OCCASION_LABELS[plan.occasion].toLowerCase()} and
+          stay estimates until you accept a vendor quotation.
+        </p>
+      </section>
       <section className="card" aria-labelledby="controls-h">
         <h2 id="controls-h">Guests and totals</h2>
         <div className="mt-4 grid gap-5 sm:grid-cols-3">
@@ -165,41 +212,15 @@ export function BudgetTab({ plan, dispatch }: { plan: Plan; dispatch: (action: A
       </section>
 
       {over && (
-        <TradeoffPanel
-          plan={plan}
-          options={options}
-          overBy={status.overBy}
-          onApply={(option) => dispatch({ type: 'applyOption', option })}
-        />
-      )}
-
-      <section aria-labelledby="cats-h">
-        <h2 id="cats-h">Where the money goes</h2>
-        <p className="mb-4 mt-1 text-sm text-ink-soft">
-          Move one slider and the others adjust to keep the total the same. Lock a category to
-          protect it.
-        </p>
-        <div className="card divide-y divide-line !p-0">
-          {needs.map((need) => (
-            <CategoryRow
-              key={need.category}
-              occasion={plan.occasion}
-              category={need.category}
-              amount={plan.allocation[need.category]}
-              total={plan.totalBudget}
-              locked={plan.locked.includes(need.category)}
-              need={need}
-              swatchClass={SWATCH_CLASS[need.category]}
-              onChange={onChange}
-              onToggleLock={onToggleLock}
-            />
-          ))}
+        <div id="tradeoffs" ref={optionsRef} tabIndex={-1} className="outline-none">
+          <TradeoffPanel
+            plan={plan}
+            options={options}
+            overBy={status.overBy}
+            onApply={(option) => dispatch({ type: 'applyOption', option })}
+          />
         </div>
-        <p className="mt-4 text-xs text-ink-soft">
-          Splits start from typical presets for a {OCCASION_LABELS[plan.occasion].toLowerCase()} and
-          stay estimates until you accept a vendor quote.
-        </p>
-      </section>
+      )}
     </div>
   );
 }

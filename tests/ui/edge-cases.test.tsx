@@ -210,8 +210,8 @@ describe('timeline, vendors and ideas edge cases', () => {
       configurable: true,
     });
     await user.click(screen.getByRole('tab', { name: 'Vendors' }));
-    await user.type(await screen.findByLabelText('Quote text'), 'Rs 900 per plate');
-    await user.click(screen.getByRole('button', { name: 'Analyze quote' }));
+    await user.type(await screen.findByLabelText('Quotation text'), 'Rs 900 per plate');
+    await user.click(screen.getByRole('button', { name: 'Analyze quotation' }));
     await screen.findByTestId('quote-result');
     await user.click(screen.getByRole('button', { name: 'Copy inquiry message' }));
     const draft = await screen.findByLabelText<HTMLTextAreaElement>('Inquiry message');

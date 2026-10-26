@@ -44,7 +44,7 @@ export function QuoteAnalyzer({
     dispatch({ type: 'addQuote', quote, id: newId(), accept });
     setSaved(
       accept
-        ? 'Quote accepted. This category now shows a verified quote.'
+        ? 'Quotation accepted. This category now shows a verified quotation.'
         : 'Saved for comparison.',
     );
     ai.reset();
@@ -54,7 +54,7 @@ export function QuoteAnalyzer({
   return (
     <section className="card" aria-labelledby="analyze-h">
       <h2 id="analyze-h" className="text-lg">
-        Paste a vendor quote
+        Paste a vendor quotation
       </h2>
       <p className="hint">
         Copy the message or PDF text your vendor sent. We pull out the details and flag the fine
@@ -63,7 +63,7 @@ export function QuoteAnalyzer({
       <div className="mt-4 grid gap-4">
         <div>
           <label htmlFor="quote-cat" className="label">
-            What is this quote for?
+            What is this quotation for?
           </label>
           <select
             id="quote-cat"
@@ -83,7 +83,7 @@ export function QuoteAnalyzer({
         </div>
         <div>
           <label htmlFor="quote-text" className="label">
-            Quote text
+            Quotation text
           </label>
           <textarea
             id="quote-text"
@@ -102,13 +102,13 @@ export function QuoteAnalyzer({
             disabled={pasted.trim() === '' || ai.state.status === 'loading'}
             onClick={() => void analyze()}
           >
-            Analyze quote
+            Analyze quotation
           </button>
         </div>
       </div>
 
       <div aria-live="polite" className="mt-4">
-        {ai.state.status === 'loading' && <AiLoading label="Reading the quote…" />}
+        {ai.state.status === 'loading' && <AiLoading label="Reading the quotation…" />}
         {ai.state.status === 'error' && (
           <AiError message={ai.state.message} onRetry={() => void analyze()} />
         )}

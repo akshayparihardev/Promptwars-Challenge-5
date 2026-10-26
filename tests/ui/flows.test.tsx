@@ -18,7 +18,7 @@ describe('create a plan and watch it react', () => {
 
     expect(await screen.findByRole('heading', { name: 'Budget at a glance' })).toBeInTheDocument();
     expect(document.getElementById('plan-title')).toHaveFocus();
-    expect(screen.getByTestId('over-budget-region')).toBeEmptyDOMElement();
+    expect(screen.getByTestId('over-budget-region')).not.toHaveTextContent(/Over budget/);
     const catering = screen.getByRole('article', { name: 'Catering' });
     expect(within(catering).getByText('Estimate')).toBeInTheDocument();
 
@@ -35,7 +35,9 @@ describe('create a plan and watch it react', () => {
     await user.click(first(screen.getAllByRole('button', { name: 'Apply' })));
     expect(screen.getByText(/Apply "Reduce guests by/)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Yes, apply' }));
-    await waitFor(() => expect(screen.getByTestId('over-budget-region')).toBeEmptyDOMElement());
+    await waitFor(() =>
+      expect(screen.getByTestId('over-budget-region')).not.toHaveTextContent(/Over budget/),
+    );
   });
 
   it('shows an error summary that takes focus and links to each field', async () => {
@@ -188,8 +190,11 @@ describe('vendors', () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
     await user.click(screen.getByRole('tab', { name: 'Vendors' }));
-    await user.type(await screen.findByLabelText('Quote text'), 'Per plate 1500, min 250 plates');
-    await user.click(screen.getByRole('button', { name: 'Analyze quote' }));
+    await user.type(
+      await screen.findByLabelText('Quotation text'),
+      'Per plate 1500, min 250 plates',
+    );
+    await user.click(screen.getByRole('button', { name: 'Analyze quotation' }));
     const result = await screen.findByTestId('quote-result');
     expect(result).toHaveTextContent(/Vendor minimum is 250 guests/);
     expect(result).toHaveTextContent(/GST\/tax is not mentioned/);
@@ -199,15 +204,15 @@ describe('vendors', () => {
     expect(writeText).toHaveBeenCalledWith(expect.stringContaining('Is GST/tax included'));
     expect(await screen.findByText(/Message copied/)).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Accept quote' }));
-    expect(await screen.findByText(/Quote accepted. This category/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Accept quotation' }));
+    expect(await screen.findByText(/Quotation accepted. This category/)).toBeInTheDocument();
     expect(
-      screen.getByRole('table', { name: /Side-by-side quotes for Catering/ }),
+      screen.getByRole('table', { name: /Side-by-side quotations for Catering/ }),
     ).toBeInTheDocument();
     expect(screen.getAllByText(/Accepted/).length).toBeGreaterThan(0);
     await user.click(screen.getByRole('tab', { name: 'Budget' }));
     expect(
-      within(screen.getByRole('article', { name: 'Catering' })).getByText('Verified quote'),
+      within(screen.getByRole('article', { name: 'Catering' })).getByText('Verified quotation'),
     ).toBeInTheDocument();
   });
 
@@ -218,8 +223,8 @@ describe('vendors', () => {
     );
     const { user } = renderWithPlan();
     await user.click(screen.getByRole('tab', { name: 'Vendors' }));
-    await user.type(await screen.findByLabelText('Quote text'), 'some quote');
-    await user.click(screen.getByRole('button', { name: 'Analyze quote' }));
+    await user.type(await screen.findByLabelText('Quotation text'), 'some quote');
+    await user.click(screen.getByRole('button', { name: 'Analyze quotation' }));
     expect(await screen.findByRole('alert')).toHaveTextContent(/could not trust/);
   });
 });

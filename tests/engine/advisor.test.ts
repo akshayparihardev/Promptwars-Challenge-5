@@ -64,7 +64,7 @@ describe('localAnswer (built-in planner when AI is unavailable)', () => {
   });
 
   it('answers what to do next, timing, guests and an overview', () => {
-    expect(localAnswer('what next?', plan, TODAY)).toMatch(/quotes|Next up/);
+    expect(localAnswer('what next?', plan, TODAY)).toMatch(/quotations|Next up/);
     expect(localAnswer('kab hai?', plan, TODAY)).toMatch(
       /195 days to go, with 14 tasks still open/,
     );

@@ -53,8 +53,8 @@ describe('retry buttons recover after an AI failure', () => {
     );
     const { user } = renderWithPlan();
     await user.click(screen.getByRole('tab', { name: 'Vendors' }));
-    await user.type(await screen.findByLabelText('Quote text'), 'Total 2.5 lakh');
-    await user.click(screen.getByRole('button', { name: 'Analyze quote' }));
+    await user.type(await screen.findByLabelText('Quotation text'), 'Total 2.5 lakh');
+    await user.click(screen.getByRole('button', { name: 'Analyze quotation' }));
     await user.click(await screen.findByRole('button', { name: 'Try again' }));
     expect(await screen.findByTestId('quote-result')).toHaveTextContent('Annapurna');
   });
@@ -67,7 +67,9 @@ describe('comparison table actions', () => {
     plan = addQuote(plan, makeQuote({ vendorName: 'Annapurna', totalPrice: 210000 }), 'b').plan;
     const { user } = renderApp(plan);
     await user.click(screen.getByRole('tab', { name: 'Vendors' }));
-    const table = await screen.findByRole('table', { name: /Side-by-side quotes for Catering/ });
+    const table = await screen.findByRole('table', {
+      name: /Side-by-side quotations for Catering/,
+    });
     await user.click(first(within(table).getAllByRole('button', { name: 'Accept' })));
     expect(within(table).getByText('Accepted')).toBeInTheDocument();
     const removes = within(table).getAllByRole('button', { name: 'Remove' });

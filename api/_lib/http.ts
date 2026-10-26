@@ -1,4 +1,5 @@
 import type { ZodType } from 'zod';
+import type { AiStreamEvent } from '../../src/schemas/index.js';
 import { CACHE_TTL_MS, cacheGet, cacheKey, cacheSet } from './cache.js';
 import { incrementWindow, storeGet, storeKey, storeSet } from './store.js';
 
@@ -13,7 +14,12 @@ export interface ApiResponse {
   status(code: number): ApiResponse;
   json(body: unknown): void;
   setHeader(name: string, value: string): void;
+  /** Present on real (Node) responses; used to stream thought summaries as NDJSON. */
+  write?(chunk: string): unknown;
+  end?(): unknown;
 }
+
+export const NDJSON = 'application/x-ndjson';
 
 export const MAX_BODY_BYTES = 8 * 1024;
 export const RATE_LIMIT_MAX = 20;
@@ -135,11 +141,43 @@ export interface HandlerConfig<I> {
   name: string;
   input: ZodType<I>;
   /** Returns data that has already been validated against the endpoint's output schema. */
-  run: (input: I) => Promise<unknown>;
+  run: (input: I, onEvent?: (event: AiStreamEvent) => void) => Promise<unknown>;
+  /** Stream the model's thoughts to callers that accept NDJSON. */
+  stream?: boolean;
 }
 
 function fail(res: ApiResponse, status: number, code: ErrorCode): void {
   res.status(status).json({ error: code });
+}
+
+function failureCode(error: unknown): ErrorCode {
+  if (error instanceof ApiFailure) return error.code;
+  console.error('api: unexpected failure');
+  return 'INTERNAL';
+}
+
+/**
+ * Streams one AI call as NDJSON: thought summaries and model switches as they happen, then exactly
+ * one `result` (already validated) or `error` line. Headers go out first, so failures are lines too.
+ */
+async function streamRun<I>(
+  res: ApiResponse,
+  config: HandlerConfig<I>,
+  input: I,
+  key: string,
+): Promise<void> {
+  res.setHeader('Content-Type', `${NDJSON}; charset=utf-8`);
+  res.setHeader('X-Accel-Buffering', 'no');
+  res.status(200);
+  const send = (line: unknown) => res.write?.(`${JSON.stringify(line)}\n`);
+  try {
+    const result = await config.run(input, send);
+    await writeCache(key, result);
+    send({ type: 'result', data: result });
+  } catch (error) {
+    send({ type: 'error', error: failureCode(error) });
+  }
+  res.end?.();
 }
 
 /** Shared pipeline: method guard, content type, rate limit, size cap, validate, run, respond. */
@@ -193,18 +231,17 @@ export function createHandler<I>(config: HandlerConfig<I>) {
       res.status(200).json(cached);
       return;
     }
+    if (config.stream && header(req, 'accept').includes(NDJSON) && res.write && res.end) {
+      await streamRun(res, config, parsed.data, key);
+      return;
+    }
     try {
       const result = await config.run(parsed.data);
       await writeCache(key, result);
       res.status(200).json(result);
     } catch (error) {
-      if (error instanceof ApiFailure) {
-        fail(res, error.status, error.code);
-        return;
-      }
-      console.error('api: unexpected failure');
-      fail(res, 500, 'INTERNAL');
-      return;
+      const code = failureCode(error);
+      fail(res, error instanceof ApiFailure ? error.status : 500, code);
     }
   };
 }

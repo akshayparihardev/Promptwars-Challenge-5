@@ -49,7 +49,7 @@ test('describe, create, grow the guest list, get options and apply one', async (
   await expect(page.getByText(/Over budget by ₹/).first()).toBeVisible();
   await page.getByRole('button', { name: 'Apply' }).first().click();
   await page.getByRole('button', { name: 'Yes, apply' }).click();
-  await expect(page.getByTestId('over-budget-region')).toBeEmpty();
+  await expect(page.getByTestId('over-budget-region')).toContainText('Within budget');
 });
 
 test('the assistant explains the plan and the AI review renders', async ({ page }) => {

@@ -48,7 +48,8 @@ export const PrintSummary = memo(function PrintSummary({
         </p>
         <p>
           Plan readiness {readiness.percent}% · {readiness.tasksDone}/{readiness.tasksTotal} tasks
-          done · {readiness.quotesVerified}/{readiness.quotesTotal} categories with verified quotes
+          done · {readiness.quotesVerified}/{readiness.quotesTotal} categories with verified
+          quotations
         </p>
       </div>
 
@@ -69,7 +70,7 @@ export const PrintSummary = memo(function PrintSummary({
               <td>{formatINR(plan.allocation[c])}</td>
               <td>{percentOf(plan.allocation[c], plan.totalBudget)}%</td>
               <td>
-                {needs.find((n) => n.category === c)?.verified ? 'Verified quote' : 'Estimate'}
+                {needs.find((n) => n.category === c)?.verified ? 'Verified quotation' : 'Estimate'}
               </td>
             </tr>
           ))}
@@ -82,7 +83,7 @@ export const PrintSummary = memo(function PrintSummary({
 
       {accepted.length > 0 && (
         <>
-          <h2 className="mt-5 text-lg">Accepted vendor quotes</h2>
+          <h2 className="mt-5 text-lg">Accepted vendor quotations</h2>
           <ul className="list-disc pl-5">
             {accepted.map((q) => (
               <li key={q.id}>
@@ -131,7 +132,7 @@ export const PrintSummary = memo(function PrintSummary({
         ))}
       </ul>
       <p className="mt-4 text-sm">
-        Amounts are estimates unless marked as a verified quote. Planned with Aayojan.
+        Amounts are estimates unless marked as a verified quotation. Planned with Aayojan.
       </p>
     </article>
   );

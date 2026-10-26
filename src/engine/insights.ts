@@ -102,7 +102,7 @@ export function planInsights(plan: Plan, today: string): Insight[] {
       out.push({
         id: `quote-${q.id}`,
         severity: 'warning',
-        title: `Check the accepted ${categoryLabel(plan.occasion, q.category).toLowerCase()} quote`,
+        title: `Check the accepted ${categoryLabel(plan.occasion, q.category).toLowerCase()} quotation`,
         detail: issues.map((i) => i.message).join(' '),
         tab: 'vendors',
       });
@@ -123,8 +123,8 @@ export function planInsights(plan: Plan, today: string): Insight[] {
       severity: soon ? 'warning' : 'suggestion',
       title: soon
         ? `${unconfirmed.length} vendors still unconfirmed with ${Math.max(0, daysToEvent)} days to go`
-        : `Collect quotes for ${unconfirmed.length} categories`,
-      detail: `${labels}. Paste a quote to compare and confirm.`,
+        : `Collect quotations for ${unconfirmed.length} categories`,
+      detail: `${labels}. Paste a quotation to compare and confirm.`,
       tab: 'vendors',
     });
   }

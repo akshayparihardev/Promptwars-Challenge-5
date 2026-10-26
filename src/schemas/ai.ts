@@ -142,3 +142,19 @@ export const AskPlannerRequestSchema = z.object({
 
 export const PlannerAnswerSchema = z.object({ answer: z.string().min(1).max(1200) });
 export type PlannerAnswer = z.infer<typeof PlannerAnswerSchema>;
+
+/**
+ * One line of a streamed AI answer (NDJSON): the model's thought summaries and model switches as
+ * they happen, then the validated result or an error code.
+ */
+export const AiStreamEventSchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('thought'), text: z.string().max(2000) }),
+  z.object({ type: z.literal('fallback') }),
+]);
+export type AiStreamEvent = z.infer<typeof AiStreamEventSchema>;
+
+export const AiStreamLineSchema = z.union([
+  AiStreamEventSchema,
+  z.object({ type: z.literal('result'), data: z.unknown() }),
+  z.object({ type: z.literal('error'), error: z.string().max(64) }),
+]);

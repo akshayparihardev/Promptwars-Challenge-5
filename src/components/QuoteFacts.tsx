@@ -24,7 +24,7 @@ export function QuoteFacts({ quote, guests }: { quote: Quote; guests: number }) 
   const cost = effectiveCost(quote, guests);
   return (
     <table>
-      <caption className="sr-only">Details found in the quote</caption>
+      <caption className="sr-only">Details found in the quotation</caption>
       <tbody>
         {rows.map(([k, v]) => (
           <tr key={k}>

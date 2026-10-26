@@ -94,17 +94,19 @@ export function QuoteResult({
           disabled={full || cost === null}
           onClick={() => onSave(true)}
         >
-          Accept quote
+          Accept quotation
         </button>
       </div>
       {full && (
         <p className="text-sm text-ink-soft">
-          You already have {MAX_QUOTES_PER_CATEGORY} quotes for this category. Remove one below to
-          add another.
+          You already have {MAX_QUOTES_PER_CATEGORY} quotations for this category. Remove one below
+          to add another.
         </p>
       )}
       {cost === null && (
-        <p className="text-sm text-ink-soft">A quote needs a price before it can be accepted.</p>
+        <p className="text-sm text-ink-soft">
+          A quotation needs a price before it can be accepted.
+        </p>
       )}
       <div aria-live="polite">
         {copied === 'done' && (

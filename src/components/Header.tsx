@@ -39,7 +39,7 @@ export function Header({ plan, onReset }: { plan: Plan | null; onReset: () => vo
               <span>Plan readiness {readiness.percent}%</span>
               <span className="text-xs font-normal text-ink-soft">
                 {readiness.tasksDone}/{readiness.tasksTotal} tasks · {readiness.quotesVerified}/
-                {readiness.quotesTotal} quotes
+                {readiness.quotesTotal} vendors
               </span>
             </p>
             <progress
@@ -103,7 +103,7 @@ export function Header({ plan, onReset }: { plan: Plan | null; onReset: () => vo
         {confirmReset && (
           <div className="pb-3">
             <Confirm
-              prompt="Reset the whole plan? Your budget, timeline and quotes will be cleared from this browser."
+              prompt="Reset the whole plan? Your budget, timeline and quotations will be cleared from this browser."
               confirmLabel="Yes, reset"
               onCancel={() => setConfirmReset(false)}
               onConfirm={() => {

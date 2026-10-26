@@ -28,13 +28,13 @@ function CategoryTable({
     <section className="card overflow-x-auto" aria-labelledby={`cmp-${category}`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 id={`cmp-${category}`} className="text-base">
-          {label}: compare quotes
+          {label}: compare quotations
         </h3>
         <EstimateBadge verified={quotes.some((q) => q.accepted)} />
       </div>
       <p className="hint">Budget for this category: {formatINR(budget)}</p>
       <table className="mt-2 min-w-[28rem]">
-        <caption className="sr-only">Side-by-side quotes for {label}</caption>
+        <caption className="sr-only">Side-by-side quotations for {label}</caption>
         <thead>
           <tr>
             <th scope="col">
@@ -42,7 +42,7 @@ function CategoryTable({
             </th>
             {cols.map((c, i) => (
               <th key={c.s.id} scope="col">
-                {c.s.quote.vendorName ?? `Quote ${i + 1}`}
+                {c.s.quote.vendorName ?? `Quotation ${i + 1}`}
                 {c.s.accepted && (
                   <span className="badge-verified ml-2">
                     <Icon name="check" className="h-3 w-3" /> Accepted
@@ -159,8 +159,8 @@ export function QuoteComparison({ plan, dispatch }: { plan: Plan; dispatch: (a: 
   if (groups.length === 0) {
     return (
       <p className="card text-sm text-ink-soft">
-        No quotes saved yet. Analyze a quote above and save it to compare up to three vendors per
-        category.
+        No quotations saved yet. Analyze a quotation above and save it to compare up to three
+        vendors per category.
       </p>
     );
   }

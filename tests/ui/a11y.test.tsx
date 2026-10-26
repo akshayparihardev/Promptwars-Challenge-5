@@ -86,12 +86,12 @@ describe('accessibility (axe)', () => {
     const { user, container } = renderWithPlan();
     await user.click(screen.getByRole('tab', { name: 'Vendors' }));
     await expectNoA11yViolations(container);
-    await user.type(await screen.findByLabelText('Quote text'), 'quote');
-    await user.click(screen.getByRole('button', { name: 'Analyze quote' }));
+    await user.type(await screen.findByLabelText('Quotation text'), 'quote');
+    await user.click(screen.getByRole('button', { name: 'Analyze quotation' }));
     await screen.findByTestId('quote-result');
     await expectNoA11yViolations(container);
     await user.click(screen.getByRole('button', { name: 'Save for comparison' }));
-    await screen.findByRole('table', { name: /Side-by-side quotes/ });
+    await screen.findByRole('table', { name: /Side-by-side quotations/ });
     await expectNoA11yViolations(container);
     vi.unstubAllGlobals();
   });

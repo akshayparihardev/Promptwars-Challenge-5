@@ -140,7 +140,7 @@ export const CategoryRow = memo(function CategoryRow({
 
       {need.verified && (
         <p className="tabular text-sm text-ink-soft md:col-span-3">
-          Accepted quote: {formatINR(need.amount)}
+          Accepted quotation: {formatINR(need.amount)}
         </p>
       )}
       {need.shortfall > 0 && (

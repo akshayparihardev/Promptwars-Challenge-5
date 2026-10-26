@@ -218,7 +218,7 @@ export function PlanSetup({
 
         {existing && (
           <p className="hint">
-            Creating a new plan replaces your current budget, timeline and vendor quotes.
+            Creating a new plan replaces your current budget, timeline and vendor quotations.
           </p>
         )}
         <button type="submit" className="btn-primary w-full sm:w-auto">

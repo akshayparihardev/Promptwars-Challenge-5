@@ -4,6 +4,7 @@ import type { ChatTurn, Plan } from '../schemas';
 import { askPlanner, type RequestOptions } from '../lib/api';
 import { useAiCall } from '../lib/useAiCall';
 import { Icon } from './Icon';
+import { ThinkingTrace } from './ThinkingTrace';
 import { AiLoading } from './ui';
 
 interface Turn extends ChatTurn {
@@ -22,8 +23,10 @@ const SUGGESTIONS = [
 export function AskPlanner({ plan, today }: { plan: Plan; today: string }) {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [draft, setDraft] = useState('');
-  const ai = useAiCall((options: RequestOptions, request: Parameters<typeof askPlanner>[0]) =>
-    askPlanner(request, options),
+  const ai = useAiCall(
+    (options: RequestOptions, request: Parameters<typeof askPlanner>[0]) =>
+      askPlanner(request, options),
+    { stream: true },
   );
   const busy = ai.state.status === 'loading';
 
@@ -77,6 +80,9 @@ export function AskPlanner({ plan, today }: { plan: Plan; today: string }) {
                     : 'Assistant (built-in planner, AI unavailable)'}
               </p>
               <p className="whitespace-pre-line">{turn.text}</p>
+              {turn.source === 'ai' && index === turns.length - 1 && !busy && (
+                <ThinkingTrace progress={ai.progress} live={false} />
+              )}
             </li>
           ))}
         </ol>
@@ -84,6 +90,7 @@ export function AskPlanner({ plan, today }: { plan: Plan; today: string }) {
       {busy && (
         <div className="mt-3">
           <AiLoading label="Thinking about your plan…" />
+          <ThinkingTrace progress={ai.progress} live />
         </div>
       )}
 

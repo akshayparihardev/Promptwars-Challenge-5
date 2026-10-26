@@ -1,4 +1,5 @@
 import { z, type ZodType } from 'zod';
+import type { AiStreamEvent } from '../../src/schemas/index.js';
 import { ApiFailure } from './http.js';
 import { callModel } from './model.js';
 
@@ -17,11 +18,14 @@ export async function generateJson<T>(options: {
   system: string;
   user: string;
   schema: ZodType<T>;
+  /** Receives thought summaries when the caller is streaming. */
+  onEvent?: (event: AiStreamEvent) => void;
 }): Promise<T> {
   const text = await callModel({
     system: options.system,
     user: options.user,
     jsonSchema: toJsonSchema(options.schema),
+    ...(options.onEvent ? { onEvent: options.onEvent } : {}),
   });
   let raw: unknown;
   try {

@@ -64,13 +64,13 @@ export function localAnswer(question: string, plan: Plan, today: string): string
     case 'budget':
       return status.overBy > 0
         ? `You are over budget by ${formatINR(status.overBy)} (${status.overByPct}%). Open the Budget tab to pick one of the options; nothing is cut automatically.`
-        : `You are within your ${formatINR(status.total)} budget: ${formatINR(status.committed)} is backed by accepted quotes and ${formatINR(status.estimated)} is still an estimate.`;
+        : `You are within your ${formatINR(status.total)} budget: ${formatINR(status.committed)} is backed by accepted quotations and ${formatINR(status.estimated)} is still an estimate.`;
     case 'vendors': {
       const items = vendorChecklist(plan);
       const pending = items.filter((i) => i.status !== 'quote_accepted').map((i) => i.label);
       return pending.length === 0
-        ? 'Every vendor category has an accepted quote. Well done.'
-        : `${items.length - pending.length} of ${items.length} vendors are confirmed. Still open: ${pending.join(', ')}. Paste a quote on the Vendors tab to compare and confirm.`;
+        ? 'Every vendor category has an accepted quotation. Well done.'
+        : `${items.length - pending.length} of ${items.length} vendors are confirmed. Still open: ${pending.join(', ')}. Paste a quotation on the Vendors tab to compare and confirm.`;
     }
     case 'next': {
       const top = planInsights(plan, today)[0];

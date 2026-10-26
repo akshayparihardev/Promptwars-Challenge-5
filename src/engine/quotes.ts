@@ -139,7 +139,7 @@ export function addQuote(plan: Plan, quote: Quote, id: string): { plan: Plan; ad
   };
 }
 
-/** Accepting a quote makes it the single verified quote for its category. */
+/** Accepting a quote makes it the single verified quotation for its category. */
 export function acceptQuote(plan: Plan, id: string): Plan {
   const target = plan.quotes.find((q) => q.id === id);
   if (!target) return plan;

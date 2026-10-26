@@ -51,7 +51,7 @@ export function Field({
 export function EstimateBadge({ verified }: { verified: boolean }) {
   return verified ? (
     <span className="badge-verified">
-      <Icon name="check" className="h-3 w-3" /> Verified quote
+      <Icon name="check" className="h-3 w-3" /> Verified quotation
     </span>
   ) : (
     <span className="badge-estimate">Estimate</span>

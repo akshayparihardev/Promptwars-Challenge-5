@@ -60,7 +60,7 @@ describe('planInsights (the assistant’s reasoning)', () => {
     expect(insight?.detail).toMatch(/Venue, Catering/);
   });
 
-  it('checks the fine print of accepted quotes', () => {
+  it('checks the fine print of accepted quotations', () => {
     let plan = makePlan();
     plan = addQuote(plan, makeQuote({ pricePerPlate: 100, guestMinimum: 500 }), 'q').plan;
     plan = acceptQuote(plan, 'q');
