@@ -195,7 +195,7 @@ Everything below is an estimate and is user-editable.
 - TypeScript `strict` with `noUncheckedIndexedAccess`; no `any`, no `@ts-ignore`, no non-null assertions.
 - ESLint with **typescript-eslint `strictTypeChecked` + `stylisticTypeChecked`**, `jsx-a11y` and `react-hooks`; Prettier formatting; all enforced in CI.
 - Business logic lives only in `src/engine` as pure functions; components render and dispatch, nothing more. API handlers are thin: guard, validate, call, validate, respond.
-- Small, single-purpose modules (largest component about 230 lines) with one shared schema layer used by client, server and tests.
+- Small, single-purpose modules (every component under 250 lines) with one shared schema layer used by client, server and tests.
 
 ### 🧪 Testing: 266 unit and integration tests, 14 end-to-end
 

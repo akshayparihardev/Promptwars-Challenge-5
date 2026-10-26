@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import {
-  categoryLabel,
   createPlan,
   formatINR,
   isValidISO,
@@ -10,7 +9,6 @@ import {
   toLakh,
 } from '../engine';
 import {
-  CATEGORIES,
   IntakeSchema,
   MAX_GUESTS,
   OCCASIONS,
@@ -21,11 +19,8 @@ import {
   type Plan,
 } from '../schemas';
 import { DescribeEvent } from './DescribeEvent';
+import { PlanExtras } from './PlanExtras';
 import { Field } from './ui';
-
-const PRIORITY_CATEGORIES = CATEGORIES.filter(
-  (c): c is Exclude<Category, 'contingency'> => c !== 'contingency',
-);
 
 interface Errors {
   budget?: string;
@@ -98,12 +93,6 @@ export function PlanSetup({
       found.push('priorities');
     }
     return found;
-  }
-
-  function togglePriority(category: Category) {
-    setPriorities((current) =>
-      current.includes(category) ? current.filter((c) => c !== category) : [...current, category],
-    );
   }
 
   function submit(event: FormEvent) {
@@ -223,45 +212,13 @@ export function PlanSetup({
           </Field>
         </div>
 
-        <details className="rounded-xl border border-line p-4">
-          <summary className="min-h-11 cursor-pointer font-medium">
-            Make it yours (optional)
-          </summary>
-          <div className="mt-4 space-y-5">
-            <Field label="Style or vibe" hint="For example: traditional, minimal, fun for kids.">
-              {(p) => (
-                <input
-                  {...p}
-                  className="input"
-                  maxLength={200}
-                  value={vibe}
-                  onChange={(e) => setVibe(e.target.value)}
-                />
-              )}
-            </Field>
-            <fieldset>
-              <legend className="label">
-                What matters most? We give these categories more of the budget.
-              </legend>
-              <div className="grid gap-1 sm:grid-cols-2">
-                {PRIORITY_CATEGORIES.map((c) => (
-                  <label
-                    key={c}
-                    className="flex min-h-11 items-center gap-3 rounded-lg px-2 hover:bg-paper"
-                  >
-                    <input
-                      type="checkbox"
-                      className="h-5 w-5 accent-accent"
-                      checked={priorities.includes(c)}
-                      onChange={() => togglePriority(c)}
-                    />
-                    {categoryLabel(occasion, c)}
-                  </label>
-                ))}
-              </div>
-            </fieldset>
-          </div>
-        </details>
+        <PlanExtras
+          occasion={occasion}
+          vibe={vibe}
+          priorities={priorities}
+          onVibe={setVibe}
+          onPriorities={setPriorities}
+        />
 
         {existing && (
           <p className="hint">
