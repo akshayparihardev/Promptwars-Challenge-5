@@ -1,7 +1,7 @@
 /// <reference types="vitest/config" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { devApi } from './dev-api';
+import { devApi } from './scripts/dev-api';
 
 export default defineConfig({
   plugins: [react(), devApi()],

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiFailure, resetRateLimit, RATE_LIMIT_MAX, MAX_BODY_BYTES } from '../../api/_lib/http';
+import { clearCache } from '../../api/_lib/cache';
 import { mockReq, mockRes } from './helpers';
 
 vi.mock('../../api/_lib/model', () => ({ callModel: vi.fn() }));
@@ -43,7 +44,56 @@ async function call(handler: typeof parseIntake, req = mockReq()) {
 
 beforeEach(() => {
   resetRateLimit();
+  clearCache();
   model.mockReset();
+});
+
+describe('same-origin guard', () => {
+  it('403 for a cross-site origin, a missing origin or a malformed one', async () => {
+    for (const origin of ['https://evil.example', '', 'not a url']) {
+      const out = await call(parseIntake, mockReq({ headers: { origin }, body: { text: 'hi' } }));
+      expect(out.status).toBe(403);
+      expect(out.body).toEqual({ error: 'FORBIDDEN_ORIGIN' });
+    }
+    expect(model).not.toHaveBeenCalled();
+  });
+
+  it('accepts the forwarded host used behind the platform proxy', async () => {
+    model.mockResolvedValue(JSON.stringify(emptyIntake));
+    const out = await call(
+      parseIntake,
+      mockReq({
+        headers: {
+          origin: 'https://app.example',
+          host: 'internal',
+          'x-forwarded-host': 'app.example',
+        },
+        body: { text: 'hi' },
+      }),
+    );
+    expect(out.status).toBe(200);
+  });
+});
+
+describe('response cache', () => {
+  it('serves an identical request from cache without calling the model again', async () => {
+    model.mockResolvedValue(JSON.stringify(emptyIntake));
+    const first = await call(parseIntake, mockReq({ body: { text: 'same text' } }));
+    const second = await call(parseIntake, mockReq({ body: { text: 'same text' } }));
+    expect(first.status).toBe(200);
+    expect(second.body).toEqual(first.body);
+    expect(second.headers['X-Cache']).toBe('HIT');
+    expect(model).toHaveBeenCalledTimes(1);
+    await call(parseIntake, mockReq({ body: { text: 'different text' } }));
+    expect(model).toHaveBeenCalledTimes(2);
+  });
+
+  it('never caches failures', async () => {
+    model.mockResolvedValueOnce('not json');
+    expect((await call(parseIntake, mockReq({ body: { text: 'x' } }))).status).toBe(502);
+    model.mockResolvedValueOnce(JSON.stringify(emptyIntake));
+    expect((await call(parseIntake, mockReq({ body: { text: 'x' } }))).status).toBe(200);
+  });
 });
 
 describe('shared guards', () => {

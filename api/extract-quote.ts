@@ -4,6 +4,7 @@ import { createHandler } from './_lib/http.js';
 import { QUOTE_PROMPT, wrapUserText } from './_lib/prompts.js';
 
 export default createHandler({
+  name: 'extract-quote',
   input: ExtractQuoteRequestSchema,
   async run({ text, category }) {
     const quote = await generateJson({

@@ -13,6 +13,8 @@ import type { Action } from '../state/planStore';
 import { Icon } from './Icon';
 import { TaskRow } from './TaskRow';
 
+const EMPTY: ScheduledTask[] = [];
+
 export function TimelineTab({
   plan,
   today,
@@ -27,7 +29,7 @@ export function TimelineTab({
       return { schedule: buildSchedule(plan.tasks, plan.eventDate, today), error: null };
     } catch (error) {
       return {
-        schedule: [] as ScheduledTask[],
+        schedule: EMPTY,
         error: error instanceof ScheduleError ? error.message : 'The timeline could not be built.',
       };
     }

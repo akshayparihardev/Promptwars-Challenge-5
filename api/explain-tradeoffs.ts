@@ -4,6 +4,7 @@ import { createHandler } from './_lib/http.js';
 import { EXPLAIN_PROMPT } from './_lib/prompts.js';
 
 export default createHandler({
+  name: 'explain-tradeoffs',
   input: ExplainTradeoffsRequestSchema,
   async run(input) {
     const result = await generateJson({

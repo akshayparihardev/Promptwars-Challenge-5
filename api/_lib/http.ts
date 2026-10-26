@@ -1,4 +1,5 @@
 import type { ZodType } from 'zod';
+import { cacheGet, cacheKey, cacheSet } from './cache.js';
 
 /** Structural subsets of the Vercel request/response so handlers are trivial to unit test. */
 export interface ApiRequest {
@@ -19,6 +20,7 @@ export const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000;
 
 export type ErrorCode =
   | 'METHOD_NOT_ALLOWED'
+  | 'FORBIDDEN_ORIGIN'
   | 'UNSUPPORTED_MEDIA_TYPE'
   | 'PAYLOAD_TOO_LARGE'
   | 'INVALID_INPUT'
@@ -83,7 +85,25 @@ function bodyBytes(body: unknown): number {
   }
 }
 
+/**
+ * Only our own pages may spend the AI quota. Browsers always send Origin on a POST; it must match
+ * the host serving the API. Cross-site requests and clients that hide where they come from are
+ * refused. (A determined server-side caller can still forge headers, which the rate limit covers.)
+ */
+export function sameOrigin(req: ApiRequest): boolean {
+  const origin = header(req, 'origin');
+  const host = header(req, 'x-forwarded-host') || header(req, 'host');
+  if (!origin || !host) return false;
+  try {
+    return new URL(origin).host === host.split(',')[0]?.trim();
+  } catch {
+    return false;
+  }
+}
+
 export interface HandlerConfig<I> {
+  /** Route name, used as the cache namespace. */
+  name: string;
   input: ZodType<I>;
   /** Returns data that has already been validated against the endpoint's output schema. */
   run: (input: I) => Promise<unknown>;
@@ -101,6 +121,7 @@ export function createHandler<I>(config: HandlerConfig<I>) {
       res.setHeader('Allow', 'POST');
       return fail(res, 405, 'METHOD_NOT_ALLOWED');
     }
+    if (!sameOrigin(req)) return fail(res, 403, 'FORBIDDEN_ORIGIN');
     if (!header(req, 'content-type').toLowerCase().startsWith('application/json')) {
       return fail(res, 415, 'UNSUPPORTED_MEDIA_TYPE');
     }
@@ -125,8 +146,17 @@ export function createHandler<I>(config: HandlerConfig<I>) {
     }
     const parsed = config.input.safeParse(body);
     if (!parsed.success) return fail(res, 400, 'INVALID_INPUT');
+    const key = cacheKey(config.name, parsed.data);
+    const cached = cacheGet(key);
+    if (cached !== undefined) {
+      res.setHeader('X-Cache', 'HIT');
+      res.status(200).json(cached);
+      return;
+    }
     try {
-      res.status(200).json(await config.run(parsed.data));
+      const result = await config.run(parsed.data);
+      cacheSet(key, result);
+      res.status(200).json(result);
     } catch (error) {
       if (error instanceof ApiFailure) return fail(res, error.status, error.code);
       console.error('api: unexpected failure');

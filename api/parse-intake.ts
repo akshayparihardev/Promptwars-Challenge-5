@@ -5,6 +5,7 @@ import { createHandler } from './_lib/http.js';
 import { INTAKE_PROMPT, wrapUserText } from './_lib/prompts.js';
 
 export default createHandler({
+  name: 'parse-intake',
   input: ParseIntakeRequestSchema,
   async run({ text }) {
     const today = new Date().toISOString().slice(0, 10);

@@ -1,4 +1,4 @@
-import { CATEGORIES, type Category, type Intake, type Plan } from '../schemas';
+import { CATEGORIES, MAX_GUESTS, type Category, type Intake, type Plan } from '../schemas';
 import { allocate } from './budget';
 import { TASK_TEMPLATES } from './presets';
 
@@ -26,6 +26,14 @@ export function createPlan(intake: Intake): Plan {
     })),
     quotes: [],
   };
+}
+
+/** Guest count from user text: a whole number from 1 to MAX_GUESTS, otherwise null. */
+export function parseGuests(value: string): number | null {
+  const trimmed = value.trim();
+  if (!/^\d+$/.test(trimmed)) return null;
+  const n = Number(trimmed);
+  return n >= 1 && n <= MAX_GUESTS ? n : null;
 }
 
 export type BudgetTier = 'modest' | 'comfortable' | 'premium';

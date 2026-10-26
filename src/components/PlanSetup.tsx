@@ -5,6 +5,7 @@ import {
   formatINR,
   isValidISO,
   OCCASION_LABELS,
+  parseGuests,
   parseINR,
   toLakh,
 } from '../engine';
@@ -13,13 +14,14 @@ import {
   IntakeSchema,
   MAX_GUESTS,
   OCCASIONS,
+  OccasionSchema,
   type Category,
+  type IntakeParse,
   type Occasion,
   type Plan,
 } from '../schemas';
-import { parseIntake } from '../lib/api';
-import { useAiCall } from '../lib/useAiCall';
-import { AiError, AiLoading, Field } from './ui';
+import { DescribeEvent } from './DescribeEvent';
+import { Field } from './ui';
 
 const PRIORITY_CATEGORIES = CATEGORIES.filter(
   (c): c is Exclude<Category, 'contingency'> => c !== 'contingency',
@@ -40,7 +42,6 @@ export function PlanSetup({
   existing: Plan | null;
   onCreate: (plan: Plan) => void;
 }) {
-  const [description, setDescription] = useState('');
   const [occasion, setOccasion] = useState<Occasion>(existing?.occasion ?? 'wedding');
   const [budgetText, setBudgetText] = useState(existing ? String(existing.totalBudget) : '');
   const [guestsText, setGuestsText] = useState(existing ? String(existing.guests) : '');
@@ -48,8 +49,6 @@ export function PlanSetup({
   const [vibe, setVibe] = useState(existing?.vibe ?? '');
   const [priorities, setPriorities] = useState<Category[]>(existing?.priorities ?? []);
   const [errors, setErrors] = useState<Errors>({});
-  const [filled, setFilled] = useState<string | null>(null);
-  const ai = useAiCall(parseIntake);
 
   const budget = parseINR(budgetText);
   const budgetHint =
@@ -63,10 +62,8 @@ export function PlanSetup({
       ? "Couldn't read that amount. Try 8 lakh or 8,00,000."
       : errors.budget;
 
-  async function fillFromDescription() {
-    setFilled(null);
-    const result = await ai.run(description);
-    if (!result) return;
+  /** Fills only what the AI actually found; returns the names of the filled fields. */
+  function applyParsed(result: IntakeParse): string[] {
     const found: string[] = [];
     if (result.occasion) {
       setOccasion(result.occasion);
@@ -92,11 +89,7 @@ export function PlanSetup({
       setPriorities(result.nonNegotiables);
       found.push('priorities');
     }
-    setFilled(
-      found.length
-        ? `Filled ${found.join(', ')}. Please check the details before creating your plan.`
-        : 'We could not find event details in that text. You can fill the form below by hand.',
-    );
+    return found;
   }
 
   function togglePriority(category: Category) {
@@ -108,15 +101,15 @@ export function PlanSetup({
   function submit(event: FormEvent) {
     event.preventDefault();
     const next: Errors = {};
-    const guests = Number(guestsText);
+    const guests = parseGuests(guestsText);
     if (budget === null) next.budget = 'Enter your total budget, for example 8 lakh.';
-    if (!Number.isInteger(guests) || guests < 1 || guests > MAX_GUESTS) {
+    if (guests === null) {
       next.guests = `Enter a guest count between 1 and ${MAX_GUESTS.toLocaleString('en-IN')}.`;
     }
     if (!isValidISO(date)) next.date = 'Pick the event date.';
     else if (date < today) next.date = 'Pick today or a future date.';
     setErrors(next);
-    if (Object.keys(next).length > 0 || budget === null) return;
+    if (Object.keys(next).length > 0) return;
     const parsed = IntakeSchema.safeParse({
       occasion,
       totalBudget: budget,
@@ -147,47 +140,7 @@ export function PlanSetup({
           </p>
         </div>
       )}
-      <section className="card lg:sticky lg:top-6" aria-labelledby="describe-h">
-        <h2 id="describe-h" className="text-lg">
-          Describe your event
-        </h2>
-        <p className="hint">
-          Write it the way you would tell a friend. We will fill the form for you.
-        </p>
-        <label htmlFor="describe" className="sr-only">
-          Event description
-        </label>
-        <textarea
-          id="describe"
-          className="input mt-3 min-h-28"
-          maxLength={1000}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Shaadi in Pune, 200 guests, 8 lakh budget, mid-Feb, simple ceremony but premium food"
-        />
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            className="btn-secondary w-full sm:w-auto"
-            onClick={fillFromDescription}
-            disabled={description.trim() === '' || ai.state.status === 'loading'}
-          >
-            Fill form from description
-          </button>
-          <span className="text-xs text-ink-soft">
-            {description.length}/1000 · AI suggestion, always check it
-          </span>
-        </div>
-        <div className="mt-3" aria-live="polite">
-          {ai.state.status === 'loading' && <AiLoading label="Reading your description…" />}
-          {ai.state.status === 'error' && (
-            <AiError message={ai.state.message} onRetry={() => void fillFromDescription()} />
-          )}
-          {filled && ai.state.status === 'done' && (
-            <p className="text-sm font-medium text-accent">{filled}</p>
-          )}
-        </div>
-      </section>
+      <DescribeEvent onParsed={applyParsed} />
 
       <form className="card space-y-5" onSubmit={submit} noValidate aria-labelledby="essentials-h">
         <h2 id="essentials-h" className="text-lg">
@@ -199,7 +152,10 @@ export function PlanSetup({
               {...p}
               className="input"
               value={occasion}
-              onChange={(e) => setOccasion(e.target.value as Occasion)}
+              onChange={(e) => {
+                const picked = OccasionSchema.safeParse(e.target.value);
+                if (picked.success) setOccasion(picked.data);
+              }}
             >
               {OCCASIONS.map((o) => (
                 <option key={o} value={o}>

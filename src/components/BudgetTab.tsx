@@ -6,6 +6,7 @@ import {
   formatINR,
   generateOverBudgetOptions,
   OCCASION_LABELS,
+  parseGuests,
   parseINR,
   scaleGuests,
   toLakh,
@@ -38,10 +39,9 @@ export function BudgetTab({ plan, dispatch }: { plan: Plan; dispatch: (action: A
   );
 
   function commitGuests(value: string) {
-    const n = Number(value);
-    if (Number.isInteger(n) && n >= 1 && n <= MAX_GUESTS)
-      dispatch({ type: 'setGuests', guests: n });
-    else setGuestsText(String(plan.guests));
+    const guests = parseGuests(value);
+    if (guests === null) setGuestsText(String(plan.guests));
+    else dispatch({ type: 'setGuests', guests });
   }
   function commitBudget() {
     const parsed = parseINR(budgetText);
@@ -111,9 +111,8 @@ export function BudgetTab({ plan, dispatch }: { plan: Plan; dispatch: (action: A
                 value={guestsText}
                 onChange={(e) => {
                   setGuestsText(e.target.value);
-                  const n = Number(e.target.value);
-                  if (Number.isInteger(n) && n >= 1 && n <= MAX_GUESTS)
-                    dispatch({ type: 'setGuests', guests: n });
+                  const guests = parseGuests(e.target.value);
+                  if (guests !== null) dispatch({ type: 'setGuests', guests });
                 }}
                 onBlur={(e) => commitGuests(e.target.value)}
               />

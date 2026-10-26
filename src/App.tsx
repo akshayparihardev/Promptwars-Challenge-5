@@ -14,13 +14,13 @@ import { loadInitial, safeStorage, usePlanStore, type InitialLoad } from './stat
 const VendorsTab = lazy(() => import('./components/VendorsTab'));
 const IdeasPanel = lazy(() => import('./components/IdeasPanel'));
 
-const TABS: readonly { id: string; label: string; icon: IconName }[] = [
+const TABS = [
   { id: 'setup', label: 'Plan setup', icon: 'pencil' },
   { id: 'budget', label: 'Budget', icon: 'wallet' },
   { id: 'timeline', label: 'Timeline', icon: 'route' },
   { id: 'vendors', label: 'Vendors', icon: 'store' },
-];
-type TabId = 'setup' | 'budget' | 'timeline' | 'vendors';
+] as const satisfies readonly { id: string; label: string; icon: IconName }[];
+type TabId = (typeof TABS)[number]['id'];
 
 function readInitial(): InitialLoad {
   return loadInitial(typeof window === 'undefined' ? '' : window.location.hash, safeStorage());
@@ -53,7 +53,7 @@ export default function App({
     event.preventDefault();
     const target = TABS[next];
     if (target) {
-      setTab(target.id as TabId);
+      setTab(target.id);
       refs.current[target.id]?.focus();
     }
   }
@@ -117,7 +117,7 @@ export default function App({
               aria-controls={`panel-${t.id}`}
               tabIndex={tab === t.id ? 0 : -1}
               className={`-mb-px flex min-h-14 min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-1 border-b-2 whitespace-nowrap px-1 text-xs font-semibold transition-colors duration-150 sm:min-h-12 sm:flex-row sm:gap-2 sm:px-5 sm:text-sm ${tab === t.id ? 'border-accent text-accent' : 'border-transparent text-ink-soft hover:border-line hover:text-ink'}`}
-              onClick={() => setTab(t.id as TabId)}
+              onClick={() => setTab(t.id)}
               onKeyDown={onKeyDown}
             >
               <Icon name={t.icon} className="h-5 w-5 sm:h-4 sm:w-4" />

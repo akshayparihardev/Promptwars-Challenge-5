@@ -6,12 +6,21 @@ export interface Captured {
   headers: Record<string, string>;
 }
 
+export const TEST_HOST = 'aayojan.test';
+
+/** A same-origin JSON POST by default; `headers` are merged over those defaults. */
 export function mockReq(over: Partial<ApiRequest> = {}): ApiRequest {
   return {
     method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-forwarded-for': '1.2.3.4' },
     body: {},
     ...over,
+    headers: {
+      'content-type': 'application/json',
+      'x-forwarded-for': '1.2.3.4',
+      origin: `https://${TEST_HOST}`,
+      host: TEST_HOST,
+      ...over.headers,
+    },
   };
 }
 

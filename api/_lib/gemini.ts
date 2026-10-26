@@ -4,9 +4,9 @@ import { callModel } from './model.js';
 
 /** Gemini-friendly JSON Schema from a zod schema (drops the $schema marker). */
 export function toJsonSchema(schema: ZodType): Record<string, unknown> {
-  const { $schema: _ignored, ...rest } = z.toJSONSchema(schema) as Record<string, unknown>;
-  void _ignored;
-  return rest;
+  const json: Record<string, unknown> = { ...z.toJSONSchema(schema) };
+  delete json.$schema;
+  return json;
 }
 
 /**

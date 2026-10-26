@@ -4,6 +4,7 @@ import { createHandler } from './_lib/http.js';
 import { IDEAS_PROMPT, wrapUserText } from './_lib/prompts.js';
 
 export default createHandler({
+  name: 'suggest-ideas',
   input: SuggestIdeasRequestSchema,
   async run(input) {
     const { vibe, ...facts } = input;
