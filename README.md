@@ -1,5 +1,7 @@
 # Aayojan: one plan, everything connected
 
+![CI](https://github.com/akshayparihardev/Promptwars-Challenge-5/actions/workflows/ci.yml/badge.svg)
+
 A celebration planner for **Indian families** (weddings, kids' birthdays, milestone birthdays and anniversaries, community festivals).
 Built for PromptWars Virtual, Challenge 5: Celebration & Event Planner.
 
@@ -134,8 +136,7 @@ WCAG 2.1 AA aims: `lang="en-IN"`, skip link, landmarks, labelled inputs, visible
 ```bash
 npm install
 cp .env.example .env   # add your GEMINI_API_KEY
-npm run dev            # UI only; AI panels need the API
-npx vercel dev         # UI + /api functions together
+npm run dev            # UI + /api (same handlers as Vercel, reads GEMINI_API_KEY from .env)
 npm run check          # typecheck + lint + tests
 npm run coverage       # engine coverage
 npm run build

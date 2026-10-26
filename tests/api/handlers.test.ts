@@ -97,6 +97,17 @@ describe('shared guards', () => {
     expect(other.status).toBe(200);
   });
 
+  it('keys the rate limit on the platform IP header, not a spoofable forwarded one', async () => {
+    model.mockResolvedValue(JSON.stringify(emptyIntake));
+    const withIp = (spoof: string) =>
+      mockReq({
+        headers: { 'content-type': 'application/json', 'x-real-ip': '7.7.7.7', 'x-forwarded-for': spoof },
+        body: { text: 'hi' },
+      });
+    for (let i = 0; i < RATE_LIMIT_MAX; i++) await call(parseIntake, withIp(`10.0.0.${i}`));
+    expect((await call(parseIntake, withIp('10.9.9.9'))).status).toBe(429);
+  });
+
   it('never leaks internals on unexpected errors', async () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     model.mockRejectedValue(new Error('secret-key-abc stack trace'));

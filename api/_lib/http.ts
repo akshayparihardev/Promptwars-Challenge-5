@@ -45,8 +45,10 @@ function header(req: ApiRequest, name: string): string {
 
 /** Best-effort client address used only as an in-memory rate-limit key. */
 export function clientIp(req: ApiRequest): string {
+  // Vercel sets these itself; prefer them over a header a caller could add.
+  const platform = header(req, 'x-vercel-forwarded-for') || header(req, 'x-real-ip');
   const forwarded = header(req, 'x-forwarded-for').split(',')[0]?.trim();
-  return forwarded || req.socket?.remoteAddress || 'unknown';
+  return platform || forwarded || req.socket?.remoteAddress || 'unknown';
 }
 
 const hits = new Map<string, number[]>();

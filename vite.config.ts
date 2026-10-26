@@ -1,9 +1,10 @@
 /// <reference types="vitest/config" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { devApi } from './dev-api';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), devApi()],
   build: { target: 'es2022', sourcemap: false },
   test: {
     globals: true,
