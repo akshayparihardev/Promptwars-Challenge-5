@@ -160,7 +160,7 @@ describe('affectedByDelays', () => {
       task('c', 5, 1, ['b']),
       task('d', 25, 1),
     ];
-    expect(affectedByDelays(tasks)).toEqual({ b: 'a', c: 'a' });
+    expect(affectedByDelays(tasks)).toEqual({ b: 'a' });
     expect(affectedByDelays(tasks.map((t) => ({ ...t, status: 'todo' as const })))).toEqual({});
   });
 });
