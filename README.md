@@ -8,7 +8,7 @@ One connected plan for budget, timeline and vendors, built for Indian families.<
 Change the guest count and watch catering, budget and warnings move together.
 
 [![CI](https://github.com/akshayparihardev/Promptwars-Challenge-5/actions/workflows/ci.yml/badge.svg)](https://github.com/akshayparihardev/Promptwars-Challenge-5/actions)
-![Tests](https://img.shields.io/badge/tests-261%20unit%20%2B%2012%20e2e-2f6b45)
+![Tests](https://img.shields.io/badge/tests-266%20unit%20%2B%2014%20e2e-2f6b45)
 ![a11y](https://img.shields.io/badge/axe-0%20violations%20(light%20%26%20dark)-2f6b45)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)
 ![Gemini](https://img.shields.io/badge/Gemini-3.6%20Flash-5e2750)
@@ -73,7 +73,7 @@ Open the **[live app](https://promptwars-challenge-5.vercel.app/)** and follow P
 1. ✍️ **Describe it** in your own words: _"Shaadi in Pune, 200 guests, 8 lakh budget, mid-Feb, simple ceremony but premium food"_ and press **Fill form from description**. Gemini fills the form; you can still edit everything.
 2. 💰 **Budget.** Catering is boosted because "premium food" matters most. Drag **Photography** up and a toast shows exactly what shrank. **Lock** catering to protect it.
 3. 👥 **Guests 200 → 260.** An over-budget banner appears with up to three options (reduce guests, trim flexible categories, use the contingency buffer). Press **Explain these options** for a plain-language reading, then **Apply** one.
-4. 📅 **Timeline.** Mark _Book venue_ as delayed by 40 days. Every task that depends on it is highlighted with a text reason.
+4. 📅 **Timeline.** Mark _Book venue_ as delayed by 40 days. Every task that depends on it is highlighted with a text reason. Then press **Add timeline to calendar** to get every date on your phone.
 5. 🧾 **Vendors.** Paste a caterer's quote (_"₹1500 per plate, minimum 250 plates, 50% advance"_). Aayojan flags the guest minimum, the missing GST line and the missing cancellation policy, and writes the follow-up message for you to copy.
 6. 🔗 **Ideas, share, print.** Get themes and food ideas, copy a share link (open it in a private window to see the same plan), and print a one-page summary.
 7. 🎂 Switch the occasion to **Kid's birthday** and see different categories, tasks and ideas.
@@ -86,7 +86,7 @@ Open the **[live app](https://promptwars-challenge-5.vercel.app/)** and follow P
 | 🗣️ Say what you want, naturally | Free-text intake. Type "8 lakh", "8L", "8,00,000", "₹800000", "8.5 lac" or "2 crore" and it understands |
 | 💰 Keep spending in check | Occasion presets, priority weighting, per-category lock, live redistribution, change toast, **Estimate** vs **Verified quote** labels |
 | 👥 Survive a bigger guest list | Live catering impact and an over-budget banner with options, each with its exact rupee effect |
-| 📅 Never miss a deadline | Dependency-aware timeline in five phases, assignees, done and delayed, **delay propagation**, at-risk, overdue and impossible flags |
+| 📅 Never miss a deadline | Dependency-aware timeline in five phases, assignees, done and delayed, **delay propagation**, at-risk, overdue and impossible flags, and one tap to **add the whole timeline to your phone calendar** (.ics) |
 | 📋 Know who to book | A vendor checklist per occasion with status: not started, contacted, quote received, quote accepted |
 | 🧾 Compare vendors | Paste a quote, get extracted fields, flags, **effective cost** against the category budget, an inquiry draft, and a side-by-side table for up to three quotes per category |
 | 💡 Get fresh ideas | Themes, activities, food style and personal touches, tuned to occasion, vibe, guest count and budget band (no prices, ever) |
@@ -137,6 +137,7 @@ flowchart LR
 | `tradeoffs.ts` | `generateOverBudgetOptions`, `applyOption` |
 | `quotes.ts` | `effectiveCost`, `compareQuote`, `missingFields`, `inquiryDraft` |
 | `checklist.ts` | `vendorChecklist` |
+| `calendar.ts` | `timelineToIcs`: RFC 5545 calendar export with escaping and line folding |
 | `insights.ts` | `planInsights`: the assistant's ranked findings |
 | `presets.ts` | allocation presets and task templates for four occasions |
 
@@ -189,16 +190,16 @@ Everything below is an estimate and is user-editable.
 
 ## ✅ Quality
 
-### 🧪 Testing: 261 unit and integration tests, 12 end-to-end
+### 🧪 Testing: 266 unit and integration tests, 14 end-to-end
 
 `npm run check` runs typecheck, lint and the whole unit suite; `npm run e2e` runs the browser suite. CI runs both on every push.
 
 - **Engine** (100% line coverage): rounding invariant, zero and huge budgets, 1 and 5,000 guests, event date today or in the past, dependency cycles, all categories locked, all-null quotes, every assistant rule.
 - **Schemas:** malicious share-link payloads, oversized strings, broken dependencies.
 - **API** with Gemini mocked: 403, 405, 415, 400, 413, 429, 502, timeout, retry, cache hits, prompt-injection text, and a guard that keeps `.js` import extensions so Vercel's Node runtime can load the functions.
-- **End to end** (Playwright, real Chromium, desktop and Pixel 7): describe, create, grow guests, apply an option; the AI review; a share link reopened in a fresh browser; no horizontal scroll on any tab; and **axe with colour contrast on every tab in light and dark mode: 0 violations**. `/api` is mocked, so no key is needed.
+- **End to end** (Playwright, real Chromium, desktop and Pixel 7): describe, create, grow guests, apply an option; the AI review; a share link reopened in a fresh browser; **the built app under the exact production CSP with zero console errors**; no horizontal scroll on any tab; and **axe with colour contrast on every tab in light and dark mode: 0 violations**. `/api` is mocked, so no key is needed.
 - **Theming:** the real colour tokens in `index.css` are parsed and every text pair is checked for WCAG AA (4.5:1) in **both light and dark**.
-- **Coverage:** engine 100% lines; whole app (src + api) about 95% lines.
+- **Coverage:** engine 100% lines, enforced by thresholds in CI; whole app (src + api) about 95% lines.
 
 ### 🔒 Security
 
@@ -208,17 +209,17 @@ Everything below is an estimate and is user-editable.
 | Input | zod validation on every endpoint, text length caps, 8 KB body cap |
 | Abuse | POST only, JSON only, **same-origin only** (cross-site and origin-less calls get 403, so other sites cannot spend the AI quota), per-IP rate limit (20 per 5 minutes, keyed on the platform IP header) |
 | Output | Validated against a schema before it is returned; errors return a code only, never a stack or user text |
-| Browser | CSP (`default-src 'self'`, `connect-src 'self'`, `frame-ancestors 'none'`, `object-src 'none'`), HSTS, `X-Frame-Options: DENY`, COOP, `nosniff`, referrer and permissions policy |
+| Browser | Strict CSP with **no `unsafe-inline`** (`default-src 'self'`, `style-src 'self'`, `connect-src 'self'`, `frame-ancestors 'none'`, `object-src 'none'`), HSTS, `X-Frame-Options: DENY`, COOP, `nosniff`, referrer and permissions policy |
 | Share links | Size cap, base64url check, zod schema, then consistency checks (budget sums, no dependency cycles). React escapes all text and there is no `dangerouslySetInnerHTML` |
 | Supply chain | `npm audit` clean and enforced in CI, lockfile committed, CI uses `npm ci` |
 
 ### ⚡ Efficiency
 
-AI responses are cached server-side for 10 minutes, derived engine results are memoised, budget rows are memoised, number inputs commit on blur or Enter, Vendors and Ideas are lazy loaded, and the first load is about **94 kB gzipped** of JavaScript with no web fonts to download.
+AI responses are cached server-side for 10 minutes, an AI request is **cancelled** as soon as a newer one starts or its panel closes, derived engine results are memoised, budget rows are memoised, number inputs commit on blur or Enter, Vendors and Ideas are lazy loaded, and the first load is about **94 kB gzipped** of JavaScript with no web fonts to download.
 
 ### ♿ Accessibility (WCAG 2.1 AA)
 
-`lang="en-IN"`, skip link, landmarks, every input labelled, visible focus rings, a real tablist with arrow-key, Home and End support, `aria-live` for warnings, toasts and AI results, status shown as **text plus icon (never colour alone)**, tables with `th scope`, 44 px touch targets, `prefers-reduced-motion` respected, light and dark themes each contrast-checked, and no horizontal scroll from 320 px up.
+`lang="en-IN"`, skip link, landmarks, every input labelled, focus moves to the first invalid field on a failed submit, visible focus rings, a real tablist with arrow-key, Home and End support, `aria-live` for warnings, toasts and AI results, status shown as **text plus icon (never colour alone)**, tables with `th scope`, 44 px touch targets, `prefers-reduced-motion` respected, light and dark themes each contrast-checked, and no horizontal scroll from 320 px up.
 
 <details>
 <summary><b>🎯 UX principles applied</b> (click to expand)</summary>
@@ -278,6 +279,8 @@ tests/              engine, schemas, api, ui (with axe)
 e2e/                Playwright: real-browser flows and WCAG checks
 scripts/            dev server bridge that serves /api locally
 ```
+
+More detail on the security model is in [SECURITY.md](SECURITY.md).
 
 ## 🙏 Limits, honestly
 

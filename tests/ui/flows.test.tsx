@@ -43,6 +43,7 @@ describe('create a plan and watch it react', () => {
     expect(screen.getByText('Enter your total budget, for example 8 lakh.')).toBeInTheDocument();
     expect(screen.getByText(/Enter a guest count/)).toBeInTheDocument();
     expect(screen.getByText('Pick the event date.')).toBeInTheDocument();
+    expect(screen.getByLabelText('Total budget (₹)')).toHaveFocus();
     await user.type(screen.getByLabelText('Total budget (₹)'), 'lots');
     expect(screen.getByText(/Couldn't read that amount/)).toBeInTheDocument();
   });

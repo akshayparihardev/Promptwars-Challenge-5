@@ -1,5 +1,5 @@
 import { screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { renderWithPlan } from './helpers';
 
 describe('timeline', () => {
@@ -62,5 +62,24 @@ describe('timeline', () => {
     const { user } = renderWithPlan({ eventDate: '2026-01-05' });
     await user.click(screen.getByRole('tab', { name: 'Timeline' }));
     expect(screen.getAllByText(/Overdue|Due date already passed/).length).toBeGreaterThan(0);
+  });
+
+  it('downloads the timeline as a calendar file', async () => {
+    const create = vi.fn().mockReturnValue('blob:aayojan');
+    const revoke = vi.fn();
+    Object.assign(URL, { createObjectURL: create, revokeObjectURL: revoke });
+    const click = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(() => undefined);
+    const { user } = renderWithPlan();
+    await user.click(screen.getByRole('tab', { name: 'Timeline' }));
+    await user.click(screen.getByRole('button', { name: 'Add timeline to calendar (.ics)' }));
+    expect(create).toHaveBeenCalledTimes(1);
+    const blob = create.mock.calls[0]?.[0] as Blob;
+    expect(blob.type).toContain('text/calendar');
+    expect(await blob.text()).toContain('BEGIN:VCALENDAR');
+    expect(click).toHaveBeenCalled();
+    expect(revoke).toHaveBeenCalledWith('blob:aayojan');
+    click.mockRestore();
   });
 });

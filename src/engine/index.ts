@@ -8,3 +8,4 @@ export * from './quotes';
 export * from './plan';
 export * from './checklist';
 export * from './insights';
+export * from './calendar';

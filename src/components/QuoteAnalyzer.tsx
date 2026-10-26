@@ -8,7 +8,7 @@ import {
   type Plan,
 } from '../schemas';
 import { extractQuote, type RequestOptions } from '../lib/api';
-import { newId } from '../lib/today';
+import { newId } from '../lib/id';
 import { useAiCall } from '../lib/useAiCall';
 import type { Action } from '../state/planStore';
 import { Icon } from './Icon';

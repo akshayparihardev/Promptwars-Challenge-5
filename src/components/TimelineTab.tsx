@@ -4,10 +4,12 @@ import {
   buildSchedule,
   diffDays,
   phaseFor,
+  timelineToIcs,
   ScheduleError,
   type ScheduledTask,
 } from '../engine';
 import type { Plan } from '../schemas';
+import { downloadText } from '../lib/download';
 import { formatDate } from '../lib/format';
 import type { Action } from '../state/planStore';
 import { Icon } from './Icon';
@@ -87,6 +89,20 @@ export function TimelineTab({
               : ' · this date has passed'}
         </p>
         <p className="hint">Delay a task and everything that depends on it moves too.</p>
+        <button
+          type="button"
+          className="btn-secondary mt-3"
+          onClick={() =>
+            downloadText(
+              `aayojan-${plan.occasion}-${plan.eventDate}.ics`,
+              timelineToIcs(plan, result.schedule, today),
+              'text/calendar;charset=utf-8',
+            )
+          }
+        >
+          <Icon name="calendar" />
+          Add timeline to calendar (.ics)
+        </button>
         <div
           role="status"
           aria-live="polite"

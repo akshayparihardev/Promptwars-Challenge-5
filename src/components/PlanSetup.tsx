@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import {
   categoryLabel,
   createPlan,
@@ -49,6 +49,14 @@ export function PlanSetup({
   const [vibe, setVibe] = useState(existing?.vibe ?? '');
   const [priorities, setPriorities] = useState<Category[]>(existing?.priorities ?? []);
   const [errors, setErrors] = useState<Errors>({});
+  const [failedSubmits, setFailedSubmits] = useState(0);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // After a failed submit, move focus to the first field with an error so it is read out.
+  useEffect(() => {
+    if (failedSubmits === 0) return;
+    formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+  }, [failedSubmits]);
 
   const budget = parseINR(budgetText);
   const budgetHint =
@@ -109,7 +117,10 @@ export function PlanSetup({
     if (!isValidISO(date)) next.date = 'Pick the event date.';
     else if (date < today) next.date = 'Pick today or a future date.';
     setErrors(next);
-    if (Object.keys(next).length > 0) return;
+    if (Object.keys(next).length > 0) {
+      setFailedSubmits((n) => n + 1);
+      return;
+    }
     const parsed = IntakeSchema.safeParse({
       occasion,
       totalBudget: budget,
@@ -142,7 +153,13 @@ export function PlanSetup({
       )}
       <DescribeEvent onParsed={applyParsed} />
 
-      <form className="card space-y-5" onSubmit={submit} noValidate aria-labelledby="essentials-h">
+      <form
+        ref={formRef}
+        className="card space-y-5"
+        onSubmit={submit}
+        noValidate
+        aria-labelledby="essentials-h"
+      >
         <h2 id="essentials-h" className="text-lg">
           The essentials
         </h2>

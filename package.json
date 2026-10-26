@@ -2,8 +2,12 @@
   "name": "aayojan",
   "private": true,
   "version": "1.0.0",
+  "description": "Aayojan: a GenAI-assisted, connected celebration planner for Indian families (budget, timeline, vendors).",
   "type": "module",
   "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

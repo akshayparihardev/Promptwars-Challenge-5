@@ -7,7 +7,8 @@ import {
   suggestIdeas,
 } from '../../src/lib/api';
 import { formatDate, signedINR, describeChanges } from '../../src/lib/format';
-import { newId, todayISO } from '../../src/lib/today';
+import { newId } from '../../src/lib/id';
+import { todayISO } from '../../src/lib/today';
 import { jsonResponse } from './helpers';
 
 const intake = {
