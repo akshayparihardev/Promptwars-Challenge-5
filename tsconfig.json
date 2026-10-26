@@ -15,5 +15,14 @@
     "noEmit": true,
     "types": ["vitest/globals", "node"]
   },
-  "include": ["src", "api", "tests", "vite.config.ts", "scripts", "vitest.setup.ts"]
+  "include": [
+    "src",
+    "api",
+    "tests",
+    "e2e",
+    "playwright.config.ts",
+    "vite.config.ts",
+    "scripts",
+    "vitest.setup.ts"
+  ]
 }
