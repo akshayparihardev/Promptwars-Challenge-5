@@ -230,6 +230,7 @@ describe('timeline, vendors and ideas edge cases', () => {
             activities: ['Antakshari'],
             foodStyle: ['Chaat'],
             personalTouches: [],
+            invitationLine: 'Join us for [names] on [date] at [venue].',
           }),
         ),
     );

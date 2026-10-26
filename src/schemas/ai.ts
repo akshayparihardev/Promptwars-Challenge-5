@@ -70,6 +70,7 @@ export const IdeasSchema = z.object({
   activities: z.array(z.string().max(200)).min(1).max(8),
   foodStyle: z.array(z.string().max(200)).min(1).max(6),
   personalTouches: z.array(z.string().max(200)).max(5),
+  invitationLine: z.string().min(1).max(400),
 });
 export type Ideas = z.infer<typeof IdeasSchema>;
 

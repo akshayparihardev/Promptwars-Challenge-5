@@ -98,7 +98,7 @@ Open the **[live app](https://promptwars-challenge-5.vercel.app/)** and follow P
 | 📅 Never miss a deadline | Dependency-aware timeline in five phases, assignees, done and delayed, **delay propagation**, at-risk, overdue and impossible flags, **automatic compression** when the event is closer than the usual lead time, a suggested **run sheet for the day**, and one tap to **add the whole timeline to your phone calendar** (.ics) |
 | 📋 Know who to book | A vendor checklist per occasion with status: not started, contacted, quote received, quote accepted |
 | 🧾 Compare vendors | Paste a quote, get extracted fields, flags, **effective cost** against the category budget, an inquiry draft, and a side-by-side table for up to three quotes per category |
-| 💡 Get fresh ideas | Themes, activities, food style and personal touches, tuned to occasion, vibe, guest count and budget band (no prices, ever) |
+| 💡 Get fresh ideas | Themes, activities, food style, personal touches and a ready **invitation line**, tuned to occasion, vibe, guest count and budget band (no prices, ever) |
 | 🔗 Share and keep | Autosave, a shareable link, and a printable summary |
 | 🌙 Work comfortably anywhere | A designed **dark mode** (follows your system, remembers your choice, no flash on load) and a compact mobile layout |
 

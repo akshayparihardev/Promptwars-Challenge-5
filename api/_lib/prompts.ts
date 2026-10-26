@@ -40,6 +40,7 @@ Tailor themes, activities and food style to the occasion, vibe, guest count, bud
 - activities: 4 to 6 short ideas.
 - foodStyle: 3 to 5 short ideas (menu style, live counters, regional dishes). Suggest dishes and styles only.
 - personalTouches: 2 to 4 small, meaningful details.
+- invitationLine: one warm invitation sentence in the family's voice, using the placeholders [names], [date] and [venue].
 NEVER mention prices, costs, discounts, vendor names, brands, or availability.
 ${GUARD}`;
 

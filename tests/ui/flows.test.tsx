@@ -364,6 +364,7 @@ describe('header and ideas', () => {
           activities: ['Antakshari'],
           foodStyle: ['Chaat counter'],
           personalTouches: [],
+          invitationLine: 'Join us for [names] on [date] at [venue].',
         }),
       ),
     );
@@ -373,6 +374,7 @@ describe('header and ideas', () => {
     await user.click(screen.getByRole('button', { name: 'Get ideas' }));
     expect(await screen.findByText('Marigold Mehfil')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Regenerate ideas' })).toBeInTheDocument();
+    expect(screen.getByText('Join us for [names] on [date] at [venue].')).toBeInTheDocument();
   });
 });
 

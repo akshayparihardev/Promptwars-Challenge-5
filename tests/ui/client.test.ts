@@ -141,6 +141,7 @@ describe('api client', () => {
       activities: ['a'],
       foodStyle: ['f'],
       personalTouches: [],
+      invitationLine: 'Join us for [names] on [date] at [venue].',
     };
     await expect(
       suggestIdeas(

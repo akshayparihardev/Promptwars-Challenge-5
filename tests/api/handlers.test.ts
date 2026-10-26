@@ -340,6 +340,7 @@ describe('suggest-ideas', () => {
     activities: ['Antakshari'],
     foodStyle: ['Live chaat counter'],
     personalTouches: [],
+    invitationLine: 'Join us for [names] on [date] at [venue].',
   };
   it('returns ideas and sends occasion facts', async () => {
     model.mockResolvedValue(JSON.stringify(ideas));

@@ -81,6 +81,12 @@ export default function IdeasPanel({ plan }: { plan: Plan }) {
               <List title="Food style" items={data.foodStyle} />
               <List title="Personal touches" items={data.personalTouches} />
             </div>
+            <figure className="rounded-xl border border-line bg-paper p-4">
+              <figcaption className="text-sm font-semibold">Invitation line</figcaption>
+              <blockquote className="mt-1 font-display text-lg italic">
+                {data.invitationLine}
+              </blockquote>
+            </figure>
           </div>
         )}
       </div>
