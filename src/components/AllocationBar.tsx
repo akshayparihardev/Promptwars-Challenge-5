@@ -3,13 +3,13 @@ import { CATEGORIES, type Category, type Plan } from '../schemas';
 
 /** Tonal palette for the split. Meaning is carried by the text legend, never by colour alone. */
 export const SWATCHES: Record<Category, string> = {
-  venue: '#5e2750',
-  catering: '#c27a2c',
-  decor: '#2f7f6f',
-  photography: '#3f5f8f',
-  entertainment: '#a64b6b',
-  misc: '#7a6f66',
-  contingency: '#c9ae6b',
+  venue: 'rgb(var(--sw-venue))',
+  catering: 'rgb(var(--sw-catering))',
+  decor: 'rgb(var(--sw-decor))',
+  photography: 'rgb(var(--sw-photography))',
+  entertainment: 'rgb(var(--sw-entertainment))',
+  misc: 'rgb(var(--sw-misc))',
+  contingency: 'rgb(var(--sw-contingency))',
 };
 
 export function AllocationBar({ plan }: { plan: Plan }) {

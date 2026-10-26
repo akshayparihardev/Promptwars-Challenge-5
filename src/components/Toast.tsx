@@ -29,11 +29,11 @@ export function Toast({
       className="no-print pointer-events-none fixed inset-x-0 bottom-4 z-50 flex justify-center px-4"
     >
       {toast && text && (
-        <div className="pointer-events-auto flex max-w-xl items-start gap-3 rounded-xl bg-ink px-4 py-3 text-sm text-white shadow-lg">
+        <div className="pointer-events-auto flex max-w-xl items-start gap-3 rounded-xl bg-ink px-4 py-3 text-sm text-paper shadow-lg">
           <p>{text}</p>
           <button
             type="button"
-            className="btn min-h-11 shrink-0 text-white underline"
+            className="btn min-h-11 shrink-0 text-paper underline"
             onClick={onDismiss}
           >
             Dismiss

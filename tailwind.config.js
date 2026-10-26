@@ -4,13 +4,28 @@ export default {
   theme: {
     extend: {
       colors: {
-        paper: '#faf6f0',
-        card: '#ffffff',
-        ink: { DEFAULT: '#2a2420', soft: '#5f554d' },
-        line: '#e8dfd3',
-        accent: { DEFAULT: '#5e2750', dark: '#471c3c', soft: '#f4eaf1' },
-        ok: '#2f6b45',
-        warn: { DEFAULT: '#b3261e', soft: '#fdecea' },
+        paper: 'rgb(var(--paper) / <alpha-value>)',
+        card: 'rgb(var(--card) / <alpha-value>)',
+        field: 'rgb(var(--field) / <alpha-value>)',
+        ink: {
+          DEFAULT: 'rgb(var(--ink) / <alpha-value>)',
+          soft: 'rgb(var(--ink-soft) / <alpha-value>)',
+        },
+        line: 'rgb(var(--line) / <alpha-value>)',
+        accent: {
+          DEFAULT: 'rgb(var(--accent) / <alpha-value>)',
+          dark: 'rgb(var(--accent-dark) / <alpha-value>)',
+          soft: 'rgb(var(--accent-soft) / <alpha-value>)',
+        },
+        'on-accent': 'rgb(var(--on-accent) / <alpha-value>)',
+        ok: {
+          DEFAULT: 'rgb(var(--ok) / <alpha-value>)',
+          soft: 'rgb(var(--ok-soft) / <alpha-value>)',
+        },
+        warn: {
+          DEFAULT: 'rgb(var(--warn) / <alpha-value>)',
+          soft: 'rgb(var(--warn-soft) / <alpha-value>)',
+        },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],

@@ -54,7 +54,7 @@ export function TaskRow({
       <span
         aria-hidden="true"
         className={`absolute left-0 top-1 flex h-5 w-5 items-center justify-center rounded-full border-2 bg-paper ${
-          done ? 'border-ok bg-ok text-white' : flagged ? 'border-warn' : 'border-ink-soft/50'
+          done ? 'border-ok bg-ok text-paper' : flagged ? 'border-warn' : 'border-ink-soft/50'
         }`}
       >
         {done && <Icon name="check" className="h-3 w-3" />}
