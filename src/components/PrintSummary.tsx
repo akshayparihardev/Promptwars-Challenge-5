@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import {
   buildSchedule,
   budgetStatus,
@@ -12,8 +13,17 @@ import {
 import { CATEGORIES, type Plan } from '../schemas';
 import { formatDate } from '../lib/format';
 
-/** Printable one-page summary. Hidden on screen, shown by print CSS. */
-export function PrintSummary({ plan, today }: { plan: Plan; today: string }) {
+/**
+ * Printable one-page summary. Hidden on screen, shown by print CSS. Memoised so it only
+ * recomputes when the plan changes, not on every unrelated render of the app.
+ */
+export const PrintSummary = memo(function PrintSummary({
+  plan,
+  today,
+}: {
+  plan: Plan;
+  today: string;
+}) {
   const status = budgetStatus(plan);
   const needs = categoryNeeds(plan);
   const readiness = planReadiness(plan);
@@ -115,4 +125,4 @@ export function PrintSummary({ plan, today }: { plan: Plan; today: string }) {
       </p>
     </article>
   );
-}
+});

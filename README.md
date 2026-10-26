@@ -8,7 +8,7 @@ One connected plan for budget, timeline and vendors, built for Indian families.<
 Change the guest count and watch catering, budget and warnings move together.
 
 [![CI](https://github.com/akshayparihardev/Promptwars-Challenge-5/actions/workflows/ci.yml/badge.svg)](https://github.com/akshayparihardev/Promptwars-Challenge-5/actions)
-![Tests](https://img.shields.io/badge/tests-266%20unit%20%2B%2014%20e2e-2f6b45)
+![Tests](https://img.shields.io/badge/tests-275%20unit%20%2B%2014%20e2e-2f6b45)
 ![a11y](https://img.shields.io/badge/axe-0%20violations%20(light%20%26%20dark)-2f6b45)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)
 ![Gemini](https://img.shields.io/badge/Gemini-3.6%20Flash-5e2750)
@@ -164,7 +164,7 @@ The injected line was treated as data, and fields that were not stated stayed `n
 
 - **Model:** `gemini-3.6-flash` by default (override with `GEMINI_MODEL`), through the `@google/genai` SDK.
 - **Server only.** The key is read from `process.env` inside serverless functions and never reaches the browser, the repo or the logs.
-- **Cached.** Identical validated requests within 10 minutes are served from a bounded in-memory cache (`X-Cache: HIT`), so repeats cost nothing.
+- **Cached.** Identical validated requests within 10 minutes are served from cache (`X-Cache: HIT`), so repeats cost nothing. With Vercel KV / Upstash configured the cache is **shared by every serverless instance**; otherwise each instance keeps a bounded in-memory copy.
 - **JSON mode with a schema** generated from the same zod schemas the app uses, a 15 s timeout, minimal "thinking" for speed (a typical call takes about 2 seconds) and one retry if the model is busy.
 - **Validated twice.** Output is parsed with zod on the server (invalid output returns `502 AI_RESPONSE_INVALID`) and again on the client. Raw model text never reaches the UI.
 - **Prompt-injection guard.** User text is wrapped in `<user_text>` tags and declared to be data; closing-tag tricks are stripped; the model is told never to invent prices, vendors or availability.
@@ -197,7 +197,7 @@ Everything below is an estimate and is user-editable.
 - Business logic lives only in `src/engine` as pure functions; components render and dispatch, nothing more. API handlers are thin: guard, validate, call, validate, respond.
 - Small, single-purpose modules (every component under 250 lines) with one shared schema layer used by client, server and tests.
 
-### 🧪 Testing: 266 unit and integration tests, 14 end-to-end
+### 🧪 Testing: 275 unit and integration tests, 14 end-to-end
 
 `npm run check` runs typecheck, lint and the whole unit suite; `npm run e2e` runs the browser suite. CI runs both on every push.
 
@@ -214,7 +214,7 @@ Everything below is an estimate and is user-editable.
 | --- | --- |
 | Secrets | `GEMINI_API_KEY` only on the server; `.env` is gitignored; `.env.example` holds placeholders; no secret in git history |
 | Input | zod validation on every endpoint, text length caps, 8 KB body cap |
-| Abuse | POST only, JSON only, **same-origin only** (cross-site and origin-less calls get 403, so other sites cannot spend the AI quota), per-IP rate limit (20 per 5 minutes, keyed on the platform IP header) |
+| Abuse | POST only, JSON only, **same-origin only** (cross-site and origin-less calls get 403, so other sites cannot spend the AI quota), per-IP rate limit (20 per 5 minutes, keyed on the platform IP header, **shared across all instances via Vercel KV / Upstash** when configured, in-memory otherwise) |
 | Output | Validated against a schema before it is returned; errors return a code only, never a stack or user text |
 | Browser | Strict CSP with **no `unsafe-inline`** (`default-src 'self'`, `style-src 'self'`, `connect-src 'self'`, `frame-ancestors 'none'`, `object-src 'none'`), HSTS, `X-Frame-Options: DENY`, COOP, `nosniff`, referrer and permissions policy |
 | Share links | Size cap, base64url check, zod schema, then consistency checks (budget sums, no dependency cycles). React escapes all text and there is no `dangerouslySetInnerHTML` |
@@ -265,17 +265,17 @@ npm run dev              # UI and /api together (same handlers as production)
 | `npm run format:check` | Prettier check (also run in CI) |
 | `npm run build` | production build |
 
-Environment variables: `GEMINI_API_KEY` (required for AI features) and `GEMINI_MODEL` (optional, default `gemini-3.6-flash`).
+Environment variables: `GEMINI_API_KEY` (required for AI features), `GEMINI_MODEL` (optional, default `gemini-3.6-flash`), and optionally `KV_REST_API_URL` + `KV_REST_API_TOKEN` (set automatically by Vercel's Upstash Redis integration) to share the rate limit and AI cache across instances.
 
 ## ☁️ Deploy
 
-Import the repo into Vercel (Framework: Vite), add the two environment variables, deploy. Every push to `main` redeploys.
+Import the repo into Vercel (Framework: Vite), add `GEMINI_API_KEY` and `GEMINI_MODEL`, deploy. For a shared rate limit and cache, add **Storage → Upstash for Redis** to the project (free tier is enough); it injects the KV variables and the API picks them up with no code change. Every push to `main` redeploys.
 
 ## 🗂️ Project layout
 
 ```text
 api/                serverless functions (thin: guard, validate, call Gemini, validate, respond)
-  _lib/             http guards, cache, Gemini client, prompts
+  _lib/             http guards, cache, shared store, Gemini client, prompts
 src/
   engine/           pure business logic (money, budget, timeline, trade-offs, quotes, checklist, insights)
   schemas/          zod schemas shared by client, server and tests
@@ -293,7 +293,7 @@ More detail on the security model is in [SECURITY.md](SECURITY.md).
 
 - Allocation percentages and task lead times are sensible defaults, not market data. They are labelled as estimates and everything is editable.
 - The plan lives in your browser and in share links; there are no accounts or server storage.
-- The rate limiter and AI cache are in memory, so they are best effort per serverless instance.
+- Without the optional Upstash/Vercel KV store, the rate limiter and AI cache fall back to per-instance memory. If the store is ever unreachable, requests still work (it fails open to memory, with a 1.5 s timeout).
 - Quote extraction depends on what the pasted text actually says. Anything not stated stays `null`, and the app asks you to verify AI extractions.
 
 ## 📄 License

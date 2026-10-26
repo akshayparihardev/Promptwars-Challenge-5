@@ -1,5 +1,6 @@
 import type { ZodType } from 'zod';
-import { cacheGet, cacheKey, cacheSet } from './cache.js';
+import { CACHE_TTL_MS, cacheGet, cacheKey, cacheSet } from './cache.js';
+import { incrementWindow, storeGet, storeKey, storeSet } from './store.js';
 
 /** Structural subsets of the Vercel request/response so handlers are trivial to unit test. */
 export interface ApiRequest {
@@ -45,7 +46,7 @@ function header(req: ApiRequest, name: string): string {
   return (Array.isArray(value) ? value[0] : value) ?? '';
 }
 
-/** Best-effort client address used only as an in-memory rate-limit key. */
+/** Best-effort client address, used only as a rate-limit key. */
 export function clientIp(req: ApiRequest): string {
   // Vercel sets these itself; prefer them over a header a caller could add.
   const platform = header(req, 'x-vercel-forwarded-for') || header(req, 'x-real-ip');
@@ -57,7 +58,7 @@ export function clientIp(req: ApiRequest): string {
 
 const hits = new Map<string, number[]>();
 
-/** Sliding-window limiter. Memory-only, so best effort per serverless instance. */
+/** Per-instance sliding-window limiter, used when no shared store is configured. */
 export function rateLimited(ip: string, now: number = Date.now()): boolean {
   const recent = (hits.get(ip) ?? []).filter((t) => now - t < RATE_LIMIT_WINDOW_MS);
   if (recent.length >= RATE_LIMIT_MAX) {
@@ -76,6 +77,30 @@ export function rateLimited(ip: string, now: number = Date.now()): boolean {
 
 export function resetRateLimit(): void {
   hits.clear();
+}
+
+/** Shared fixed-window limit across all instances when a store is configured, else in memory. */
+export async function isRateLimited(ip: string, now: number = Date.now()): Promise<boolean> {
+  const window = Math.floor(now / RATE_LIMIT_WINDOW_MS);
+  const count = await incrementWindow(
+    storeKey('rl', `${ip}:${window}`),
+    RATE_LIMIT_WINDOW_MS / 1000,
+  );
+  return count === null ? rateLimited(ip, now) : count > RATE_LIMIT_MAX;
+}
+
+/** Validated AI results: shared store first (if configured), then this instance's memory. */
+async function readCache(key: string): Promise<unknown> {
+  const local = cacheGet(key);
+  if (local !== undefined) return local;
+  const shared = await storeGet(storeKey('cache', key));
+  if (shared !== undefined) cacheSet(key, shared);
+  return shared;
+}
+
+async function writeCache(key: string, value: unknown): Promise<void> {
+  cacheSet(key, value);
+  await storeSet(storeKey('cache', key), value, CACHE_TTL_MS / 1000);
 }
 
 function bodyBytes(body: unknown): number {
@@ -134,7 +159,7 @@ export function createHandler<I>(config: HandlerConfig<I>) {
       fail(res, 415, 'UNSUPPORTED_MEDIA_TYPE');
       return;
     }
-    if (rateLimited(clientIp(req))) {
+    if (await isRateLimited(clientIp(req))) {
       res.setHeader('Retry-After', String(RATE_LIMIT_WINDOW_MS / 1000));
       fail(res, 429, 'RATE_LIMITED');
       return;
@@ -162,7 +187,7 @@ export function createHandler<I>(config: HandlerConfig<I>) {
       return;
     }
     const key = cacheKey(config.name, parsed.data);
-    const cached = cacheGet(key);
+    const cached = await readCache(key);
     if (cached !== undefined) {
       res.setHeader('X-Cache', 'HIT');
       res.status(200).json(cached);
@@ -170,7 +195,7 @@ export function createHandler<I>(config: HandlerConfig<I>) {
     }
     try {
       const result = await config.run(parsed.data);
-      cacheSet(key, result);
+      await writeCache(key, result);
       res.status(200).json(result);
     } catch (error) {
       if (error instanceof ApiFailure) {

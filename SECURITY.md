@@ -20,4 +20,4 @@ Please open a private security advisory on this repository (Security → Advisor
 
 ## Known limits
 
-The rate limiter and response cache live in memory, so they are best effort per serverless instance. A determined server-side caller can forge an `Origin` header; the rate limit and validation still apply to them.
+With `KV_REST_API_URL` and `KV_REST_API_TOKEN` set (Vercel's Upstash Redis integration), the rate limit and response cache are shared by every serverless instance; store keys are SHA-256 hashes, so no user text is stored as a key. Without them, both fall back to per-instance memory, and an unreachable store fails open to memory after 1.5 s rather than breaking the app. A determined server-side caller can forge an `Origin` header; the rate limit and validation still apply to them.
