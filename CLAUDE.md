@@ -45,7 +45,8 @@ Every screen reacts to real user input.
 - Model name from `process.env.GEMINI_MODEL`, default `gemini-3.8-flash`.
 - Git: work on `main` only. Do NOT create branches. Small commits with clear messages
   (`feat(engine): ...`, `test: ...`, `fix(api): ...`). Push after each phase.
-- Repo must stay under 10 MB. No images/videos/fonts committed beyond a tiny favicon. No build output.
+- Repo must stay under 10 MB. No videos or fonts; images only as the favicon and small README
+  screenshots in `docs/screenshots` (JPEG, under 150 KB each). No build output.
 - Keep dependencies minimal. Do not add a library when 20 lines of code will do.
 - After every phase run `npm run check` (typecheck + lint + test). Never leave it failing.
 
