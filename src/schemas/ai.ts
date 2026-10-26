@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CategorySchema, OccasionSchema, QuoteSchema } from './base';
+import { CategorySchema, OccasionSchema, QuoteSchema } from './base.js';
 
 /** Request bodies (also used by the client wrappers). */
 export const ParseIntakeRequestSchema = z.object({ text: z.string().trim().min(1).max(1000) });

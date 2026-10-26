@@ -1,6 +1,6 @@
 import { z, type ZodType } from 'zod';
-import { ApiFailure } from './http';
-import { callModel } from './model';
+import { ApiFailure } from './http.js';
+import { callModel } from './model.js';
 
 /** Gemini-friendly JSON Schema from a zod schema (drops the $schema marker). */
 export function toJsonSchema(schema: ZodType): Record<string, unknown> {

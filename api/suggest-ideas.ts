@@ -1,7 +1,7 @@
-import { IdeasSchema, SuggestIdeasRequestSchema } from '../src/schemas';
-import { generateJson } from './_lib/gemini';
-import { createHandler } from './_lib/http';
-import { IDEAS_PROMPT, wrapUserText } from './_lib/prompts';
+import { IdeasSchema, SuggestIdeasRequestSchema } from '../src/schemas/index.js';
+import { generateJson } from './_lib/gemini.js';
+import { createHandler } from './_lib/http.js';
+import { IDEAS_PROMPT, wrapUserText } from './_lib/prompts.js';
 
 export default createHandler({
   input: SuggestIdeasRequestSchema,

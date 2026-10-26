@@ -1,2 +1,2 @@
-export * from './base';
-export * from './ai';
+export * from './base.js';
+export * from './ai.js';

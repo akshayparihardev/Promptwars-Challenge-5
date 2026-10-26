@@ -1,7 +1,7 @@
-import { ExplanationsSchema, ExplainTradeoffsRequestSchema } from '../src/schemas';
-import { generateJson } from './_lib/gemini';
-import { createHandler } from './_lib/http';
-import { EXPLAIN_PROMPT } from './_lib/prompts';
+import { ExplanationsSchema, ExplainTradeoffsRequestSchema } from '../src/schemas/index.js';
+import { generateJson } from './_lib/gemini.js';
+import { createHandler } from './_lib/http.js';
+import { EXPLAIN_PROMPT } from './_lib/prompts.js';
 
 export default createHandler({
   input: ExplainTradeoffsRequestSchema,

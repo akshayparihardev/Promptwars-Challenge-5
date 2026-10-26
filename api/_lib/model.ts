@@ -1,5 +1,5 @@
 import { GoogleGenAI, ThinkingLevel } from '@google/genai';
-import { ApiFailure } from './http';
+import { ApiFailure } from './http.js';
 
 export const DEFAULT_MODEL = 'gemini-3.6-flash';
 export const MODEL_TIMEOUT_MS = 15_000;
