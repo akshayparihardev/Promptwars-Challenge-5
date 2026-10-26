@@ -4,6 +4,7 @@ import type { Plan } from '../schemas';
 import { explainTradeoffs } from '../lib/api';
 import { describeChanges } from '../lib/format';
 import { useAiCall } from '../lib/useAiCall';
+import { Icon } from './Icon';
 import { AiError, AiLoading, Confirm } from './ui';
 
 export function TradeoffPanel({
@@ -93,7 +94,7 @@ export function TradeoffPanel({
               )}
               {o.warning && (
                 <p className="mt-2 text-sm font-medium text-warn">
-                  <span aria-hidden="true">⚠ </span>
+                  <Icon name="alert" className="mr-1 inline h-4 w-4" />
                   {o.warning}
                 </p>
               )}

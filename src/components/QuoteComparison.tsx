@@ -1,6 +1,7 @@
 import { categoryLabel, compareQuote, effectiveCost, formatINR } from '../engine';
 import { CATEGORIES, type Category, type Plan, type StoredQuote } from '../schemas';
 import type { Action } from '../state/planStore';
+import { Icon } from './Icon';
 import { EstimateBadge } from './ui';
 
 function CategoryTable({
@@ -42,7 +43,11 @@ function CategoryTable({
             {cols.map((c, i) => (
               <th key={c.s.id} scope="col">
                 {c.s.quote.vendorName ?? `Quote ${i + 1}`}
-                {c.s.accepted && <span className="badge-verified ml-2">✓ Accepted</span>}
+                {c.s.accepted && (
+                  <span className="badge-verified ml-2">
+                    <Icon name="check" className="h-3 w-3" /> Accepted
+                  </span>
+                )}
               </th>
             ))}
           </tr>
@@ -58,9 +63,15 @@ function CategoryTable({
               c.cost === null ? (
                 '-'
               ) : c.cost > budget ? (
-                <span className="font-medium text-warn">⚠ {formatINR(c.cost - budget)} over</span>
+                <span className="inline-flex items-center gap-1 font-medium text-warn">
+                  <Icon name="alert" className="h-3.5 w-3.5" />
+                  {formatINR(c.cost - budget)} over
+                </span>
               ) : (
-                <span className="text-ok">✓ {formatINR(budget - c.cost)} under</span>
+                <span className="inline-flex items-center gap-1 text-ok">
+                  <Icon name="check" className="h-3.5 w-3.5" />
+                  {formatINR(budget - c.cost)} under
+                </span>
               ),
             )}
           </tr>
@@ -94,12 +105,15 @@ function CategoryTable({
             <th scope="row">Things to check</th>
             {cell((c) =>
               c.flags.length === 0 ? (
-                <span className="text-ok">✓ None</span>
+                <span className="inline-flex items-center gap-1 text-ok">
+                  <Icon name="check" className="h-3.5 w-3.5" />
+                  None
+                </span>
               ) : (
                 <ul className="space-y-1">
                   {c.flags.map((f) => (
                     <li key={f.code} className="text-warn">
-                      <span aria-hidden="true">⚠ </span>
+                      <Icon name="alert" className="mr-1 inline h-3.5 w-3.5" />
                       {f.message}
                     </li>
                   ))}

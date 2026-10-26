@@ -18,6 +18,7 @@ import { extractQuote } from '../lib/api';
 import { newId } from '../lib/today';
 import { useAiCall } from '../lib/useAiCall';
 import type { Action } from '../state/planStore';
+import { Icon } from './Icon';
 import { AiError, AiLoading } from './ui';
 
 const QUOTE_CATEGORIES = CATEGORIES.filter((c): c is Category => c !== 'contingency');
@@ -175,7 +176,12 @@ export function QuoteAnalyzer({
         {ai.state.status === 'error' && (
           <AiError message={ai.state.message} onRetry={() => void analyze()} />
         )}
-        {saved && <p className="font-medium text-ok">✓ {saved}</p>}
+        {saved && (
+          <p className="flex items-center gap-2 font-medium text-ok">
+            <Icon name="check" />
+            {saved}
+          </p>
+        )}
       </div>
 
       {result && (
@@ -194,12 +200,15 @@ export function QuoteAnalyzer({
           <div role="status" aria-live="polite">
             <h4 className="font-semibold">Things to check</h4>
             {flags.length === 0 ? (
-              <p className="text-sm text-ok">✓ Nothing worrying found.</p>
+              <p className="flex items-center gap-2 text-sm text-ok">
+                <Icon name="check" />
+                Nothing worrying found.
+              </p>
             ) : (
               <ul className="mt-1 space-y-1 text-sm">
                 {flags.map((f) => (
                   <li key={f.code} className="text-warn">
-                    <span aria-hidden="true">⚠ </span>
+                    <Icon name="alert" className="mr-1 inline h-4 w-4" />
                     {f.message}
                   </li>
                 ))}
@@ -246,7 +255,12 @@ export function QuoteAnalyzer({
             </p>
           )}
           <div aria-live="polite">
-            {copied === 'done' && <p className="text-sm font-medium text-ok">✓ Message copied.</p>}
+            {copied === 'done' && (
+              <p className="flex items-center gap-2 text-sm font-medium text-ok">
+                <Icon name="check" />
+                Message copied.
+              </p>
+            )}
             {copied === 'failed' && (
               <div>
                 <p className="text-sm font-medium">

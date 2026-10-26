@@ -1,6 +1,8 @@
 import { lazy, Suspense, useCallback, useRef, useState, type KeyboardEvent } from 'react';
 import { BudgetTab } from './components/BudgetTab';
 import { Header } from './components/Header';
+import { Icon, type IconName } from './components/Icon';
+import { PlanMasthead } from './components/PlanMasthead';
 import { PlanSetup } from './components/PlanSetup';
 import { PrintSummary } from './components/PrintSummary';
 import { TimelineTab } from './components/TimelineTab';
@@ -12,13 +14,13 @@ import { loadInitial, safeStorage, usePlanStore, type InitialLoad } from './stat
 const VendorsTab = lazy(() => import('./components/VendorsTab'));
 const IdeasPanel = lazy(() => import('./components/IdeasPanel'));
 
-const TABS = [
-  { id: 'setup', label: 'Plan setup' },
-  { id: 'budget', label: 'Budget' },
-  { id: 'timeline', label: 'Timeline' },
-  { id: 'vendors', label: 'Vendors' },
-] as const;
-type TabId = (typeof TABS)[number]['id'];
+const TABS: readonly { id: string; label: string; icon: IconName }[] = [
+  { id: 'setup', label: 'Plan setup', icon: 'pencil' },
+  { id: 'budget', label: 'Budget', icon: 'wallet' },
+  { id: 'timeline', label: 'Timeline', icon: 'route' },
+  { id: 'vendors', label: 'Vendors', icon: 'store' },
+];
+type TabId = 'setup' | 'budget' | 'timeline' | 'vendors';
 
 function readInitial(): InitialLoad {
   return loadInitial(typeof window === 'undefined' ? '' : window.location.hash, safeStorage());
@@ -51,7 +53,7 @@ export default function App({
     event.preventDefault();
     const target = TABS[next];
     if (target) {
-      setTab(target.id);
+      setTab(target.id as TabId);
       refs.current[target.id]?.focus();
     }
   }
@@ -88,7 +90,9 @@ export default function App({
             className={`mb-4 flex items-start justify-between gap-3 rounded-xl border p-3 text-sm ${notice.kind === 'bad_link' ? 'border-warn bg-warn-soft text-warn' : 'border-line bg-accent-soft'}`}
           >
             <p>
-              {notice.kind === 'bad_link' && <span aria-hidden="true">⚠ </span>}
+              {notice.kind === 'bad_link' && (
+                <Icon name="alert" className="mr-1.5 inline h-4 w-4" />
+              )}
               {notice.message}
             </p>
             <button type="button" className="btn-quiet shrink-0" onClick={() => setNotice(null)}>
@@ -97,11 +101,9 @@ export default function App({
           </div>
         )}
 
-        <div
-          role="tablist"
-          aria-label="Plan sections"
-          className="mb-6 flex gap-1 rounded-2xl border border-line bg-card p-1"
-        >
+        {plan && <PlanMasthead plan={plan} today={today} />}
+
+        <div role="tablist" aria-label="Plan sections" className="mb-6 flex border-b border-line">
           {TABS.map((t) => (
             <button
               key={t.id}
@@ -114,16 +116,24 @@ export default function App({
               aria-selected={tab === t.id}
               aria-controls={`panel-${t.id}`}
               tabIndex={tab === t.id ? 0 : -1}
-              className={`btn min-w-0 flex-1 px-2 text-[13px] sm:px-4 sm:text-sm ${tab === t.id ? 'bg-accent text-white' : 'text-ink hover:bg-paper'}`}
-              onClick={() => setTab(t.id)}
+              className={`-mb-px flex min-h-14 min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-1 border-b-2 px-2 text-[13px] font-semibold transition-colors duration-150 sm:min-h-12 sm:flex-row sm:gap-2 sm:px-5 sm:text-sm ${tab === t.id ? 'border-accent text-accent' : 'border-transparent text-ink-soft hover:border-line hover:text-ink'}`}
+              onClick={() => setTab(t.id as TabId)}
               onKeyDown={onKeyDown}
             >
+              <Icon name={t.icon} className="h-5 w-5 sm:h-4 sm:w-4" />
               {t.label}
             </button>
           ))}
         </div>
 
-        <div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`} tabIndex={0}>
+        <div
+          role="tabpanel"
+          id={`panel-${tab}`}
+          aria-labelledby={`tab-${tab}`}
+          tabIndex={0}
+          className="panel-enter"
+          key={tab}
+        >
           {tab === 'setup' && (
             <div className="space-y-6">
               <PlanSetup

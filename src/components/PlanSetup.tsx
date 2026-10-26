@@ -135,8 +135,19 @@ export function PlanSetup({
   }
 
   return (
-    <div className="space-y-6">
-      <section className="card" aria-labelledby="describe-h">
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-start">
+      {!existing && (
+        <div className="lg:col-span-2">
+          <h2 className="text-3xl leading-tight sm:text-4xl">
+            Plan the celebration, not the spreadsheet.
+          </h2>
+          <p className="mt-2 max-w-2xl text-ink-soft">
+            Tell us about your event. Aayojan keeps your budget, timeline and vendors in one
+            connected plan, so a change in one place updates everything else.
+          </p>
+        </div>
+      )}
+      <section className="card lg:sticky lg:top-6" aria-labelledby="describe-h">
         <h2 id="describe-h" className="text-lg">
           Describe your event
         </h2>

@@ -1,13 +1,14 @@
 import { useMemo } from 'react';
 import { vendorChecklist, VENDOR_STATUS_LABELS, type VendorStatus } from '../engine';
 import type { Plan } from '../schemas';
+import { Icon, type IconName } from './Icon';
 import type { Action } from '../state/planStore';
 
-const ICON: Record<VendorStatus, string> = {
-  not_started: '○',
-  contacted: '✉',
-  quote_received: '📄',
-  quote_accepted: '✓',
+const ICON: Record<VendorStatus, IconName> = {
+  not_started: 'circle',
+  contacted: 'mail',
+  quote_received: 'file',
+  quote_accepted: 'check',
 };
 
 export function VendorChecklist({
@@ -47,7 +48,7 @@ export function VendorChecklist({
               <span
                 className={item.status === 'quote_accepted' ? 'badge-verified' : 'badge-estimate'}
               >
-                <span aria-hidden="true">{ICON[item.status]}</span>{' '}
+                <Icon name={ICON[item.status]} className="h-3 w-3" />{' '}
                 {VENDOR_STATUS_LABELS[item.status]}
               </span>
               <label className="flex min-h-11 items-center gap-2 text-sm">

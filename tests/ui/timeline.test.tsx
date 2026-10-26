@@ -44,7 +44,7 @@ describe('timeline', () => {
     await user.click(screen.getByRole('tab', { name: 'Timeline' }));
     const venue = screen.getByTestId('task-venue');
     await user.click(within(venue).getByRole('button', { name: 'Done' }));
-    expect(within(venue).getByText('✓ Done')).toBeInTheDocument();
+    expect(within(venue).getByText('Done', { selector: 'span' })).toBeInTheDocument();
     await user.click(within(venue).getByRole('button', { name: 'Mark as to do' }));
 
     const outfits = screen.getByTestId('task-outfits');

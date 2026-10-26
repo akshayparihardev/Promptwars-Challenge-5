@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { planReadiness } from '../engine';
 import type { Plan } from '../schemas';
 import { shareHash } from '../state/share';
+import { BrandMark, Icon } from './Icon';
 import { Confirm } from './ui';
 
 export function Header({ plan, onReset }: { plan: Plan | null; onReset: () => void }) {
@@ -21,24 +22,27 @@ export function Header({ plan, onReset }: { plan: Plan | null; onReset: () => vo
   }
 
   return (
-    <header className="no-print border-b border-line bg-card">
-      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 py-4">
-        <div>
-          <h1 className="text-xl">Aayojan</h1>
-          <p className="text-sm text-ink-soft">One plan, everything connected.</p>
+    <header className="no-print border-b border-line bg-card/80">
+      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 py-3">
+        <div className="flex items-center gap-3">
+          <BrandMark />
+          <div>
+            <h1 className="font-display text-xl leading-tight tracking-tight">Aayojan</h1>
+            <p className="text-xs text-ink-soft">One plan, everything connected.</p>
+          </div>
         </div>
 
         {readiness && (
-          <div className="min-w-48 flex-1 sm:max-w-xs" aria-label="Plan readiness">
-            <p className="text-sm font-medium">
-              Plan readiness {readiness.percent}%
-              <span className="ml-1 font-normal text-ink-soft">
-                · {readiness.tasksDone}/{readiness.tasksTotal} tasks · {readiness.quotesVerified}/
+          <div className="order-last w-full sm:order-none sm:w-64" aria-label="Plan readiness">
+            <p className="flex items-baseline justify-between text-sm font-medium">
+              <span>Plan readiness {readiness.percent}%</span>
+              <span className="text-xs font-normal text-ink-soft">
+                {readiness.tasksDone}/{readiness.tasksTotal} tasks · {readiness.quotesVerified}/
                 {readiness.quotesTotal} quotes
               </span>
             </p>
             <progress
-              className="h-2 w-full accent-accent"
+              className="mt-1 h-1.5 w-full overflow-hidden rounded-full accent-accent"
               max={100}
               value={readiness.percent}
               aria-label="Plan readiness percent"
@@ -49,12 +53,15 @@ export function Header({ plan, onReset }: { plan: Plan | null; onReset: () => vo
         {plan && (
           <div className="flex flex-wrap gap-2">
             <button type="button" className="btn-secondary" onClick={() => void copyLink()}>
+              <Icon name="link" />
               Share link
             </button>
             <button type="button" className="btn-secondary" onClick={() => window.print()}>
+              <Icon name="printer" />
               Print summary
             </button>
             <button type="button" className="btn-secondary" onClick={() => setConfirmReset(true)}>
+              <Icon name="reset" />
               Reset
             </button>
           </div>
@@ -63,8 +70,9 @@ export function Header({ plan, onReset }: { plan: Plan | null; onReset: () => vo
 
       <div className="mx-auto max-w-5xl px-4" aria-live="polite">
         {share?.status === 'copied' && (
-          <p className="pb-3 text-sm font-medium text-ok">
-            ✓ Link copied. Anyone with it can open this plan.
+          <p className="flex items-center gap-2 pb-3 text-sm font-medium text-ok">
+            <Icon name="check" />
+            Link copied. Anyone with it can open this plan.
           </p>
         )}
         {share?.status === 'manual' && (

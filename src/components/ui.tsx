@@ -1,4 +1,5 @@
 import { useId, type ReactNode } from 'react';
+import { Icon } from './Icon';
 
 export interface FieldControlProps {
   id: string;
@@ -34,9 +35,9 @@ export function Field({
         </p>
       )}
       {error && (
-        <p id={errorId} className="mt-1 text-sm font-medium text-warn">
-          <span aria-hidden="true">⚠ </span>
-          {error}
+        <p id={errorId} className="mt-1 flex items-start gap-1.5 text-sm font-medium text-warn">
+          <Icon name="alert" className="mt-0.5 h-4 w-4" />
+          <span>{error}</span>
         </p>
       )}
     </div>
@@ -46,7 +47,7 @@ export function Field({
 export function EstimateBadge({ verified }: { verified: boolean }) {
   return verified ? (
     <span className="badge-verified">
-      <span aria-hidden="true">✓</span> Verified quote
+      <Icon name="check" className="h-3 w-3" /> Verified quote
     </span>
   ) : (
     <span className="badge-estimate">Estimate</span>
@@ -57,7 +58,10 @@ export function EstimateBadge({ verified }: { verified: boolean }) {
 export function AiLoading({ label }: { label: string }) {
   return (
     <div role="status" aria-live="polite" className="space-y-2" data-testid="ai-loading">
-      <p className="text-sm font-medium text-accent">{label}</p>
+      <p className="flex items-center gap-2 text-sm font-medium text-accent">
+        <Icon name="sparkle" className="h-4 w-4" />
+        {label}
+      </p>
       <div className="skeleton h-4 w-3/4" />
       <div className="skeleton h-4 w-full" />
       <div className="skeleton h-4 w-2/3" />
@@ -71,9 +75,9 @@ export function AiError({ message, onRetry }: { message: string; onRetry: () => 
       role="alert"
       className="rounded-xl border border-warn/40 bg-warn-soft p-3 text-sm text-warn"
     >
-      <p className="font-medium">
-        <span aria-hidden="true">⚠ </span>
-        {message}
+      <p className="flex items-start gap-2 font-medium">
+        <Icon name="alert" className="mt-0.5 h-4 w-4" />
+        <span>{message}</span>
       </p>
       <button type="button" className="btn-secondary mt-2" onClick={onRetry}>
         Try again
@@ -92,9 +96,9 @@ export function EmptyState({
   onAction: () => void;
 }) {
   return (
-    <div className="card text-center">
-      <p className="text-lg font-semibold">{title}</p>
-      <button type="button" className="btn-primary mt-4" onClick={onAction}>
+    <div className="card py-10 text-center">
+      <p className="font-display text-xl">{title}</p>
+      <button type="button" className="btn-primary mt-5" onClick={onAction}>
         {action}
       </button>
     </div>

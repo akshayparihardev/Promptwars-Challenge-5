@@ -10,6 +10,7 @@ import {
 import type { Plan } from '../schemas';
 import { formatDate } from '../lib/format';
 import type { Action } from '../state/planStore';
+import { Icon } from './Icon';
 import { TaskRow } from './TaskRow';
 
 export function TimelineTab({
@@ -62,7 +63,10 @@ export function TimelineTab({
   if (result.error) {
     return (
       <div role="alert" className="card text-warn">
-        <p className="font-semibold">⚠ {result.error}</p>
+        <p className="flex items-center gap-2 font-semibold">
+          <Icon name="alert" />
+          {result.error}
+        </p>
       </div>
     );
   }
@@ -81,15 +85,20 @@ export function TimelineTab({
               : ' · this date has passed'}
         </p>
         <p className="hint">Delay a task and everything that depends on it moves too.</p>
-        <div role="status" aria-live="polite" className="mt-2 text-sm font-medium">
+        <div
+          role="status"
+          aria-live="polite"
+          className="mt-2 text-sm font-medium [&>span]:flex [&>span]:items-center [&>span]:gap-1.5"
+        >
           {problems > 0 ? (
             <span className="text-warn">
-              <span aria-hidden="true">⚠ </span>
+              <Icon name="alert" className="h-4 w-4" />
               {problems} {problems === 1 ? 'task needs' : 'tasks need'} attention
             </span>
           ) : (
             <span className="text-ok">
-              <span aria-hidden="true">✓ </span>On track
+              <Icon name="check" className="h-4 w-4" />
+              On track
             </span>
           )}
         </div>
@@ -97,10 +106,10 @@ export function TimelineTab({
 
       {groups.map((g) => (
         <section key={g.order} aria-labelledby={`phase-${g.order}`}>
-          <h3 id={`phase-${g.order}`} className="mb-3 text-base">
+          <h3 id={`phase-${g.order}`} className="mb-4 font-display text-xl tracking-tight">
             {g.label}
           </h3>
-          <ul className="space-y-3">
+          <ul className="relative before:absolute before:bottom-3 before:left-[9px] before:top-3 before:w-0.5 before:bg-line before:content-['']">
             {g.tasks.map((task) => {
               const cause = affected[task.id];
               return (
