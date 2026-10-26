@@ -116,7 +116,7 @@ export default function App({
               aria-selected={tab === t.id}
               aria-controls={`panel-${t.id}`}
               tabIndex={tab === t.id ? 0 : -1}
-              className={`-mb-px flex min-h-14 min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-1 border-b-2 px-2 text-[13px] font-semibold transition-colors duration-150 sm:min-h-12 sm:flex-row sm:gap-2 sm:px-5 sm:text-sm ${tab === t.id ? 'border-accent text-accent' : 'border-transparent text-ink-soft hover:border-line hover:text-ink'}`}
+              className={`-mb-px flex min-h-14 min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-1 border-b-2 whitespace-nowrap px-1 text-xs font-semibold transition-colors duration-150 sm:min-h-12 sm:flex-row sm:gap-2 sm:px-5 sm:text-sm ${tab === t.id ? 'border-accent text-accent' : 'border-transparent text-ink-soft hover:border-line hover:text-ink'}`}
               onClick={() => setTab(t.id as TabId)}
               onKeyDown={onKeyDown}
             >
