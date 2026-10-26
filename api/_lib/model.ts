@@ -3,20 +3,27 @@ import type { AiStreamEvent } from '../../src/schemas/index.js';
 import { ApiFailure } from './http.js';
 
 /**
- * Models to try, best first. Each is fast on the free tier and answers in JSON mode; when one is out
- * of quota, overloaded, slow or retired, the next one answers instead.
+ * Models to try, best first: the newest Gemini Flash models, then older and lighter ones that stay
+ * available on the free tier. Each call walks the list until one answers, so a model that is out of
+ * quota, overloaded, retired or silent is skipped. The lite models come after the full ones because they answer fast but share little of their thinking. (gemini-3.8-flash, 3.7-flash and 3.5-flash-lite
+ * were left out: on free keys they accept the request and then never answer.)
  */
 export const DEFAULT_CHAIN = [
+  'gemini-4-argon',
+  'gemini-3.6-flash',
+  'gemini-3.5-flash',
   'gemini-3-flash-preview',
   'gemini-2.5-flash',
   'gemini-3.1-flash-lite',
   'gemini-2.5-flash-lite',
 ] as const;
 export const DEFAULT_MODEL = DEFAULT_CHAIN[0];
-/** One slow model must not eat the whole budget: after this, move on to the next. */
-export const ATTEMPT_TIMEOUT_MS = 9_000;
-/** The whole chain stays inside this, well under the function's 30 s limit. */
-export const MODEL_TIMEOUT_MS = 24_000;
+/** A model that has not produced anything by now is stuck: move on to the next one. */
+export const FIRST_CHUNK_TIMEOUT_MS = 5_000;
+/** Once it is talking, the longest silence tolerated between two chunks. */
+export const IDLE_TIMEOUT_MS = 10_000;
+/** The whole chain stays inside this, under the function's 60 s limit. */
+export const MODEL_TIMEOUT_MS = 30_000;
 /** Longest thought summary passed to the browser. */
 export const MAX_THOUGHT_CHARS = 1_200;
 
@@ -67,60 +74,50 @@ function cooldownFor(error: unknown): number | null {
 }
 
 /**
- * Gemini 2.5 models take a token budget, newer ones a level. Without thoughts we keep thinking to a
- * minimum (speed); with thoughts we ask for a short think and its summaries.
+ * Thought summaries are always requested: Gemini 2.5 models take a token budget, newer ones a level.
  */
-export function thinkingFor(model: string, withThoughts: boolean): ThinkingConfig {
-  const budgeted = model.startsWith('gemini-2.5');
-  if (withThoughts) {
-    return budgeted
-      ? { includeThoughts: true, thinkingBudget: 512 }
-      : { includeThoughts: true, thinkingLevel: ThinkingLevel.LOW };
-  }
-  return budgeted ? { thinkingBudget: 0 } : { thinkingLevel: ThinkingLevel.MINIMAL };
+export function thinkingFor(model: string): ThinkingConfig {
+  return model.startsWith('gemini-2.5')
+    ? { includeThoughts: true, thinkingBudget: 512 }
+    : { includeThoughts: true, thinkingLevel: ThinkingLevel.MEDIUM };
 }
 
 class AttemptTimeout extends Error {}
-
-/** Runs one attempt with its own abort signal; rejects with AttemptTimeout after `ms`. */
-async function withTimeout<T>(run: (signal: AbortSignal) => Promise<T>, ms: number): Promise<T> {
-  const controller = new AbortController();
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  const expired = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => {
-      controller.abort();
-      reject(new AttemptTimeout());
-    }, ms);
-  });
-  try {
-    return await Promise.race([run(controller.signal), expired]);
-  } finally {
-    clearTimeout(timer);
-  }
-}
 
 export interface ModelRequest {
   system: string;
   user: string;
   /** JSON Schema describing the required response shape. */
   jsonSchema: Record<string, unknown>;
-  /** When set, the model's thought summaries (and model switches) are reported as they happen. */
+  /** Receives the model's thought summaries and, at the end, which model answered. */
   onEvent?: (event: AiStreamEvent) => void;
 }
 
-/**
- * The only place that talks to Gemini. Reads the key from the server environment, forces JSON
- * output, walks the model chain (each attempt time-boxed) inside one overall budget, and optionally
- * streams the model's thought summaries. Errors carry codes only: no prompt text, no key, no stack.
- */
-export async function callModel(request: ModelRequest): Promise<string> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new ApiFailure(503, 'AI_UNAVAILABLE');
-  const ai = new GoogleGenAI({ apiKey });
-  const { onEvent } = request;
-
-  const attempt = async (model: string, signal: AbortSignal): Promise<string> => {
-    const params = {
+/** One streamed attempt. A watchdog gives up on a model that goes quiet (see the timeouts above). */
+async function attempt(
+  ai: GoogleGenAI,
+  model: string,
+  request: ModelRequest,
+  budgetMs: number,
+): Promise<string> {
+  const controller = new AbortController();
+  let watchdog: ReturnType<typeof setTimeout> | undefined;
+  let fail: (error: Error) => void;
+  const silent = new Promise<never>((_, reject) => {
+    fail = reject;
+  });
+  const arm = (ms: number) => {
+    clearTimeout(watchdog);
+    watchdog = setTimeout(
+      () => {
+        controller.abort();
+        fail(new AttemptTimeout());
+      },
+      Math.min(ms, budgetMs),
+    );
+  };
+  const run = async () => {
+    const stream = await ai.models.generateContentStream({
       model,
       contents: request.user,
       config: {
@@ -128,34 +125,49 @@ export async function callModel(request: ModelRequest): Promise<string> {
         responseMimeType: 'application/json',
         responseJsonSchema: request.jsonSchema,
         temperature: 0.4,
-        thinkingConfig: thinkingFor(model, onEvent !== undefined),
-        abortSignal: signal,
+        thinkingConfig: thinkingFor(model),
+        abortSignal: controller.signal,
       },
-    };
-    if (!onEvent) return (await ai.models.generateContent(params)).text ?? '';
+    });
     let text = '';
-    for await (const chunk of await ai.models.generateContentStream(params)) {
+    for await (const chunk of stream) {
+      arm(IDLE_TIMEOUT_MS);
       for (const part of chunk.candidates?.[0]?.content?.parts ?? []) {
         if (!part.text) continue;
-        if (part.thought) onEvent({ type: 'thought', text: part.text.slice(0, MAX_THOUGHT_CHARS) });
-        else text += part.text;
+        if (part.thought) {
+          request.onEvent?.({ type: 'thought', text: part.text.slice(0, MAX_THOUGHT_CHARS) });
+        } else text += part.text;
       }
     }
     return text;
   };
+  arm(FIRST_CHUNK_TIMEOUT_MS);
+  try {
+    return await Promise.race([run(), silent]);
+  } finally {
+    clearTimeout(watchdog);
+  }
+}
 
+/**
+ * The only place that talks to Gemini. Reads the key from the server environment, forces JSON
+ * output, streams every attempt (so thought summaries can be shown while the model works), walks the
+ * model chain inside one overall budget and reports which model answered. Errors carry codes only:
+ * no prompt text, no key, no stack.
+ */
+export async function callModel(request: ModelRequest): Promise<string> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new ApiFailure(503, 'AI_UNAVAILABLE');
+  const ai = new GoogleGenAI({ apiKey });
   const deadline = Date.now() + MODEL_TIMEOUT_MS;
   let timedOut = false;
-  for (const [index, model] of attemptOrder(Date.now()).entries()) {
+  for (const model of attemptOrder(Date.now())) {
     const remaining = deadline - Date.now();
     if (remaining <= 0) break;
-    if (index > 0) onEvent?.({ type: 'fallback' });
     try {
-      const text = await withTimeout(
-        (signal) => attempt(model, signal),
-        Math.min(ATTEMPT_TIMEOUT_MS, remaining),
-      );
+      const text = await attempt(ai, model, request, remaining);
       blockedUntil.delete(model);
+      request.onEvent?.({ type: 'model', model });
       return text;
     } catch (error) {
       if (error instanceof AttemptTimeout) timedOut = true;

@@ -66,8 +66,8 @@ function kindFromStatus(status: number, code: unknown): ApiErrorKind {
   return 'server';
 }
 
-/** A little above the server's own 24 s budget for the whole model chain. */
-export const CLIENT_TIMEOUT_MS = 30_000;
+/** A little above the server's own 30 s budget for the whole model chain. */
+export const CLIENT_TIMEOUT_MS = 40_000;
 
 export interface RequestOptions {
   /** Injected in tests; defaults to the global fetch. */

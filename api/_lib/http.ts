@@ -142,8 +142,6 @@ export interface HandlerConfig<I> {
   input: ZodType<I>;
   /** Returns data that has already been validated against the endpoint's output schema. */
   run: (input: I, onEvent?: (event: AiStreamEvent) => void) => Promise<unknown>;
-  /** Stream the model's thoughts to callers that accept NDJSON. */
-  stream?: boolean;
 }
 
 function fail(res: ApiResponse, status: number, code: ErrorCode): void {
@@ -231,7 +229,7 @@ export function createHandler<I>(config: HandlerConfig<I>) {
       res.status(200).json(cached);
       return;
     }
-    if (config.stream && header(req, 'accept').includes(NDJSON) && res.write && res.end) {
+    if (header(req, 'accept').includes(NDJSON) && res.write && res.end) {
       await streamRun(res, config, parsed.data, key);
       return;
     }

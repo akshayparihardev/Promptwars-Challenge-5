@@ -100,7 +100,7 @@ describe('streamed answers (NDJSON)', () => {
     expect(model).toHaveBeenCalledTimes(1);
   });
 
-  it('answers plain JSON when the caller does not ask for a stream, or the endpoint cannot stream', async () => {
+  it('answers plain JSON when the caller does not ask for a stream, and streams every endpoint on request', async () => {
     model.mockResolvedValue(JSON.stringify({ answer: 'Plain.' }));
     const plain = mockRes();
     await askPlanner(mockReq({ body }), plain.res);
@@ -119,7 +119,8 @@ describe('streamed answers (NDJSON)', () => {
     );
     const other = streamingRes();
     await parseIntake(mockReq({ body: { text: 'hello' }, headers: accept }), other.streaming);
-    expect(other.lines).toEqual([]);
+    expect(other.lines).toHaveLength(1);
+    expect(other.lines[0]).toMatchObject({ type: 'result' });
     expect(other.out.status).toBe(200);
   });
 });

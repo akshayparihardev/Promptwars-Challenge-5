@@ -1,5 +1,7 @@
 import { useId, type ReactNode } from 'react';
+import type { AiProgress } from '../lib/useAiCall';
 import { Icon } from './Icon';
+import { LiveThinking } from './ThinkingTrace';
 
 export interface FieldControlProps {
   id: string;
@@ -58,19 +60,9 @@ export function EstimateBadge({ verified }: { verified: boolean }) {
   );
 }
 
-/** Loading skeleton plus text so the wait is explained, never just a blank space. */
-export function AiLoading({ label }: { label: string }) {
-  return (
-    <div role="status" aria-live="polite" className="space-y-2" data-testid="ai-loading">
-      <p className="flex items-center gap-2 text-sm font-medium text-accent">
-        <Icon name="sparkle" className="h-4 w-4" />
-        {label}
-      </p>
-      <div className="skeleton h-4 w-3/4" />
-      <div className="skeleton h-4 w-full" />
-      <div className="skeleton h-4 w-2/3" />
-    </div>
-  );
+/** Live "Gemini is thinking" panel: a running timer plus the model's own thoughts as they stream in. */
+export function AiLoading({ label, progress }: { label: string; progress: AiProgress }) {
+  return <LiveThinking label={label} progress={progress} />;
 }
 
 export function AiError({ message, onRetry }: { message: string; onRetry: () => void }) {

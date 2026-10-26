@@ -3,6 +3,7 @@ import { budgetTier } from '../engine';
 import type { Plan } from '../schemas';
 import { suggestIdeas, type RequestOptions } from '../lib/api';
 import { useAiCall } from '../lib/useAiCall';
+import { AnswerMeta } from './ThinkingTrace';
 import { AiError, AiLoading } from './ui';
 
 function List({ title, items }: { title: string; items: string[] }) {
@@ -59,7 +60,9 @@ export default function IdeasPanel({ plan }: { plan: Plan }) {
         </button>
       </div>
       <div aria-live="polite" className="mt-4">
-        {ai.state.status === 'loading' && <AiLoading label="Thinking up ideas for your event…" />}
+        {ai.state.status === 'loading' && (
+          <AiLoading label="Gemini is thinking up ideas…" progress={ai.progress} />
+        )}
         {ai.state.status === 'error' && (
           <AiError message={ai.state.message} onRetry={() => void generate()} />
         )}
@@ -81,6 +84,7 @@ export default function IdeasPanel({ plan }: { plan: Plan }) {
               <List title="Food style" items={data.foodStyle} />
               <List title="Personal touches" items={data.personalTouches} />
             </div>
+            <AnswerMeta progress={ai.progress} />
             <figure className="rounded-xl border border-line bg-paper p-4">
               <figcaption className="text-sm font-semibold">Invitation line</figcaption>
               <blockquote className="mt-1 font-display text-lg italic">

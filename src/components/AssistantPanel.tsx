@@ -11,7 +11,7 @@ import { reviewPlan, type RequestOptions } from '../lib/api';
 import { useAiCall } from '../lib/useAiCall';
 import { AskPlanner } from './AskPlanner';
 import { Icon, type IconName } from './Icon';
-import { ThinkingTrace } from './ThinkingTrace';
+import { AnswerMeta } from './ThinkingTrace';
 import { AiError, AiLoading } from './ui';
 
 const SEVERITY: Record<InsightSeverity, { label: string; icon: IconName; tone: string }> = {
@@ -72,10 +72,8 @@ export function AssistantPanel({
 }) {
   const insights = useMemo(() => planInsights(plan, today), [plan, today]);
   const [expanded, setExpanded] = useState(false);
-  const ai = useAiCall(
-    (options: RequestOptions, request: Parameters<typeof reviewPlan>[0]) =>
-      reviewPlan(request, options),
-    { stream: true },
+  const ai = useAiCall((options: RequestOptions, request: Parameters<typeof reviewPlan>[0]) =>
+    reviewPlan(request, options),
   );
   const shown = expanded ? insights : insights.slice(0, COLLAPSED);
   const urgent = insights.filter((i) => i.severity !== 'suggestion').length;
@@ -143,8 +141,7 @@ export function AssistantPanel({
       <div aria-live="polite" className="mt-3">
         {ai.state.status === 'loading' && (
           <>
-            <AiLoading label="Reviewing your plan…" />
-            <ThinkingTrace progress={ai.progress} live />
+            <AiLoading label="Gemini is reviewing your plan…" progress={ai.progress} />
           </>
         )}
         {ai.state.status === 'error' && (
@@ -163,7 +160,7 @@ export function AssistantPanel({
             <p className="mt-3 text-xs text-ink-soft">
               AI review of the facts above. It never adds prices, dates or vendors.
             </p>
-            <ThinkingTrace progress={ai.progress} live={false} />
+            <AnswerMeta progress={ai.progress} />
           </div>
         )}
       </div>

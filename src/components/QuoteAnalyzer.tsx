@@ -14,6 +14,7 @@ import { useAiCall } from '../lib/useAiCall';
 import type { Action } from '../state/planStore';
 import { Icon } from './Icon';
 import { QuoteResult } from './QuoteResult';
+import { AnswerMeta } from './ThinkingTrace';
 import { AiError, AiLoading } from './ui';
 
 const QUOTE_CATEGORIES = CATEGORIES.filter((c) => c !== 'contingency');
@@ -108,10 +109,13 @@ export function QuoteAnalyzer({
       </div>
 
       <div aria-live="polite" className="mt-4">
-        {ai.state.status === 'loading' && <AiLoading label="Reading the quotation…" />}
+        {ai.state.status === 'loading' && (
+          <AiLoading label="Gemini is reading the quotation…" progress={ai.progress} />
+        )}
         {ai.state.status === 'error' && (
           <AiError message={ai.state.message} onRetry={() => void analyze()} />
         )}
+        {ai.state.status === 'done' && <AnswerMeta progress={ai.progress} />}
         {saved && (
           <p className="flex items-center gap-2 font-medium text-ok">
             <Icon name="check" />

@@ -4,7 +4,7 @@ import type { ChatTurn, Plan } from '../schemas';
 import { askPlanner, type RequestOptions } from '../lib/api';
 import { useAiCall } from '../lib/useAiCall';
 import { Icon } from './Icon';
-import { ThinkingTrace } from './ThinkingTrace';
+import { AnswerMeta } from './ThinkingTrace';
 import { AiLoading } from './ui';
 
 interface Turn extends ChatTurn {
@@ -23,10 +23,8 @@ const SUGGESTIONS = [
 export function AskPlanner({ plan, today }: { plan: Plan; today: string }) {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [draft, setDraft] = useState('');
-  const ai = useAiCall(
-    (options: RequestOptions, request: Parameters<typeof askPlanner>[0]) =>
-      askPlanner(request, options),
-    { stream: true },
+  const ai = useAiCall((options: RequestOptions, request: Parameters<typeof askPlanner>[0]) =>
+    askPlanner(request, options),
   );
   const busy = ai.state.status === 'loading';
 
@@ -81,7 +79,7 @@ export function AskPlanner({ plan, today }: { plan: Plan; today: string }) {
               </p>
               <p className="whitespace-pre-line">{turn.text}</p>
               {turn.source === 'ai' && index === turns.length - 1 && !busy && (
-                <ThinkingTrace progress={ai.progress} live={false} />
+                <AnswerMeta progress={ai.progress} />
               )}
             </li>
           ))}
@@ -89,8 +87,7 @@ export function AskPlanner({ plan, today }: { plan: Plan; today: string }) {
       </div>
       {busy && (
         <div className="mt-3">
-          <AiLoading label="Thinking about your plan…" />
-          <ThinkingTrace progress={ai.progress} live />
+          <AiLoading label="Gemini is thinking about your plan…" progress={ai.progress} />
         </div>
       )}
 

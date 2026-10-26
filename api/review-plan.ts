@@ -6,7 +6,6 @@ import { REVIEW_PROMPT, wrapUserText } from './_lib/prompts.js';
 export default createHandler({
   name: 'review-plan',
   input: ReviewPlanRequestSchema,
-  stream: true,
   async run(input, onEvent) {
     const { vibe, ...facts } = input;
     return generateJson({

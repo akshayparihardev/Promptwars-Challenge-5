@@ -1,7 +1,7 @@
-import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { askPlanner } from '../../src/lib/api';
-import { splitThought } from '../../src/components/ThinkingTrace';
+import { AnswerMeta, LiveThinking, splitThought } from '../../src/components/ThinkingTrace';
 import { first, renderApp, renderWithPlan, expectNoA11yViolations } from './helpers';
 
 afterEach(() => vi.unstubAllGlobals());
@@ -44,10 +44,13 @@ describe('streamed API client', () => {
     });
     stream.send({ type: 'thought', text: '**Look** at it' });
     // A line split across two network chunks is reassembled.
-    stream.raw('{"type":"fallback"}\n{"type":"res');
+    stream.raw('{"type":"model","model":"gemini-3.1-flash-lite"}\n{"type":"res');
     stream.raw('ult","data":{"answer":"Done."}}\n');
     await expect(pending).resolves.toEqual({ answer: 'Done.' });
-    expect(events).toEqual([{ type: 'thought', text: '**Look** at it' }, { type: 'fallback' }]);
+    expect(events).toEqual([
+      { type: 'thought', text: '**Look** at it' },
+      { type: 'model', model: 'gemini-3.1-flash-lite' },
+    ]);
   });
 
   it('maps an error line, junk lines and a stream that ends early to errors', async () => {
@@ -104,17 +107,20 @@ describe('thinking trace', () => {
     await user.type(screen.getByLabelText('Your question'), 'What next?');
     await user.click(screen.getByRole('button', { name: 'Ask' }));
 
+    // Before the first thought arrives the wait is already explained.
+    expect(await screen.findByText(/Waiting for Gemini.s first thought/)).toBeInTheDocument();
     stream.send({ type: 'thought', text: '**Reading your budget** Catering is the biggest cost.' });
     const live = await screen.findByTestId('thinking-live');
-    expect(live).toHaveTextContent("Gemini's thinking, live");
+    await waitFor(() => expect(live).toHaveTextContent("Gemini's thinking, live"));
     expect(live).toHaveTextContent('Reading your budget');
 
-    stream.send({ type: 'fallback' });
-    await waitFor(() => expect(live).toHaveTextContent('backup Gemini model took over'));
+    stream.send({ type: 'model', model: 'gemini-3.1-flash-lite' });
     stream.send({ type: 'result', data: { answer: 'Book the venue first.' } });
     stream.close();
 
     expect(await screen.findByText('Book the venue first.')).toBeInTheDocument();
+    expect(await screen.findByText('Answered by Gemini 3.1 Flash Lite')).toBeInTheDocument();
+    expect(screen.queryByText(/backup/i)).not.toBeInTheDocument();
     const summary = await screen.findByText(/How Gemini thought about this \(1 step\)/);
     await user.click(summary);
     expect(screen.getByTestId('thinking-done')).toHaveTextContent('Catering is the biggest cost.');
@@ -266,5 +272,52 @@ describe('holding a slider', () => {
     fireEvent.pointerDown(screen.getByRole('tab', { name: 'Budget' }));
     await user.click(screen.getByRole('tab', { name: 'Budget' }));
     expect(screen.getByRole('tab', { name: 'Budget' })).toHaveAttribute('aria-selected', 'true');
+  });
+});
+
+describe('every AI section shows the live thinking and the answering model', () => {
+  it('Describe your event: live thinking, then "Answered by"', async () => {
+    const stream = liveStream();
+    vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockResolvedValue(stream.response));
+    const { user } = renderApp(null);
+    await user.type(screen.getByLabelText('Event description'), 'Shaadi, 100 guests');
+    await user.click(screen.getByRole('button', { name: 'Fill form from description' }));
+    expect(await screen.findByText(/Gemini is reading your description/)).toBeInTheDocument();
+    stream.send({ type: 'thought', text: '**Reading** the guest count.' });
+    expect(await screen.findByText('Reading')).toBeInTheDocument();
+    stream.send({ type: 'model', model: 'gemini-2.5-flash' });
+    stream.send({
+      type: 'result',
+      data: {
+        occasion: 'wedding',
+        totalBudget: null,
+        guests: 100,
+        eventDate: null,
+        vibe: null,
+        nonNegotiables: [],
+        city: null,
+      },
+    });
+    stream.close();
+    expect(await screen.findByText('Answered by Gemini 2.5 Flash')).toBeInTheDocument();
+  });
+});
+
+describe('live thinking timer', () => {
+  it('counts the seconds while Gemini works', async () => {
+    vi.useFakeTimers();
+    try {
+      render(<LiveThinking label="Gemini is thinking…" progress={{ thoughts: [], model: null }} />);
+      expect(screen.getByText('0s')).toBeInTheDocument();
+      await act(() => vi.advanceTimersByTimeAsync(3000));
+      expect(screen.getByText('3s')).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('renders nothing extra when the model shared neither thoughts nor its name', () => {
+    const { container } = render(<AnswerMeta progress={{ thoughts: [], model: null }} />);
+    expect(container).toBeEmptyDOMElement();
   });
 });

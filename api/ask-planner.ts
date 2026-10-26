@@ -6,7 +6,6 @@ import { ASK_PROMPT, wrapUserText } from './_lib/prompts.js';
 export default createHandler({
   name: 'ask-planner',
   input: AskPlannerRequestSchema,
-  stream: true,
   async run({ question, history, facts }, onEvent) {
     const conversation = history
       .map((turn) => `${turn.role === 'user' ? 'Family' : 'Assistant'}: ${turn.text}`)

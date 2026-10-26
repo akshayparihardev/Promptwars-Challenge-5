@@ -8,20 +8,20 @@ export type AiState<T> =
   | { status: 'error'; message: string }
   | { status: 'done'; data: T };
 
-/** What the model has shared so far: its thought summaries, and whether a backup model took over. */
+/** What the model has shared so far: its thought summaries, and which model gave the answer. */
 export interface AiProgress {
   thoughts: string[];
-  switchedModel: boolean;
+  model: string | null;
 }
 
-const NO_PROGRESS: AiProgress = { thoughts: [], switchedModel: false };
+const NO_PROGRESS: AiProgress = { thoughts: [], model: null };
 /** Enough to follow the reasoning without the trace growing without bound. */
 export const MAX_THOUGHTS = 12;
 
 function withEvent(progress: AiProgress, event: AiStreamEvent): AiProgress {
   return event.type === 'thought'
     ? { ...progress, thoughts: [...progress.thoughts, event.text].slice(-MAX_THOUGHTS) }
-    : { ...progress, switchedModel: true };
+    : { ...progress, model: event.model };
 }
 
 /**
@@ -30,7 +30,6 @@ function withEvent(progress: AiProgress, event: AiStreamEvent): AiProgress {
  */
 export function useAiCall<T, A extends unknown[]>(
   fn: (options: RequestOptions, ...args: A) => Promise<T>,
-  { stream = false }: { stream?: boolean } = {},
 ) {
   const [state, setState] = useState<AiState<T>>({ status: 'idle' });
   const [progress, setProgress] = useState<AiProgress>(NO_PROGRESS);
@@ -41,35 +40,29 @@ export function useAiCall<T, A extends unknown[]>(
   });
   useEffect(() => () => inFlight.current?.abort(), []);
 
-  const run = useCallback(
-    async (...args: A): Promise<T | null> => {
-      inFlight.current?.abort();
-      const controller = new AbortController();
-      inFlight.current = controller;
-      setState({ status: 'loading' });
-      setProgress(NO_PROGRESS);
-      const onEvent = (event: AiStreamEvent) => {
-        if (!controller.signal.aborted) setProgress((current) => withEvent(current, event));
-      };
-      try {
-        const data = await fnRef.current(
-          stream ? { signal: controller.signal, onEvent } : { signal: controller.signal },
-          ...args,
-        );
-        if (!controller.signal.aborted) setState({ status: 'done', data });
-        return data;
-      } catch (error) {
-        if (controller.signal.aborted) return null;
-        const message =
-          error instanceof ApiError ? error.message : 'Something went wrong. Please try again.';
-        setState({ status: 'error', message });
-        return null;
-      } finally {
-        if (inFlight.current === controller) inFlight.current = null;
-      }
-    },
-    [stream],
-  );
+  const run = useCallback(async (...args: A): Promise<T | null> => {
+    inFlight.current?.abort();
+    const controller = new AbortController();
+    inFlight.current = controller;
+    setState({ status: 'loading' });
+    setProgress(NO_PROGRESS);
+    const onEvent = (event: AiStreamEvent) => {
+      if (!controller.signal.aborted) setProgress((current) => withEvent(current, event));
+    };
+    try {
+      const data = await fnRef.current({ signal: controller.signal, onEvent }, ...args);
+      if (!controller.signal.aborted) setState({ status: 'done', data });
+      return data;
+    } catch (error) {
+      if (controller.signal.aborted) return null;
+      const message =
+        error instanceof ApiError ? error.message : 'Something went wrong. Please try again.';
+      setState({ status: 'error', message });
+      return null;
+    } finally {
+      if (inFlight.current === controller) inFlight.current = null;
+    }
+  }, []);
 
   const reset = useCallback(() => {
     inFlight.current?.abort();

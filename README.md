@@ -8,14 +8,14 @@ One connected plan for budget, timeline and vendors, built for Indian families.<
 Change the guest count and watch catering, budget and warnings move together.
 
 [![CI](https://github.com/akshayparihardev/Promptwars-Challenge-5/actions/workflows/ci.yml/badge.svg)](https://github.com/akshayparihardev/Promptwars-Challenge-5/actions)
-![Tests](https://img.shields.io/badge/tests-403%20unit%20%2B%2014%20e2e-2f6b45)
+![Tests](https://img.shields.io/badge/tests-405%20unit%20%2B%2014%20e2e-2f6b45)
 ![a11y](https://img.shields.io/badge/axe-0%20violations%20(light%20%26%20dark)-2f6b45)
 ![Coverage](https://img.shields.io/badge/coverage-100%25%20lines-2f6b45)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)
-![Gemini](https://img.shields.io/badge/Gemini-3.6%20Flash-5e2750)
+![Gemini](https://img.shields.io/badge/Gemini-model%20chain-5e2750)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 
-**[🌐 Live app](https://promptwars-challenge-5.vercel.app/)** · **🎬 Demo video: VIDEO_URL** · Built for PromptWars Virtual, Challenge 5: Celebration & Event Planner
+**[🌐 Live app](https://promptwars-challenge-5.vercel.app/)** · Built for PromptWars Virtual, Challenge 5: Celebration & Event Planner
 
 </div>
 
@@ -93,10 +93,10 @@ Open the **[live app](https://promptwars-challenge-5.vercel.app/)** and follow P
 | --- | --- |
 | 🧭 Know what to do next | A **planning assistant** that ranks what needs attention across budget, timeline and vendors, links straight to the fix, writes an AI plan review, and **answers your questions** in English or Hinglish (with a built-in fallback) |
 | 🗣️ Say what you want, naturally | Free-text intake. Type "8 lakh", "8L", "8,00,000", "₹800000", "8.5 lac" or "2 crore" and it understands |
-| 💰 Keep spending in check | Occasion presets, priority weighting, per-category lock, live redistribution, change toast, **Estimate** vs **Verified quote** labels |
+| 💰 Keep spending in check | Occasion presets, priority weighting, per-category lock, live redistribution, change toast, **Estimate** vs **Verified quotation** labels |
 | 👥 Survive a bigger guest list | Live catering impact and an over-budget banner with options, each with its exact rupee effect |
 | 📅 Never miss a deadline | Dependency-aware timeline in five phases, assignees, done and delayed, **delay propagation**, at-risk, overdue and impossible flags, **automatic compression** when the event is closer than the usual lead time, a suggested **run sheet for the day**, and one tap to **add the whole timeline to your phone calendar** (.ics) |
-| 📋 Know who to book | A vendor checklist per occasion with status: not started, contacted, quote received, quote accepted |
+| 📋 Know who to book | A vendor checklist per occasion with status: not started, contacted, quotation received, quotation accepted |
 | 🧾 Compare vendors | Paste a quote, get extracted fields, flags, **effective cost** against the category budget, an inquiry draft, and a side-by-side table for up to three quotes per category |
 | 💡 Get fresh ideas | Themes, activities, food style, personal touches and a ready **invitation line**, tuned to occasion, vibe, guest count and budget band (no prices, ever) |
 | 🔗 Share and keep | Autosave, a shareable link, and a printable summary |
@@ -121,7 +121,7 @@ Open the **[live app](https://promptwars-challenge-5.vercel.app/)** and follow P
 | Turn the assistant's findings into a short plan review | | ✅ |
 | Answer the family's questions about their plan | | ✅ |
 
-The AI **never invents prices, vendors or availability**. Every amount is labelled _Estimate_ (a preset or your own input) or _Verified quote_ (from a quote you accepted). The app **never auto-cuts your budget**: it shows options and you decide.
+The AI **never invents prices, vendors or availability**. Every amount is labelled _Estimate_ (a preset or your own input) or _Verified quotation_ (from a quote you accepted). The app **never auto-cuts your budget**: it shows options and you decide.
 
 ## 🏗️ Architecture
 
@@ -178,12 +178,12 @@ The injected line was treated as data, and fields that were not stated stayed `n
 
 ## 🧠 GenAI usage
 
-- **Model:** a four-model chain, `gemini-3-flash-preview` → `gemini-2.5-flash` → `gemini-3.1-flash-lite` → `gemini-2.5-flash-lite` (put your own first with `GEMINI_MODEL`, one name or a list), through the `@google/genai` SDK.
-- **Model failover.** If a model is out of quota, overloaded, retired or simply slow (9 s per model, 24 s overall), the next one answers, and the failing model is set aside for a cooldown so later requests go straight to one that works.
-- **Live thinking.** The planner chat and plan review stream Gemini's own thought summaries (NDJSON, validated line by line) so the family can see what it is doing, and keep them under the answer.
+- **Models:** the newest free-tier Gemini models first, then older and lighter ones: `gemini-4-argon` → `gemini-3.6-flash` → `gemini-3.5-flash` → `gemini-3-flash-preview` → `gemini-2.5-flash` → `gemini-3.1-flash-lite` → `gemini-2.5-flash-lite` (put your own first with `GEMINI_MODEL`, one name or a list), through the `@google/genai` SDK. `gemini-3.8-flash`, `3.7-flash` and `3.5-flash-lite` are left out on purpose: on free keys they accept a request and never answer.
+- **Automatic failover.** If a model is out of quota, overloaded, retired or silent (5 s to the first token, 10 s between chunks, 30 s overall), the next one answers, and the failing model is set aside for a cooldown so later requests go straight to one that works. The UI never shows the shuffle; under each answer it simply says which model replied (_"Answered by Gemini 3.1 Flash Lite"_).
+- **Live thinking.** Every AI call streams Gemini's own thought summaries (NDJSON, validated line by line) into a "Gemini is thinking" panel with a running timer, so the wait is never blank. After the answer the thinking stays under it, collapsed.
 - **Server only.** The key is read from `process.env` inside serverless functions and never reaches the browser, the repo or the logs.
 - **Cached.** Identical validated requests within 10 minutes are served from cache (`X-Cache: HIT`), so repeats cost nothing. With Vercel KV / Upstash configured the cache is **shared by every serverless instance**; otherwise each instance keeps a bounded in-memory copy.
-- **JSON mode with a schema** generated from the same zod schemas the app uses, a 15 s timeout, minimal "thinking" for speed (a typical call takes about 2 seconds).
+- **JSON mode with a schema** generated from the same zod schemas the app uses, streamed responses and short, low-effort thinking (a typical call takes a few seconds).
 - **Validated twice.** Output is parsed with zod on the server (invalid output returns `502 AI_RESPONSE_INVALID`) and again on the client. Raw model text never reaches the UI.
 - **Prompt-injection guard.** User text is wrapped in `<user_text>` tags and declared to be data; closing-tag tricks are stripped; the model is told never to invent prices, vendors or availability.
 - **Graceful failure.** If AI is down, only the AI panels show a retry message; budget, timeline, vendors and the assistant's list keep working.
@@ -217,7 +217,7 @@ Everything below is an estimate and is user-editable.
 - Business logic lives only in `src/engine` as pure functions; components render and dispatch, nothing more. API handlers are thin: guard, validate, call, validate, respond.
 - Small, single-purpose modules (every component under 250 lines) with one shared schema layer used by client, server and tests.
 
-### 🧪 Testing: 403 unit and integration tests, 14 end-to-end
+### 🧪 Testing: 405 unit and integration tests, 14 end-to-end
 
 `npm run check` runs typecheck, lint and the whole unit suite; `npm run e2e` runs the browser suite. CI runs both on every push.
 
@@ -262,7 +262,7 @@ AI responses are cached server-side for 10 minutes, an AI request is **cancelled
 | Postel's | The budget field accepts many spellings; output is always one format |
 | Fitts's | Large targets; the lock sits beside its slider; full-width primary buttons on mobile |
 | Jakob's | Tabs, forms, tables and toasts only |
-| Doherty | Engine updates are instant; AI calls show a skeleton and status text at once |
+| Doherty | Engine updates are instant; AI calls show a live thinking panel with a timer at once |
 | Proximity | Each budget row keeps label, badge, slider, amount and lock together |
 | Von Restorff | The warning colour is used **only** for over-budget, at-risk and impossible states |
 | Goal-gradient | A plan-readiness bar in the header |
@@ -300,8 +300,8 @@ Import the repo into Vercel (Framework: Vite), add `GEMINI_API_KEY` and `GEMINI_
 | --- | --- | --- |
 | Code quality | Strict TypeScript, typescript-eslint `strictTypeChecked` with zero findings, pure engine separate from UI and API, thin handlers, files under 250 lines, shared schemas | `src/engine`, `api/_lib`, [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
 | Security | Server-only key, same-origin guard, zod on every input and AI output, size caps, rate limit (shareable via KV), strict CSP without `unsafe-inline`, HSTS, prompt-injection guard, no HTML injection | [SECURITY.md](SECURITY.md), `api/_lib/http.ts`, `vercel.json` |
-| Efficiency | Deterministic engine (no AI for maths), AI cache, request cancellation, model failover with cooldowns, minimal thinking, memoisation, lazy tabs, no web fonts, under 100 kB gzipped | `api/_lib/model.ts`, `api/_lib/cache.ts`, `src/lib/useAiCall.ts` |
-| Testing | 403 unit and integration tests, 14 real-browser e2e, 100% line, statement and function coverage and 99.6% branches enforced, property test for compression, all in CI | [docs/TESTING.md](docs/TESTING.md), `tests/`, `e2e/` |
+| Efficiency | Deterministic engine (no AI for maths), AI cache, request cancellation, model failover with cooldowns and silence watchdogs, low-effort thinking, memoisation, lazy tabs, no web fonts, under 100 kB gzipped | `api/_lib/model.ts`, `api/_lib/cache.ts`, `src/lib/useAiCall.ts` |
+| Testing | 405 unit and integration tests, 14 real-browser e2e, 100% line, statement and function coverage and 99.6% branches enforced, property test for compression, all in CI | [docs/TESTING.md](docs/TESTING.md), `tests/`, `e2e/` |
 | Accessibility | WCAG 2.1 AA: axe with contrast in real Chromium in both themes, error summary, keyboard tabs, live regions, contrast and forced-colours modes | [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md) |
 | Problem alignment | Weddings, birthdays, milestones and community events; budgets, timelines, vendor checklists, personalised ideas; a GenAI assistant that reviews, answers and explains | The table below |
 

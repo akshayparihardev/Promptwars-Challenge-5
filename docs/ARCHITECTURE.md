@@ -50,7 +50,7 @@ Everything the family enters lives in one `Plan` (see `src/schemas/base.ts`): oc
 1. The browser sends facts computed by the engine plus the family's text to `/api/<endpoint>` (same origin only).
 2. `createHandler` checks method, origin, content type, rate limit and body size, then validates the body with zod.
 3. A cache lookup (memory, then the optional shared store) can answer immediately.
-4. `generateJson` calls Gemini in JSON mode with a schema derived from zod, with minimal thinking and a 15 s budget. `callModel` fails over to the next model when one is out of quota, overloaded or retired, and remembers that for a cooldown.
+4. `generateJson` calls Gemini in JSON mode with a schema derived from zod, streaming the answer and its thought summaries (NDJSON, when the browser asks for it). `callModel` walks the model chain: a model that is out of quota, overloaded, retired or silent (5 s to the first token, 10 s between chunks, 30 s overall) is skipped and remembered for a cooldown, and the model that answers is reported so the UI can say so.
 5. The answer is validated with zod again, cached and returned. Anything invalid becomes `502 AI_RESPONSE_INVALID`.
 6. The client validates once more and renders the result as text. If the AI is unavailable, the UI keeps working and the assistant answers from the engine.
 

@@ -77,7 +77,7 @@ describe('api client', () => {
     const pending = parseIntake('x', { fetcher: f as unknown as typeof fetch }).catch(
       (e: unknown) => e,
     );
-    await vi.advanceTimersByTimeAsync(30_001);
+    await vi.advanceTimersByTimeAsync(40_001);
     expect(await pending).toMatchObject({ kind: 'timeout' });
     vi.useRealTimers();
   });

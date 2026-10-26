@@ -1,17 +1,17 @@
 # Deployment
 
-The app is built for Vercel: the Vite build is served as static files and every file in `api/` becomes a serverless function. `vercel.json` sets the security headers and a 30 s function limit.
+The app is built for Vercel: the Vite build is served as static files and every file in `api/` becomes a serverless function. `vercel.json` sets the security headers and a 60 s function limit.
 
 ## Steps
 
 1. Import the GitHub repository in Vercel. Framework preset: **Vite** (build `npm run build`, output `dist`).
 2. Add environment variables for Production, Preview and Development:
 
-| Variable                               | Required             | Value                                                                                                                                                                     |
-| -------------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GEMINI_API_KEY`                       | Yes, for AI features | Your Google AI Studio key. Never prefix it with `VITE_`.                                                                                                                  |
-| `GEMINI_MODEL`                         | No                   | Preferred model, or a comma-separated list. Default chain `gemini-3-flash-preview`, `gemini-2.5-flash`, `gemini-3.1-flash-lite`, `gemini-2.5-flash-lite`, tried in order. |
-| `KV_REST_API_URL`, `KV_REST_API_TOKEN` | No                   | Set automatically by **Storage → Upstash for Redis**. Shares the rate limit and AI cache across instances.                                                                |
+| Variable                               | Required             | Value                                                                                                                                                                                                                               |
+| -------------------------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GEMINI_API_KEY`                       | Yes, for AI features | Your Google AI Studio key. Never prefix it with `VITE_`.                                                                                                                                                                            |
+| `GEMINI_MODEL`                         | No                   | Preferred model, or a comma-separated list. Default chain (newest first): `gemini-4-argon`, `gemini-3.6-flash`, `gemini-3.5-flash`, `gemini-3-flash-preview`, `gemini-2.5-flash`, `gemini-3.1-flash-lite`, `gemini-2.5-flash-lite`. |
+| `KV_REST_API_URL`, `KV_REST_API_TOKEN` | No                   | Set automatically by **Storage → Upstash for Redis**. Shares the rate limit and AI cache across instances.                                                                                                                          |
 
 3. Deploy. Every push to `main` redeploys.
 

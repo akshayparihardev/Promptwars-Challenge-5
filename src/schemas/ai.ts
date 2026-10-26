@@ -149,7 +149,7 @@ export type PlannerAnswer = z.infer<typeof PlannerAnswerSchema>;
  */
 export const AiStreamEventSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('thought'), text: z.string().max(2000) }),
-  z.object({ type: z.literal('fallback') }),
+  z.object({ type: z.literal('model'), model: z.string().max(80) }),
 ]);
 export type AiStreamEvent = z.infer<typeof AiStreamEventSchema>;
 

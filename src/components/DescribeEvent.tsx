@@ -2,6 +2,7 @@ import { useState, type KeyboardEvent } from 'react';
 import type { IntakeParse } from '../schemas';
 import { parseIntake, type RequestOptions } from '../lib/api';
 import { useAiCall } from '../lib/useAiCall';
+import { AnswerMeta } from './ThinkingTrace';
 import { AiError, AiLoading } from './ui';
 
 export const EXAMPLE_EVENT =
@@ -76,12 +77,17 @@ export function DescribeEvent({ onParsed }: { onParsed: (result: IntakeParse) =>
         </span>
       </div>
       <div className="mt-3" aria-live="polite">
-        {ai.state.status === 'loading' && <AiLoading label="Reading your description…" />}
+        {ai.state.status === 'loading' && (
+          <AiLoading label="Gemini is reading your description…" progress={ai.progress} />
+        )}
         {ai.state.status === 'error' && (
           <AiError message={ai.state.message} onRetry={() => void fill()} />
         )}
         {filled && ai.state.status === 'done' && (
-          <p className="text-sm font-medium text-accent">{filled}</p>
+          <>
+            <p className="text-sm font-medium text-accent">{filled}</p>
+            <AnswerMeta progress={ai.progress} />
+          </>
         )}
       </div>
     </section>

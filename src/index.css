@@ -313,3 +313,25 @@
     break-inside: avoid;
   }
 }
+
+@keyframes thought-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes thinking-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+.thought-in {
+  animation: thought-in 0.35s ease-out;
+}
+.thinking-pulse {
+  animation: thinking-pulse 1.2s ease-in-out infinite;
+}

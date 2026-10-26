@@ -5,6 +5,7 @@ import { explainTradeoffs, type RequestOptions } from '../lib/api';
 import { describeChanges } from '../lib/format';
 import { useAiCall } from '../lib/useAiCall';
 import { Icon } from './Icon';
+import { AnswerMeta } from './ThinkingTrace';
 import { AiError, AiLoading, Confirm } from './ui';
 
 export function TradeoffPanel({
@@ -75,11 +76,12 @@ export function TradeoffPanel({
 
       <div aria-live="polite" className="mt-3">
         {ai.state.status === 'loading' && (
-          <AiLoading label="Asking the AI to explain in plain language…" />
+          <AiLoading label="Gemini is explaining the options…" progress={ai.progress} />
         )}
         {ai.state.status === 'error' && (
           <AiError message={ai.state.message} onRetry={() => void explain()} />
         )}
+        {ai.state.status === 'done' && <AnswerMeta progress={ai.progress} />}
       </div>
 
       <ul className="mt-4 grid gap-4 md:grid-cols-3">
