@@ -1,6 +1,9 @@
 import '@testing-library/jest-dom/vitest';
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { afterEach } from 'vitest';
+
+// Lazy tabs load slower under coverage instrumentation; allow findBy* queries a little longer.
+configure({ asyncUtilTimeout: 5000 });
 
 afterEach(() => {
   cleanup();

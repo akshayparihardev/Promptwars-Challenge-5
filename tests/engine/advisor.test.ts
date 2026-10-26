@@ -90,4 +90,9 @@ describe('localAnswer (built-in planner when AI is unavailable)', () => {
     expect(localAnswer('date?', makePlan({ eventDate: '2025-06-01' }), TODAY)).toMatch(/passed/);
     expect(localAnswer('hi', makePlan({ eventDate: '2025-06-01' }), TODAY)).toMatch(/date passed/);
   });
+
+  it('counts confirmed vendors in the overview', () => {
+    const withQuote = acceptQuote(addQuote(plan, makeQuote({ totalPrice: 1000 }), 'q').plan, 'q');
+    expect(localAnswer('hi', withQuote, TODAY)).toMatch(/1 vendors confirmed/);
+  });
 });

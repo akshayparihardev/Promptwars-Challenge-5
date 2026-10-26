@@ -32,7 +32,7 @@ const TABS = [
 type TabId = (typeof TABS)[number]['id'];
 
 function readInitial(): InitialLoad {
-  return loadInitial(typeof window === 'undefined' ? '' : window.location.hash, safeStorage());
+  return loadInitial(window.location.hash, safeStorage());
 }
 
 export default function App({

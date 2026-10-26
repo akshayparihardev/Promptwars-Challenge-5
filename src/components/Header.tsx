@@ -12,9 +12,8 @@ export function Header({ plan, onReset }: { plan: Plan | null; onReset: () => vo
   const readiness = plan ? planReadiness(plan) : null;
   const { theme, toggle } = useTheme();
 
-  async function copyLink() {
-    if (!plan) return;
-    const url = `${window.location.origin}${window.location.pathname}${shareHash(plan)}`;
+  async function copyLink(current: Plan) {
+    const url = `${window.location.origin}${window.location.pathname}${shareHash(current)}`;
     try {
       await navigator.clipboard.writeText(url);
       setShare({ status: 'copied', url });
@@ -63,7 +62,7 @@ export function Header({ plan, onReset }: { plan: Plan | null; onReset: () => vo
           </button>
           {plan && (
             <>
-              <button type="button" className="btn-secondary" onClick={() => void copyLink()}>
+              <button type="button" className="btn-secondary" onClick={() => void copyLink(plan)}>
                 <Icon name="link" />
                 <span className="sr-only sm:not-sr-only">Share link</span>
               </button>
