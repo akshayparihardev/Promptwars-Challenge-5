@@ -15,12 +15,12 @@ CI (`.github/workflows/ci.yml`) runs format, check, coverage, build and `npm aud
 
 | Suite                                                                                                    | Folder          | Tests   | Result         |
 | -------------------------------------------------------------------------------------------------------- | --------------- | ------- | -------------- |
-| Engine: money, budget, timeline, compression, trade-offs, quotes, checklist, insights, advisor, calendar | `tests/engine`  | 133     | Passed         |
+| Engine: money, budget, timeline, compression, trade-offs, quotes, checklist, insights, advisor, calendar | `tests/engine`  | 141     | Passed         |
 | Schemas and share-link payloads                                                                          | `tests/schemas` | 9       | Passed         |
-| API: handlers, guards, rate limit, cache, shared store, Gemini client and failover                       | `tests/api`     | 74      | Passed         |
-| UI: flows, assistant and chat, timeline, vendors, theme and contrast, state, client, axe                 | `tests/ui`      | 120     | Passed         |
+| API: handlers, guards, rate limit, cache, shared store, Gemini client and failover                       | `tests/api`     | 77      | Passed         |
+| UI: flows, assistant and chat, timeline, vendors, theme and contrast, state, client, axe                 | `tests/ui`      | 145     | Passed         |
 | Project hygiene                                                                                          | `tests/quality` | 8       | Passed         |
-| **Unit and integration total**                                                                           |                 | **344** | **All passed** |
+| **Unit and integration total**                                                                           |                 | **380** | **All passed** |
 | End to end in real Chromium (7 scenarios × desktop and mobile)                                           | `e2e/`          | 14      | All passed     |
 
 | Coverage (src + api)        | Result | Threshold enforced in CI |
