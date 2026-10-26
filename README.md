@@ -8,7 +8,7 @@ One connected plan for budget, timeline and vendors, built for Indian families.
 Change the guest count and watch catering, budget and warnings move together.
 
 [![CI](https://github.com/akshayparihardev/Promptwars-Challenge-5/actions/workflows/ci.yml/badge.svg)](https://github.com/akshayparihardev/Promptwars-Challenge-5/actions)
-![Tests](https://img.shields.io/badge/tests-197%20passing-2f6b45)
+![Tests](https://img.shields.io/badge/tests-237%20passing-2f6b45)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)
 ![Gemini](https://img.shields.io/badge/Gemini-3.6%20Flash-5e2750)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
@@ -67,6 +67,7 @@ Open the **[live app](https://promptwars-challenge-5.vercel.app/)** and follow P
 | Compare vendors | Paste a quote, get extracted fields, flags, **effective cost** against the category budget, an inquiry draft, and a side-by-side table for up to three quotes per category |
 | Get fresh ideas | Themes, activities, food style and personal touches, tuned to occasion, vibe, guest count and budget band (no prices, ever) |
 | Share and keep | Autosave, a shareable link, and a printable summary |
+| Work comfortably anywhere | A designed **dark mode** (follows your system, remembers your choice, no flash on load) and a compact mobile layout |
 
 ## How the work is split
 
@@ -158,13 +159,14 @@ Everything below is an estimate and is user-editable.
 
 ## Quality
 
-### Testing: 197 tests
+### Testing: 237 tests
 
 `npm run check` runs typecheck, lint and the whole suite.
 
 - **Engine** (100% line coverage): rounding invariant, zero and huge budgets, 1 and 5,000 guests, event date today or in the past, dependency cycles, all categories locked, all-null quotes.
 - **Schemas:** malicious share-link payloads, oversized strings, broken dependencies.
 - **API** with Gemini mocked: 405, 415, 400, 413, 429, 502, timeout, retry, prompt-injection text, and a guard that keeps `.js` import extensions so Vercel's Node runtime can load the functions.
+- **Theming:** the real colour tokens in `index.css` are parsed and every text pair is checked for WCAG AA (4.5:1) in **both light and dark**, plus the theme toggle itself.
 - **UI:** full flows (create a plan, grow the guest list, see options, apply), delay propagation, vendor checklist, share link, AI failure with retry, and **axe accessibility checks on every tab**.
 
 ### Security
@@ -185,7 +187,7 @@ Derived engine results are memoised, category rows are memoised, number inputs c
 
 ### Accessibility (WCAG 2.1 AA aims)
 
-`lang="en-IN"`, skip link, landmarks, every input labelled, visible focus rings, a real tablist with arrow-key, Home and End support, `aria-live` for warnings, toasts and AI results, status shown as **text plus icon (never colour alone)**, tables with `th scope`, 44 px touch targets, `prefers-reduced-motion` respected, and no horizontal scroll at 360 px.
+`lang="en-IN"`, skip link, landmarks, every input labelled, visible focus rings, a real tablist with arrow-key, Home and End support, `aria-live` for warnings, toasts and AI results, status shown as **text plus icon (never colour alone)**, tables with `th scope`, 44 px touch targets, `prefers-reduced-motion` respected, light and dark themes each contrast-checked, and no horizontal scroll at 360 px.
 
 ### UX principles applied
 
