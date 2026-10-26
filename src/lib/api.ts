@@ -4,15 +4,18 @@ import {
   IdeasSchema,
   IntakeParseSchema,
   PlanReviewSchema,
+  PlannerAnswerSchema,
   QuoteSchema,
   type Category,
   type Explanations,
   type Ideas,
   type IntakeParse,
   type PlanReview,
+  type PlannerAnswer,
   type Quote,
 } from '../schemas';
 import type {
+  AskPlannerRequestSchema,
   ExplainTradeoffsRequestSchema,
   ReviewPlanRequestSchema,
   SuggestIdeasRequestSchema,
@@ -146,4 +149,11 @@ export function reviewPlan(
   options?: RequestOptions,
 ): Promise<PlanReview> {
   return post('/api/review-plan', request, PlanReviewSchema, options);
+}
+
+export function askPlanner(
+  request: z.input<typeof AskPlannerRequestSchema>,
+  options?: RequestOptions,
+): Promise<PlannerAnswer> {
+  return post('/api/ask-planner', request, PlannerAnswerSchema, options);
 }

@@ -9,6 +9,7 @@ import {
 import type { Plan } from '../schemas';
 import { reviewPlan, type RequestOptions } from '../lib/api';
 import { useAiCall } from '../lib/useAiCall';
+import { AskPlanner } from './AskPlanner';
 import { Icon, type IconName } from './Icon';
 import { AiError, AiLoading } from './ui';
 
@@ -157,6 +158,7 @@ export function AssistantPanel({
           </div>
         )}
       </div>
+      <AskPlanner plan={plan} today={today} />
     </section>
   );
 }

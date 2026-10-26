@@ -259,6 +259,48 @@ describe('planning assistant', () => {
   });
 });
 
+describe('ask the planner', () => {
+  it('sends the question with plan facts and shows the Gemini answer', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(jsonResponse({ answer: 'Pehle venue book karein.' }));
+    vi.stubGlobal('fetch', fetchMock);
+    const { user } = renderWithPlan();
+    await user.type(screen.getByLabelText('Your question'), 'Pehle kya karein?');
+    await user.click(screen.getByRole('button', { name: 'Ask' }));
+    const log = screen.getByRole('log', { name: 'Conversation' });
+    expect(await within(log).findByText('Pehle venue book karein.')).toBeInTheDocument();
+    expect(within(log).getByText('Assistant (Gemini)')).toBeInTheDocument();
+    const sent = JSON.parse(fetchMock.mock.calls[0]?.[1]?.body as string) as {
+      question: string;
+      facts: { totalBudget: number };
+    };
+    expect(sent.question).toBe('Pehle kya karein?');
+    expect(sent.facts.totalBudget).toBe(800000);
+    await user.click(screen.getByRole('button', { name: 'New conversation' }));
+    expect(within(log).queryByText('Pehle venue book karein.')).not.toBeInTheDocument();
+  });
+
+  it('falls back to the built-in planner when AI is unavailable, and sends history', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(jsonResponse({ error: 'AI_UNAVAILABLE' }, 503))
+      .mockResolvedValueOnce(jsonResponse({ answer: 'Second answer.' }));
+    vi.stubGlobal('fetch', fetchMock);
+    const { user } = renderWithPlan();
+    await user.click(screen.getByRole('button', { name: 'Are we over budget?' }));
+    const log = screen.getByRole('log', { name: 'Conversation' });
+    expect(await within(log).findByText(/within your ₹8,00,000 budget/)).toBeInTheDocument();
+    expect(within(log).getByText(/built-in planner, AI unavailable/)).toBeInTheDocument();
+    await user.type(screen.getByLabelText('Your question'), 'And next?{Enter}');
+    expect(await within(log).findByText('Second answer.')).toBeInTheDocument();
+    const sent = JSON.parse(fetchMock.mock.calls[1]?.[1]?.body as string) as {
+      history: unknown[];
+    };
+    expect(sent.history).toHaveLength(2);
+  });
+});
+
 describe('vendor checklist', () => {
   it('marks a vendor as contacted and shows progress', async () => {
     const { user } = renderWithPlan();

@@ -99,3 +99,45 @@ export const PlanReviewSchema = z.object({
     .max(3),
 });
 export type PlanReview = z.infer<typeof PlanReviewSchema>;
+
+export const PlanFactsSchema = z.object({
+  occasion: OccasionSchema,
+  guests: z.number().int().min(1),
+  totalBudget: z.number().int().min(0),
+  daysToEvent: z.number().int().min(-3650).max(3650),
+  vibe: z.string().max(200).default(''),
+  budget: z
+    .array(
+      z.object({
+        category: z.string().max(60),
+        amount: z.number().int().min(0),
+        verified: z.boolean(),
+        shortfall: z.number().int().min(0),
+      }),
+    )
+    .max(7),
+  insights: z
+    .array(
+      z.object({
+        severity: z.enum(['critical', 'warning', 'suggestion']),
+        title: z.string().max(200),
+        detail: z.string().max(400),
+      }),
+    )
+    .max(10),
+});
+
+export const ChatTurnSchema = z.object({
+  role: z.enum(['user', 'assistant']),
+  text: z.string().min(1).max(1200),
+});
+export type ChatTurn = z.infer<typeof ChatTurnSchema>;
+
+export const AskPlannerRequestSchema = z.object({
+  question: z.string().trim().min(1).max(500),
+  history: z.array(ChatTurnSchema).max(8).default([]),
+  facts: PlanFactsSchema,
+});
+
+export const PlannerAnswerSchema = z.object({ answer: z.string().min(1).max(1200) });
+export type PlannerAnswer = z.infer<typeof PlannerAnswerSchema>;

@@ -9,3 +9,4 @@ export * from './plan';
 export * from './checklist';
 export * from './insights';
 export * from './calendar';
+export * from './advisor';
