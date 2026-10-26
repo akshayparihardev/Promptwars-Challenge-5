@@ -23,13 +23,14 @@ CI (`.github/workflows/ci.yml`) runs format, check, coverage, build and `npm aud
 | **Unit and integration total**                                                                           |                 | **380** | **All passed** |
 | End to end in real Chromium (7 scenarios × desktop and mobile)                                           | `e2e/`          | 14      | All passed     |
 
-| Coverage (src + api)        | Result | Threshold enforced in CI |
-| --------------------------- | ------ | ------------------------ |
-| Lines                       | 99.3%  | 99%                      |
-| Statements                  | 98.6%  | 98%                      |
-| Functions                   | 98.2%  | 97%                      |
-| Branches                    | 93.0%  | 90%                      |
-| Engine lines (`src/engine`) | 100%   | 100%                     |
+| Coverage (src + api) | Result | Threshold enforced in CI |
+| -------------------- | ------ | ------------------------ |
+| Lines                | 100%   | 100%                     |
+| Statements           | 100%   | 100%                     |
+| Functions            | 100%   | 100%                     |
+| Branches             | 99.6%  | 99%                      |
+
+The few uncovered branches are defensive fallbacks that cannot run (for example an array lookup TypeScript cannot prove is defined).
 
 ## What each area proves
 
