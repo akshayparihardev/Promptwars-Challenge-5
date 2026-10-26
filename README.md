@@ -8,9 +8,9 @@ One connected plan for budget, timeline and vendors, built for Indian families.<
 Change the guest count and watch catering, budget and warnings move together.
 
 [![CI](https://github.com/akshayparihardev/Promptwars-Challenge-5/actions/workflows/ci.yml/badge.svg)](https://github.com/akshayparihardev/Promptwars-Challenge-5/actions)
-![Tests](https://img.shields.io/badge/tests-344%20unit%20%2B%2014%20e2e-2f6b45)
+![Tests](https://img.shields.io/badge/tests-380%20unit%20%2B%2014%20e2e-2f6b45)
 ![a11y](https://img.shields.io/badge/axe-0%20violations%20(light%20%26%20dark)-2f6b45)
-![Coverage](https://img.shields.io/badge/coverage-99%25%20lines-2f6b45)
+![Coverage](https://img.shields.io/badge/coverage-100%25%20lines-2f6b45)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)
 ![Gemini](https://img.shields.io/badge/Gemini-3.6%20Flash-5e2750)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
@@ -216,7 +216,7 @@ Everything below is an estimate and is user-editable.
 - Business logic lives only in `src/engine` as pure functions; components render and dispatch, nothing more. API handlers are thin: guard, validate, call, validate, respond.
 - Small, single-purpose modules (every component under 250 lines) with one shared schema layer used by client, server and tests.
 
-### 🧪 Testing: 344 unit and integration tests, 14 end-to-end
+### 🧪 Testing: 380 unit and integration tests, 14 end-to-end
 
 `npm run check` runs typecheck, lint and the whole unit suite; `npm run e2e` runs the browser suite. CI runs both on every push.
 
@@ -225,7 +225,7 @@ Everything below is an estimate and is user-editable.
 - **API** with Gemini mocked: 403, 405, 415, 400, 413, 429, 502, timeout, retry, cache hits, prompt-injection text, and a guard that keeps `.js` import extensions so Vercel's Node runtime can load the functions.
 - **End to end** (Playwright, real Chromium, desktop and Pixel 7): describe, create, grow guests, apply an option; the AI review; a share link reopened in a fresh browser; **the built app under the exact production CSP with zero console errors**; no horizontal scroll on any tab; and **axe with colour contrast on every tab in light and dark mode: 0 violations**. `/api` is mocked, so no key is needed.
 - **Theming:** the real colour tokens in `index.css` are parsed and every text pair is checked for WCAG AA (4.5:1) in **both light and dark**.
-- **Coverage, enforced in CI:** whole app (src + api) **99.3% lines**, 98.6% statements, 98.2% functions, 93% branches; engine 100% lines.
+- **Coverage, enforced in CI:** whole app (src + api) **100% lines, 100% statements, 100% functions, 99.6% branches**.
 - **Hygiene:** required docs exist, files stay under 250 lines, no `any`, no HTML injection, no browser logging, no credentials.
 
 Full breakdown with per-suite counts: [docs/TESTING.md](docs/TESTING.md).
@@ -282,7 +282,7 @@ npm run dev              # UI and /api together (same handlers as production)
 | Command | What it does |
 | --- | --- |
 | `npm run check` | typecheck, lint and all unit tests |
-| `npm run coverage` | tests with coverage thresholds (99% lines overall, 100% engine) |
+| `npm run coverage` | tests with coverage thresholds (100% lines, statements and functions; 99% branches) |
 | `npm run e2e` | Playwright end-to-end and axe checks (`npx playwright install chromium` once) |
 | `npm run format:check` | Prettier check (also run in CI) |
 | `npm run build` | production build |
@@ -300,7 +300,7 @@ Import the repo into Vercel (Framework: Vite), add `GEMINI_API_KEY` and `GEMINI_
 | Code quality | Strict TypeScript, typescript-eslint `strictTypeChecked` with zero findings, pure engine separate from UI and API, thin handlers, files under 250 lines, shared schemas | `src/engine`, `api/_lib`, [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
 | Security | Server-only key, same-origin guard, zod on every input and AI output, size caps, rate limit (shareable via KV), strict CSP without `unsafe-inline`, HSTS, prompt-injection guard, no HTML injection | [SECURITY.md](SECURITY.md), `api/_lib/http.ts`, `vercel.json` |
 | Efficiency | Deterministic engine (no AI for maths), AI cache, request cancellation, model failover with cooldowns, minimal thinking, memoisation, lazy tabs, no web fonts, under 100 kB gzipped | `api/_lib/model.ts`, `api/_lib/cache.ts`, `src/lib/useAiCall.ts` |
-| Testing | 344 unit and integration tests, 14 real-browser e2e, 99% line coverage enforced, property test for compression, all in CI | [docs/TESTING.md](docs/TESTING.md), `tests/`, `e2e/` |
+| Testing | 380 unit and integration tests, 14 real-browser e2e, 100% line, statement and function coverage and 99.6% branches enforced, property test for compression, all in CI | [docs/TESTING.md](docs/TESTING.md), `tests/`, `e2e/` |
 | Accessibility | WCAG 2.1 AA: axe with contrast in real Chromium in both themes, error summary, keyboard tabs, live regions, contrast and forced-colours modes | [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md) |
 | Problem alignment | Weddings, birthdays, milestones and community events; budgets, timelines, vendor checklists, personalised ideas; a GenAI assistant that reviews, answers and explains | The table below |
 

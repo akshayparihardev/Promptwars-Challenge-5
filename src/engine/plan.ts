@@ -67,6 +67,7 @@ export function planReadiness(plan: Plan): Readiness {
     tasksTotal: plan.tasks.length,
     quotesVerified: verified,
     quotesTotal: quotable.length,
-    percent: total === 0 ? 0 : Math.round(((done + verified) / total) * 100),
+    // `total` always includes the six bookable categories, so it is never zero.
+    percent: Math.round(((done + verified) / total) * 100),
   };
 }

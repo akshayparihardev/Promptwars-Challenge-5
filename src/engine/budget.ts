@@ -1,5 +1,5 @@
 import { CATEGORIES, type Allocation, type Category, type Occasion, type Plan } from '../schemas';
-import { largestRemainderRound } from './money';
+import { apportion, type Share } from './money';
 import { ALLOCATION_PRESETS } from './presets';
 import { effectiveCost } from './quotes';
 
@@ -15,21 +15,18 @@ function sum(values: readonly number[]): number {
   return values.reduce((a, b) => a + b, 0);
 }
 
-function fromList(values: readonly number[]): Allocation {
-  const at = (i: number) => values[i] ?? 0;
-  return {
-    venue: at(0),
-    catering: at(1),
-    decor: at(2),
-    photography: at(3),
-    entertainment: at(4),
-    misc: at(5),
-    contingency: at(6),
+function toAllocation(parts: readonly Share<Category>[]): Allocation {
+  const allocation: Allocation = {
+    venue: 0,
+    catering: 0,
+    decor: 0,
+    photography: 0,
+    entertainment: 0,
+    misc: 0,
+    contingency: 0,
   };
-}
-
-function toList(allocation: Allocation): number[] {
-  return CATEGORIES.map((c) => allocation[c]);
+  for (const { item, share } of parts) allocation[item] = share;
+  return allocation;
 }
 
 /**
@@ -42,16 +39,12 @@ export function allocate(
   priorities: readonly Category[],
 ): Allocation {
   const preset = ALLOCATION_PRESETS[occasion];
-  const weights = CATEGORIES.map((c) =>
-    c === 'contingency' ? 0 : preset[c] * (priorities.includes(c) ? PRIORITY_WEIGHT : 1),
-  );
-  const weightSum = sum(weights);
-  const percents = CATEGORIES.map((c, i) =>
-    c === 'contingency'
-      ? CONTINGENCY_PCT
-      : ((weights[i] ?? 0) / weightSum) * (100 - CONTINGENCY_PCT),
-  );
-  return fromList(largestRemainderRound(percents, total));
+  const weightOf = (c: Category) => preset[c] * (priorities.includes(c) ? PRIORITY_WEIGHT : 1);
+  const flexible = CATEGORIES.filter((c) => c !== 'contingency');
+  const weightSum = sum(flexible.map(weightOf));
+  const percentOf = (c: Category) =>
+    c === 'contingency' ? CONTINGENCY_PCT : (weightOf(c) / weightSum) * (100 - CONTINGENCY_PCT);
+  return toAllocation(apportion(CATEGORIES, percentOf, total));
 }
 
 export interface RedistributeResult {
@@ -86,17 +79,9 @@ export function redistribute(
   const applied = Math.min(maxAllowed, Math.max(minAllowed, requested));
   const delta = applied - old;
   const next: Allocation = { ...allocation, [category]: applied };
-  const weights = others.map((c) => allocation[c]);
-  if (delta > 0) {
-    largestRemainderRound(weights, delta).forEach((cut, i) => {
-      const c = others[i];
-      if (c) next[c] -= cut;
-    });
-  } else if (delta < 0) {
-    largestRemainderRound(weights, -delta).forEach((add, i) => {
-      const c = others[i];
-      if (c) next[c] += add;
-    });
+  // Others give (or receive) the difference in proportion to their current amounts.
+  for (const { item, share } of apportion(others, (c) => allocation[c], Math.abs(delta))) {
+    next[item] -= Math.sign(delta) * share;
   }
   const changes: BudgetChange[] = CATEGORIES.map((c) => ({
     category: c,
@@ -115,7 +100,7 @@ export function redistribute(
 /** Re-scales every category to a new total budget, keeping the current proportions. */
 export function setTotalBudget(plan: Plan, total: number): Plan {
   const totalBudget = Math.max(0, Math.floor(total));
-  const allocation = fromList(largestRemainderRound(toList(plan.allocation), totalBudget));
+  const allocation = toAllocation(apportion(CATEGORIES, (c) => plan.allocation[c], totalBudget));
   return { ...plan, totalBudget, allocation };
 }
 

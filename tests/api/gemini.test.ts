@@ -127,6 +127,16 @@ describe('callModel', () => {
     expect(generateContent.mock.calls[0]?.[0].model).toBe(FALLBACK_MODEL);
   });
 
+  it('uses the default chain when GEMINI_MODEL is not set at all', () => {
+    const saved = process.env.GEMINI_MODEL;
+    delete process.env.GEMINI_MODEL;
+    try {
+      expect(modelChain()).toEqual([DEFAULT_MODEL, FALLBACK_MODEL]);
+    } finally {
+      if (saved !== undefined) process.env.GEMINI_MODEL = saved;
+    }
+  });
+
   it('builds the chain from GEMINI_MODEL, without duplicates', () => {
     vi.stubEnv('GEMINI_MODEL', ' a-model , gemini-3.6-flash ,, b-model ');
     expect(modelChain()).toEqual(['a-model', 'gemini-3.6-flash', 'b-model', FALLBACK_MODEL]);

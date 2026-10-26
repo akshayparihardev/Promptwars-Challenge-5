@@ -54,6 +54,11 @@ describe('shared store (Upstash / Vercel KV REST)', () => {
     ]);
   });
 
+  it('treats a counter reply that is not a number as unavailable', async () => {
+    fetchMock.mockReturnValueOnce(reply([{ result: '3' }, { result: 1 }]));
+    expect(await incrementWindow('k', 300)).toBeNull();
+  });
+
   it('falls back (returns null / undefined) when the store fails, never throwing', async () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     fetchMock.mockReturnValueOnce(reply({}, 500));

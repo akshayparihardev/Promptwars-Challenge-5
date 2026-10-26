@@ -6,6 +6,7 @@ import {
   MAX_QUOTES_PER_CATEGORY,
   type Category,
   type Plan,
+  type Quote,
 } from '../schemas';
 import { extractQuote, type RequestOptions } from '../lib/api';
 import { newId } from '../lib/id';
@@ -39,9 +40,8 @@ export function QuoteAnalyzer({
     return ai.run(pasted, category);
   };
 
-  function save(accept: boolean) {
-    if (!result) return;
-    dispatch({ type: 'addQuote', quote: result, id: newId(), accept });
+  function save(quote: Quote, accept: boolean) {
+    dispatch({ type: 'addQuote', quote, id: newId(), accept });
     setSaved(
       accept
         ? 'Quote accepted. This category now shows a verified quote.'
@@ -120,7 +120,14 @@ export function QuoteAnalyzer({
         )}
       </div>
 
-      {result && <QuoteResult quote={result} plan={plan} full={full} onSave={save} />}
+      {result && (
+        <QuoteResult
+          quote={result}
+          plan={plan}
+          full={full}
+          onSave={(accept) => save(result, accept)}
+        />
+      )}
     </section>
   );
 }

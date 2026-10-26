@@ -25,28 +25,50 @@ export function toLakh(amount: number): string {
   return formatINR(n);
 }
 
+export interface Share<T> {
+  item: T;
+  share: number;
+}
+
 /**
- * Splits `total` (integer rupees) across `weights` so the parts always sum exactly to `total`.
- * Uses the largest-remainder method; ties go to the earlier index. All-zero weights split evenly.
+ * Splits `total` (integer rupees) across `items` in proportion to `weightOf`, so the shares always
+ * sum exactly to `total`. Largest-remainder method; ties go to the earlier item. Missing, negative
+ * or non-finite weights count as zero, and all-zero weights split evenly.
  */
-export function largestRemainderRound(weights: readonly number[], total: number): number[] {
-  const count = weights.length;
-  if (count === 0) return [];
+export function apportion<T>(
+  items: readonly T[],
+  weightOf: (item: T) => number,
+  total: number,
+): Share<T>[] {
   const target = Math.max(0, Math.floor(total));
-  const clean = weights.map((w) => (Number.isFinite(w) && w > 0 ? w : 0));
-  const sum = clean.reduce((a, b) => a + b, 0);
-  const shares = sum === 0 ? clean.map(() => target / count) : clean.map((w) => (w / sum) * target);
-  const floors = shares.map((s) => Math.floor(s));
-  let left = target - floors.reduce((a, b) => a + b, 0);
-  const order = shares
-    .map((s, i) => ({ i, rem: s - Math.floor(s) }))
-    .sort((a, b) => b.rem - a.rem || a.i - b.i);
-  for (const { i } of order) {
-    if (left <= 0) break;
-    floors[i] = (floors[i] ?? 0) + 1;
-    left -= 1;
-  }
-  return floors;
+  const rows = items.map((item, index) => {
+    const weight = weightOf(item);
+    return { item, index, weight: Number.isFinite(weight) && weight > 0 ? weight : 0 };
+  });
+  const weightSum = rows.reduce((sum, row) => sum + row.weight, 0);
+  const exact = rows.map((row) => ({
+    ...row,
+    exact: weightSum === 0 ? target / rows.length : (row.weight / weightSum) * target,
+  }));
+  const left = target - exact.reduce((sum, row) => sum + Math.floor(row.exact), 0);
+  const winners = new Set(
+    [...exact]
+      .sort(
+        (a, b) =>
+          b.exact - Math.floor(b.exact) - (a.exact - Math.floor(a.exact)) || a.index - b.index,
+      )
+      .slice(0, left)
+      .map((row) => row.index),
+  );
+  return exact.map((row) => ({
+    item: row.item,
+    share: Math.floor(row.exact) + (winners.has(row.index) ? 1 : 0),
+  }));
+}
+
+/** `apportion` for a plain list of weights. */
+export function largestRemainderRound(weights: readonly number[], total: number): number[] {
+  return apportion(weights, (weight) => weight, total).map((part) => part.share);
 }
 
 const UNIT: Record<string, number> = {

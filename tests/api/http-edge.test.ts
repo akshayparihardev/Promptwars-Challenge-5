@@ -54,4 +54,9 @@ describe('body size guard', () => {
     await parseIntake(mockReq({ body: circular }), res);
     expect(out.status).toBe(413);
   });
+  it('a missing body counts as empty and is rejected as invalid input', async () => {
+    const { res, out } = mockRes();
+    await parseIntake(mockReq({ body: undefined }), res);
+    expect(out.status).toBe(400);
+  });
 });

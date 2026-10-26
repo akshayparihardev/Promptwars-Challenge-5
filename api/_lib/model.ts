@@ -27,12 +27,13 @@ export function modelChain(): string[] {
   return [...new Set([...configured, DEFAULT_MODEL, FALLBACK_MODEL])];
 }
 
+const availableAt = (model: string) => blockedUntil.get(model) ?? 0;
+
 /** Ready models first; if all are cooling down, try them anyway, soonest to recover first. */
 function attemptOrder(now: number): string[] {
   const chain = modelChain();
-  const ready = chain.filter((model) => (blockedUntil.get(model) ?? 0) <= now);
-  if (ready.length > 0) return ready;
-  return [...chain].sort((a, b) => (blockedUntil.get(a) ?? 0) - (blockedUntil.get(b) ?? 0));
+  const ready = chain.filter((model) => availableAt(model) <= now);
+  return ready.length > 0 ? ready : [...chain].sort((a, b) => availableAt(a) - availableAt(b));
 }
 
 /** A failure that only this model has (quota, overload, retired): worth trying the next one. */
@@ -61,13 +62,11 @@ export async function callModel(request: ModelRequest): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new ApiFailure(503, 'AI_UNAVAILABLE');
   const controller = new AbortController();
-  let timer: ReturnType<typeof setTimeout> | undefined;
+  // One time budget for the whole failover chain: when it runs out, abort and report a timeout.
   const timeout = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => {
-      controller.abort();
-      reject(new ApiFailure(504, 'AI_TIMEOUT'));
-    }, MODEL_TIMEOUT_MS);
+    controller.signal.addEventListener('abort', () => reject(new ApiFailure(504, 'AI_TIMEOUT')));
   });
+  const timer = setTimeout(() => controller.abort(), MODEL_TIMEOUT_MS);
   const ai = new GoogleGenAI({ apiKey });
   const attempt = (model: string) =>
     ai.models.generateContent({
@@ -101,6 +100,6 @@ export async function callModel(request: ModelRequest): Promise<string> {
     console.error('gemini: request failed');
     throw new ApiFailure(503, 'AI_UNAVAILABLE');
   } finally {
-    if (timer) clearTimeout(timer);
+    clearTimeout(timer);
   }
 }

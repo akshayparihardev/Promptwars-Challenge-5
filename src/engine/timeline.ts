@@ -17,29 +17,36 @@ export class ScheduleError extends Error {
   }
 }
 
+/** The tasks a task depends on; ids that match no task are skipped. */
+function dependenciesOf(task: Task, byId: ReadonlyMap<string, Task>): Task[] {
+  return task.dependsOn.flatMap((id) => {
+    const dep = byId.get(id);
+    return dep ? [dep] : [];
+  });
+}
+
 /** Returns the ids of one dependency cycle (first id repeated at the end), or [] when acyclic. */
 export function detectCycles(tasks: readonly Task[]): string[] {
   const byId = new Map(tasks.map((t) => [t.id, t]));
   const state = new Map<string, 1 | 2>();
   const stack: string[] = [];
-  const visit = (id: string): string[] => {
-    state.set(id, 1);
-    stack.push(id);
-    for (const dep of byId.get(id)?.dependsOn ?? []) {
-      if (!byId.has(dep)) continue;
-      if (state.get(dep) === 1) return [...stack.slice(stack.indexOf(dep)), dep];
-      if (!state.has(dep)) {
+  const visit = (task: Task): string[] => {
+    state.set(task.id, 1);
+    stack.push(task.id);
+    for (const dep of dependenciesOf(task, byId)) {
+      if (state.get(dep.id) === 1) return [...stack.slice(stack.indexOf(dep.id)), dep.id];
+      if (!state.has(dep.id)) {
         const found = visit(dep);
         if (found.length) return found;
       }
     }
     stack.pop();
-    state.set(id, 2);
+    state.set(task.id, 2);
     return [];
   };
   for (const t of tasks) {
     if (!state.has(t.id)) {
-      const found = visit(t.id);
+      const found = visit(t);
       if (found.length) return found;
     }
   }
@@ -59,29 +66,36 @@ function topoOrder(tasks: readonly Task[]): Task[] {
   const visit = (t: Task) => {
     if (seen.has(t.id)) return;
     seen.add(t.id);
-    for (const d of t.dependsOn) {
-      const dep = byId.get(d);
-      if (dep) visit(dep);
-    }
+    dependenciesOf(t, byId).forEach(visit);
     out.push(t);
   };
   tasks.forEach(visit);
   return out;
 }
 
-/** Effective day offset relative to the event (negative = before it), per task id. */
-function effectiveOffsets(ordered: readonly Task[]): Map<string, number> {
-  const eff = new Map<string, number>();
-  for (const t of ordered) {
-    const delay = t.status === 'done' ? 0 : (t.delayDays ?? 0);
-    const own = -t.leadDays + delay;
-    const depEnd = t.dependsOn.length
-      ? Math.max(...t.dependsOn.map((d) => eff.get(d) ?? Number.NEGATIVE_INFINITY)) + t.durationDays
-      : Number.NEGATIVE_INFINITY;
-    eff.set(t.id, t.status === 'done' ? -t.leadDays : Math.max(own, depEnd));
-  }
-  return eff;
+interface Offset {
+  task: Task;
+  /** Effective day relative to the event (negative = before it). */
+  offset: number;
 }
+
+/** Effective offsets in dependency order; dependencies are always computed first. */
+function effectiveOffsets(ordered: readonly Task[]): Offset[] {
+  const eff = new Map<string, number>();
+  return ordered.map((t) => {
+    const delay = t.status === 'done' ? 0 : (t.delayDays ?? 0);
+    const depOffsets = t.dependsOn
+      .map((d) => eff.get(d))
+      .filter((v): v is number => v !== undefined);
+    const depEnd = Math.max(Number.NEGATIVE_INFINITY, ...depOffsets) + t.durationDays;
+    const offset = t.status === 'done' ? -t.leadDays : Math.max(-t.leadDays + delay, depEnd);
+    eff.set(t.id, offset);
+    return { task: t, offset };
+  });
+}
+
+const offsetsById = (list: readonly Offset[]) =>
+  new Map(list.map(({ task, offset }) => [task.id, offset]));
 
 export interface ScheduledTask extends Task {
   dueDate: string;
@@ -99,10 +113,9 @@ export function buildSchedule(
   today: string,
 ): ScheduledTask[] {
   const ordered = topoOrder(compressTasks(tasks, eventDate, today));
-  const eff = effectiveOffsets(ordered);
-  return ordered.map((t) => {
+  return effectiveOffsets(ordered).map(({ task: t, offset }) => {
     const dueDate = addDays(eventDate, -t.leadDays);
-    const effectiveDate = addDays(eventDate, eff.get(t.id) ?? -t.leadDays);
+    const effectiveDate = addDays(eventDate, offset);
     const done = t.status === 'done';
     return {
       ...t,
@@ -125,13 +138,15 @@ export function propagateDelay(
   delayDays: number,
 ): string[] {
   const ordered = topoOrder(tasks);
-  const before = effectiveOffsets(ordered);
+  const before = offsetsById(effectiveOffsets(ordered));
   const days = Math.max(0, Math.floor(delayDays));
-  const after = effectiveOffsets(
-    ordered.map((t) =>
-      t.id === taskId
-        ? { ...t, status: t.status === 'done' ? 'todo' : t.status, delayDays: days }
-        : t,
+  const after = offsetsById(
+    effectiveOffsets(
+      ordered.map((t) =>
+        t.id === taskId
+          ? { ...t, status: t.status === 'done' ? 'todo' : t.status, delayDays: days }
+          : t,
+      ),
     ),
   );
   return ordered
@@ -164,13 +179,10 @@ const PHASES: { min: number; phase: Phase }[] = [
   { min: 60, phase: { key: 'p2', label: '2 to 4 months out', order: 2 } },
   { min: 30, phase: { key: 'p3', label: '1 to 2 months out', order: 3 } },
   { min: 8, phase: { key: 'p4', label: 'Final month', order: 4 } },
-  { min: -Infinity, phase: { key: 'p5', label: 'Final week', order: 5 } },
 ];
+const FINAL_WEEK: Phase = { key: 'p5', label: 'Final week', order: 5 };
 
 /** Chunks tasks into a few phases by how many days before the event they are due. */
 export function phaseFor(leadDays: number): Phase {
-  const found = PHASES.find((p) => leadDays >= p.min);
-  return (
-    (found ?? PHASES[PHASES.length - 1])?.phase ?? { key: 'p5', label: 'Final week', order: 5 }
-  );
+  return PHASES.find((p) => leadDays >= p.min)?.phase ?? FINAL_WEEK;
 }

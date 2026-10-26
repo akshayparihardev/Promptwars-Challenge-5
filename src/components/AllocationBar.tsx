@@ -16,13 +16,13 @@ export const SWATCH_CLASS: Record<Category, string> = {
 };
 
 export function AllocationBar({ plan }: { plan: Plan }) {
-  const shares = CATEGORIES.map((c) => percentOf(plan.allocation[c], plan.totalBudget));
+  const pctOf = (c: (typeof CATEGORIES)[number]) => percentOf(plan.allocation[c], plan.totalBudget);
   const parts = CATEGORIES.map((c, i) => ({
     category: c,
     label: categoryLabel(plan.occasion, c),
-    pct: shares[i] ?? 0,
+    pct: pctOf(c),
     // Where this segment starts: the sum of the shares before it.
-    x: shares.slice(0, i).reduce((a, b) => a + b, 0),
+    x: CATEGORIES.slice(0, i).reduce((sum, before) => sum + pctOf(before), 0),
   }));
   const summary = parts.map((p) => `${p.label} ${p.pct}%`).join(', ');
   return (

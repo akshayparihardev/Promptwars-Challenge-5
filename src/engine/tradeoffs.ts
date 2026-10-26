@@ -1,6 +1,6 @@
 import type { Category, Plan } from '../schemas';
 import { budgetStatus, categoryNeeds, type BudgetChange } from './budget';
-import { formatINR, largestRemainderRound } from './money';
+import { apportion, formatINR } from './money';
 import { categoryLabel } from './presets';
 
 export type OptionId = 'reduce_guests' | 'trim_flexible' | 'use_contingency';
@@ -60,15 +60,9 @@ function trimOption(plan: Plan, overBy: number): TradeoffOption | null {
     0,
   );
   if (sources.length === 0 || capacity < overBy) return null;
-  const cuts = largestRemainderRound(
-    sources.map((n) => plan.allocation[n.category]),
-    overBy,
-  );
-  const changes: BudgetChange[] = [];
-  sources.forEach((n, i) => {
-    const cut = cuts[i] ?? 0;
-    if (cut > 0) changes.push({ category: n.category, delta: -cut });
-  });
+  const changes: BudgetChange[] = apportion(sources, (n) => plan.allocation[n.category], overBy)
+    .filter((part) => part.share > 0)
+    .map((part) => ({ category: part.item.category, delta: -part.share }));
   changes.push(...fundingChanges(plan));
   const names = sources.map((n) => categoryLabel(plan.occasion, n.category)).join(', ');
   return {

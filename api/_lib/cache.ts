@@ -24,8 +24,11 @@ export function cacheGet(key: string, now: number = Date.now()): unknown {
 
 export function cacheSet(key: string, value: unknown, now: number = Date.now()): void {
   if (store.size >= CACHE_MAX_ENTRIES) {
-    const oldest = store.keys().next().value;
-    if (oldest !== undefined) store.delete(oldest);
+    // Maps keep insertion order, so the first key is the oldest entry.
+    for (const oldest of store.keys()) {
+      store.delete(oldest);
+      break;
+    }
   }
   store.set(key, { value, expires: now + CACHE_TTL_MS });
 }

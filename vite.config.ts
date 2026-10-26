@@ -2,7 +2,7 @@
 import { readFileSync } from 'node:fs';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { devApi } from './scripts/dev-api';
+import { devApi } from './scripts/dev-api.ts';
 
 /** The production security headers from vercel.json, reused by `vite preview` so e2e runs under the real CSP. */
 function productionHeaders(): Record<string, string> {
@@ -30,14 +30,8 @@ export default defineConfig({
       include: ['src/**/*.{ts,tsx}', 'api/**/*.ts'],
       exclude: ['src/main.tsx', 'src/vite-env.d.ts'],
       reporter: ['text-summary', 'text'],
-      // Whole app (UI, state, API) and a stricter bar for the business-logic engine.
-      thresholds: {
-        lines: 99,
-        statements: 98,
-        functions: 97,
-        branches: 90,
-        'src/engine/**': { lines: 100, functions: 100, statements: 99, branches: 90 },
-      },
+      // Whole app (engine, UI, state, API). The few uncovered branches are defensive fallbacks.
+      thresholds: { lines: 100, statements: 100, functions: 100, branches: 99 },
     },
   },
 });

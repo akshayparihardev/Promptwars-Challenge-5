@@ -11,7 +11,7 @@ import {
   scaleGuests,
   toLakh,
 } from '../engine';
-import { CATEGORIES, MAX_GUESTS, type Category, type Plan } from '../schemas';
+import { MAX_GUESTS, type Category, type Plan } from '../schemas';
 import type { Action } from '../state/planStore';
 import { AllocationBar, SWATCH_CLASS } from './AllocationBar';
 import { CategoryRow } from './CategoryRow';
@@ -180,24 +180,20 @@ export function BudgetTab({ plan, dispatch }: { plan: Plan; dispatch: (action: A
           protect it.
         </p>
         <div className="card divide-y divide-line !p-0">
-          {CATEGORIES.map((c) => {
-            const need = needs.find((n) => n.category === c);
-            if (!need) return null;
-            return (
-              <CategoryRow
-                key={c}
-                occasion={plan.occasion}
-                category={c}
-                amount={plan.allocation[c]}
-                total={plan.totalBudget}
-                locked={plan.locked.includes(c)}
-                need={need}
-                swatchClass={SWATCH_CLASS[c]}
-                onChange={onChange}
-                onToggleLock={onToggleLock}
-              />
-            );
-          })}
+          {needs.map((need) => (
+            <CategoryRow
+              key={need.category}
+              occasion={plan.occasion}
+              category={need.category}
+              amount={plan.allocation[need.category]}
+              total={plan.totalBudget}
+              locked={plan.locked.includes(need.category)}
+              need={need}
+              swatchClass={SWATCH_CLASS[need.category]}
+              onChange={onChange}
+              onToggleLock={onToggleLock}
+            />
+          ))}
         </div>
         <p className="mt-4 text-xs text-ink-soft">
           Splits start from typical presets for a {OCCASION_LABELS[plan.occasion].toLowerCase()} and
