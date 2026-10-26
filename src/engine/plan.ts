@@ -23,6 +23,16 @@ export function createPlan(intake: Intake): Plan {
   };
 }
 
+export type BudgetTier = 'modest' | 'comfortable' | 'premium';
+
+/** Rough per-guest spending band (rupees per head) used to tune AI ideas, never to price anything. */
+export function budgetTier(plan: Pick<Plan, 'totalBudget' | 'guests'>): BudgetTier {
+  const perGuest = plan.totalBudget / Math.max(1, plan.guests);
+  if (perGuest < 2000) return 'modest';
+  if (perGuest < 5000) return 'comfortable';
+  return 'premium';
+}
+
 export interface Readiness {
   tasksDone: number;
   tasksTotal: number;
