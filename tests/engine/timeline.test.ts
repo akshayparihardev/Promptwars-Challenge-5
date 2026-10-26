@@ -126,7 +126,7 @@ describe('buildSchedule', () => {
 
   it('flags overdue and tooLate for past-due tasks, but not done ones', () => {
     const tasks = [task('a', 30, 1), task('b', 30, 1, [], { status: 'done' })];
-    const s = buildSchedule(tasks, '2026-07-15', '2026-07-10');
+    const s = buildSchedule(tasks, '2026-07-05', '2026-07-10');
     expect(s[0]?.flags).toMatchObject({ overdue: true, tooLate: true });
     expect(s[1]?.flags).toEqual({
       overdue: false,

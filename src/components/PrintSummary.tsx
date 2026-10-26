@@ -9,6 +9,7 @@ import {
   OCCASION_LABELS,
   planReadiness,
   percentOf,
+  RUN_SHEETS,
 } from '../engine';
 import { CATEGORIES, type Plan } from '../schemas';
 import { formatDate } from '../lib/format';
@@ -120,6 +121,15 @@ export const PrintSummary = memo(function PrintSummary({
           ))}
         </tbody>
       </table>
+
+      <h2 className="mt-5 text-lg">On the day (suggested)</h2>
+      <ul className="list-none pl-0">
+        {RUN_SHEETS[plan.occasion].map((item) => (
+          <li key={item.time}>
+            <strong>{item.time}</strong> {item.title}
+          </li>
+        ))}
+      </ul>
       <p className="mt-4 text-sm">
         Amounts are estimates unless marked as a verified quote. Planned with Aayojan.
       </p>

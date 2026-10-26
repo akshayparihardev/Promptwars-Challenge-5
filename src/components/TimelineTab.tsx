@@ -2,6 +2,8 @@ import { useMemo } from 'react';
 import {
   affectedByDelays,
   buildSchedule,
+  compressTasks,
+  scheduleCompression,
   diffDays,
   phaseFor,
   timelineToIcs,
@@ -13,6 +15,7 @@ import { downloadText } from '../lib/download';
 import { formatDate } from '../lib/format';
 import type { Action } from '../state/planStore';
 import { Icon } from './Icon';
+import { RunSheet } from './RunSheet';
 import { TaskRow } from './TaskRow';
 
 const EMPTY: ScheduledTask[] = [];
@@ -38,11 +41,15 @@ export function TimelineTab({
   }, [plan.tasks, plan.eventDate, today]);
   const affected = useMemo(() => {
     try {
-      return affectedByDelays(plan.tasks);
+      return affectedByDelays(compressTasks(plan.tasks, plan.eventDate, today));
     } catch {
       return {};
     }
-  }, [plan.tasks]);
+  }, [plan.tasks, plan.eventDate, today]);
+  const compression = useMemo(
+    () => scheduleCompression(plan.tasks, plan.eventDate, today),
+    [plan.tasks, plan.eventDate, today],
+  );
   const titles = useMemo(
     () => Object.fromEntries(plan.tasks.map((t) => [t.id, t.title])),
     [plan.tasks],
@@ -89,6 +96,19 @@ export function TimelineTab({
               : ' · this date has passed'}
         </p>
         <p className="hint">Delay a task and everything that depends on it moves too.</p>
+        {compression.compressed && (
+          <p
+            className="mt-3 flex items-start gap-2 rounded-xl bg-accent-soft p-3 text-sm"
+            data-testid="compressed-note"
+          >
+            <Icon name="clock" className="mt-0.5 h-4 w-4 text-accent" />
+            <span>
+              Your event is {compression.availableDays} days away, sooner than the usual{' '}
+              {compression.spanDays}-day plan, so every task has been pulled closer in the same
+              order. Dates are tighter than usual.
+            </span>
+          </p>
+        )}
         <button
           type="button"
           className="btn-secondary mt-3"
@@ -146,6 +166,8 @@ export function TimelineTab({
           </ul>
         </section>
       ))}
+
+      <RunSheet occasion={plan.occasion} />
     </div>
   );
 }

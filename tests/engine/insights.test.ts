@@ -26,8 +26,9 @@ describe('planInsights (the assistant’s reasoning)', () => {
     expect(insights[0]?.title).toMatch(/Over budget by ₹/);
   });
 
-  it('flags overdue tasks and impossible ones when the event is close', () => {
-    expect(ids(makePlan({ eventDate: '2026-01-20' }))).toContain('overdue');
+  it('flags overdue tasks for a past event and impossible ones after a long delay', () => {
+    expect(ids(makePlan({ eventDate: '2025-12-20' }))).toContain('overdue');
+    expect(ids(makePlan({ eventDate: '2026-01-20' }))).not.toContain('overdue');
     const delayed = makePlan({ eventDate: '2026-03-01' });
     const plan = {
       ...delayed,

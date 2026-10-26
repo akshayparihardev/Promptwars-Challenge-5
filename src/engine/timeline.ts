@@ -1,4 +1,5 @@
 import type { Task } from '../schemas';
+import { compressTasks } from './compression';
 import { addDays, diffDays } from './dates';
 
 export class ScheduleError extends Error {
@@ -88,12 +89,16 @@ export interface ScheduledTask extends Task {
   flags: { overdue: boolean; atRisk: boolean; impossible: boolean; tooLate: boolean };
 }
 
+/**
+ * Dates for every task, delay-aware. When the event is closer than the usual lead time the plan is
+ * compressed first (see compressTasks), so the returned lead times may be shorter than the template.
+ */
 export function buildSchedule(
   tasks: readonly Task[],
   eventDate: string,
   today: string,
 ): ScheduledTask[] {
-  const ordered = topoOrder(tasks);
+  const ordered = topoOrder(compressTasks(tasks, eventDate, today));
   const eff = effectiveOffsets(ordered);
   return ordered.map((t) => {
     const dueDate = addDays(eventDate, -t.leadDays);

@@ -58,10 +58,29 @@ describe('timeline', () => {
     expect(within(outfits).getByRole('button', { name: 'Apply delay' })).toBeDisabled();
   });
 
-  it('flags an event date that is too close as overdue/too late', async () => {
-    const { user } = renderWithPlan({ eventDate: '2026-01-05' });
+  it('compresses the plan for a close event instead of showing everything overdue', async () => {
+    const { user } = renderWithPlan({ eventDate: '2026-01-20' });
     await user.click(screen.getByRole('tab', { name: 'Timeline' }));
-    expect(screen.getAllByText(/Overdue|Due date already passed/).length).toBeGreaterThan(0);
+    expect(screen.getByTestId('compressed-note')).toHaveTextContent(
+      'Your event is 19 days away, sooner than the usual 180-day plan',
+    );
+    expect(screen.queryByText('Overdue')).not.toBeInTheDocument();
+    expect(screen.getByText('On track')).toBeInTheDocument();
+  });
+
+  it('flags tasks of a past event as overdue', async () => {
+    const { user } = renderWithPlan({ eventDate: '2025-12-20' });
+    await user.click(screen.getByRole('tab', { name: 'Timeline' }));
+    expect(screen.getAllByText(/Overdue/).length).toBeGreaterThan(0);
+    expect(screen.queryByTestId('compressed-note')).not.toBeInTheDocument();
+  });
+
+  it('shows the suggested run sheet for the day', async () => {
+    const { user } = renderWithPlan();
+    await user.click(screen.getByRole('tab', { name: 'Timeline' }));
+    const sheet = screen.getByRole('region', { name: 'On the day: suggested run sheet' });
+    expect(within(sheet).getByText('Pheras at the muhurat')).toBeInTheDocument();
+    expect(within(sheet).getByText('20:30')).toBeInTheDocument();
   });
 
   it('downloads the timeline as a calendar file', async () => {

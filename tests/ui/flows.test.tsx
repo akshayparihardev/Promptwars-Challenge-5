@@ -249,7 +249,14 @@ describe('planning assistant', () => {
   });
 
   it('expands to show every insight', async () => {
-    const { user } = renderApp({ ...makePlan({ eventDate: '2026-01-20' }), guests: 260 });
+    const base = makePlan({ eventDate: '2026-02-15' });
+    const { user } = renderApp({
+      ...base,
+      guests: 260,
+      tasks: base.tasks.map((t) =>
+        t.id === 'venue' ? { ...t, status: 'delayed' as const, delayDays: 20 } : t,
+      ),
+    });
     const panel = screen.getByRole('region', { name: 'Your planning assistant' });
     await user.click(within(panel).getByRole('button', { name: /Show all/ }));
     expect(within(panel).getByRole('button', { name: 'Show less' })).toHaveAttribute(
